@@ -1,0 +1,36 @@
+# -------------------------
+# Database data
+# -------------------------
+/data/**/*
+!/data/**/       
+!/data/**/.gitkeep
+!/data/duckdb/scripts/create_duckdb.py
+!/data/sqlite/scripts/create_sqlite.py
+
+
+
+# -------------------------
+# Python virtual environment
+# -------------------------
+venv/
+.venv/
+.env
+__pycache__/
+*.pyc
+
+# -------------------------
+# OS / IDE files
+# -------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# -------------------------
+# Docker / Compose temp files
+# -------------------------
+*.log
+*.pid
+docker-compose.override.yml
