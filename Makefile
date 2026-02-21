@@ -52,7 +52,7 @@ up-mysql: ## Start MySQL + phpMyAdmin
 	docker compose up -d mysql phpmyadmin
 
 cli-mysql: ## Enter MySQL CLI
-	docker compose exec -it mysql mysql -u root -p$$MYSQL_ROOT_PASSWORD
+	docker compose exec -it mysql mysql -u root -p$$MYSQL_ROOT_PASSWORD -D mysql
 
 down-mysql: ## Stop MySQL + phpMyAdmin
 	docker compose stop mysql phpmyadmin
