@@ -62,7 +62,7 @@ up-mariadb: ## Start MariaDB + phpMyAdmin
 	docker compose up -d mariadb phpmyadmin
 
 cli-mariadb: ## Enter MariaDB CLI
-	docker compose exec -it mariadb mysql -u root -p$$MARIADB_ROOT_PASSWORD
+	docker compose exec -it mariadb mariadb -u root -p$$MARIADB_ROOT_PASSWORD -D mysql
 
 down-mariadb: ## Stop MariaDB + phpMyAdmin
 	docker compose stop mariadb phpmyadmin
