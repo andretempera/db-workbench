@@ -1,147 +1,237 @@
 .DEFAULT_GOAL := help
 
-########################################
-# SQL Databases
-########################################
-
-up-postgres: ## Start PostgreSQL
-	docker compose up -d postgres
-
-down-postgres: ## Stop PostgreSQL
-	docker compose stop postgres
-
-up-mysql: ## Start MySQL
-	docker compose up -d mysql
-
-down-mysql: ## Stop MySQL
-	docker compose stop mysql
-
-up-mariadb: ## Start MariaDB
-	docker compose up -d mariadb
-
-down-mariadb: ## Stop MariaDB
-	docker compose stop mariadb
-
-
-########################################
-# NoSQL Databases
-########################################
-
-up-mongo: ## Start MongoDB
-	docker compose up -d mongo
-
-down-mongo: ## Stop MongoDB
-	docker compose stop mongo
-
-up-redis: ## Start Redis
-	docker compose up -d redis
-
-down-redis: ## Stop Redis
-	docker compose stop redis
-
-up-cassandra: ## Start Cassandra
-	docker compose up -d cassandra
-
-down-cassandra: ## Stop Cassandra
-	docker compose stop cassandra
-
-up-elasticsearch: ## Start Elasticsearch
-	docker compose up -d elasticsearch
-
-down-elasticsearch: ## Stop Elasticsearch
-	docker compose stop elasticsearch
-
-up-clickhouse: ## Start ClickHouse
-	docker compose up -d clickhouse
-
-down-clickhouse: ## Stop ClickHouse
-	docker compose stop clickhouse
-
-up-couchbase: ## Start Couchbase
-	docker compose up -d couchbase
-
-down-couchbase: ## Stop Couchbase
-	docker compose stop couchbase
+# Load .env variables into Makefile
+ifneq (,$(wildcard .env))
+	include .env
+	export
+endif
 
 
 ########################################
 # File-Based Databases
 ########################################
 
-up-sqlite: ## Create/Open SQLite database
-	python3 data/sqlite/scripts/create_sqlite.py
+up-sqlite: ## Initialize SQLite database file
+	python3 data/sqlite/scripts/init.py
 
-down-sqlite: ## No-op (SQLite is file-based)
+cli-sqlite: ## Enter SQLite CLI
+	sqlite3 data/sqlite/db/database.db
+
+down-sqlite: ## No-op (file-based)
 	@echo "SQLite is file-based. Nothing to stop."
 
-up-duckdb-docker: ## DuckDB via Docker CLI
-	docker compose run duckdb
 
-up-duckdb-python: ## DuckDB via Python interactive session
-	python ./data/duckdb/scripts/create_duckdb.py
+up-duckdb: ## Initialize DuckDB database file
+	python3 data/duckdb/scripts/init.py
 
-up-duckdb: ## Start DuckDB (choice between Docker CLI or Python REPL)
-	@echo "Select DuckDB mode:"
-	@echo "1) Docker CLI"
-	@echo "2) Python REPL"
-	@read -p "Enter 1 or 2: " choice; \
-	if [ $$choice -eq 1 ]; then \
-		make up-duckdb-docker; \
-	elif [ $$choice -eq 2 ]; then \
-		make up-duckdb-python; \
-	else \
-		echo "Invalid choice"; \
-	fi
+cli-duckdb-python: ## Enter DuckDB via Python CLI
+	python3 -c "import duckdb, pandas as pd; conn = duckdb.connect('data/duckdb/db/database.duckdb'); import code; code.interact(local=globals())"
 
-down-duckdb:
-	docker rm -f duckdb || true
+cli-duckdb-docker: ## Enter DuckDB via Docker CLI
+	docker run --rm -it -v "$$PWD/data/duckdb/db:/workspace" -w /workspace duckdb/duckdb duckdb database.duckdb
+	
+down-duckdb: ## No-op (file-based unless using Docker manually)
+	@echo "DuckDB (Python mode) has nothing to stop."
 
 
 ########################################
-# Web GUIs
+# SQL Databases
 ########################################
 
-up-pgadmin: ## Start pgAdmin
-	docker compose up -d pgadmin
+up-postgres: ## Start PostgreSQL + pgAdmin
+	docker compose up -d postgres pgadmin
 
-down-pgadmin: ## Stop pgAdmin
-	docker compose stop pgadmin
+cli-postgres: ## Enter PostgreSQL CLI
+	docker compose exec -it postgres psql -U $$POSTGRES_USER -d $$POSTGRES_DB
+	
+down-postgres: ## Stop PostgreSQL + pgAdmin
+	docker compose stop postgres pgadmin
 
-up-phpmyadmin: ## Start phpMyAdmin
-	docker compose up -d phpmyadmin
 
-down-phpmyadmin: ## Stop phpMyAdmin
-	docker compose stop phpmyadmin
+up-mysql: ## Start MySQL + phpMyAdmin
+	docker compose up -d mysql phpmyadmin
 
-up-mongo-express: ## Start Mongo Express
-	docker compose up -d mongo-express
+cli-mysql: ## Enter MySQL CLI
+	docker compose exec -it mysql mysql -u root -p$$MYSQL_ROOT_PASSWORD
 
-down-mongo-express: ## Stop Mongo Express
-	docker compose stop mongo-express
+down-mysql: ## Stop MySQL + phpMyAdmin
+	docker compose stop mysql phpmyadmin
 
-up-redis-insight: ## Start RedisInsight
-	docker compose up -d redis-insight
 
-down-redis-insight: ## Stop RedisInsight
-	docker compose stop redis-insight
+up-mariadb: ## Start MariaDB + phpMyAdmin
+	docker compose up -d mariadb phpmyadmin
+
+cli-mariadb: ## Enter MariaDB CLI
+	docker compose exec -it mariadb mysql -u root -p$$MARIADB_ROOT_PASSWORD
+
+down-mariadb: ## Stop MariaDB + phpMyAdmin
+	docker compose stop mariadb phpmyadmin
+
+
+########################################
+# NoSQL Databases
+########################################
+
+up-mongo: ## Start MongoDB + Mongo Express
+	docker compose up -d mongo mongo-express
+
+cli-mongo: ## Enter Mongo shell
+	docker compose exec -it mongo mongosh -u $$MONGO_INITDB_ROOT_USERNAME -p $$MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin
+
+down-mongo: ## Stop MongoDB + Mongo Express
+	docker compose stop mongo mongo-express
+
+
+up-redis: ## Start Redis + RedisInsight
+	docker compose up -d redis redis-insight
+
+cli-redis: ## Enter Redis CLI
+	docker compose exec -it redis redis-cli -a $$REDIS_PASSWORD
+
+down-redis: ## Stop Redis + RedisInsight
+	docker compose stop redis redis-insight
+
+
+up-cassandra: ## Start Cassandra
+	docker compose up -d cassandra
+
+cli-cassandra: ## Enter Cassandra CQL shell
+	docker compose exec -it cassandra cqlsh
+
+down-cassandra: ## Stop Cassandra
+	docker compose stop cassandra
+
+
+up-elasticsearch: ## Start Elasticsearch
+	docker compose up -d elasticsearch
+	
+cli-elasticsearch: ## Connect to Elasticsearch console
+	curl -u elastic:$$ELASTIC_PASSWORD http://localhost:$$ELASTIC_PORT
+
+down-elasticsearch: ## Stop Elasticsearch
+	docker compose stop elasticsearch
+
+
+up-clickhouse: ## Start ClickHouse
+	docker compose up -d clickhouse
+
+cli-clickhouse: ## Enter ClickHouse client
+	docker compose exec -it clickhouse clickhouse-client --user $$CLICKHOUSE_USER --password $$CLICKHOUSE_PASSWORD
+
+down-clickhouse: ## Stop ClickHouse
+	docker compose stop clickhouse
+
+
+up-couchbase: ## Start Couchbase
+	docker compose up -d couchbase
+
+cli-couchbase: ## Connect to Couchbase CLI
+	docker compose exec -it couchbase /bin/bash
+
+down-couchbase: ## Stop Couchbase
+	docker compose stop couchbase
 
 
 ########################################
 # Grouped Commands
 ########################################
 
-up-sql: ## Start all SQL databases
-	docker compose up -d postgres mysql mariadb
+up-file: ## Start all file-based databases (SQLite + DuckDB)
+	make up-sqlite
+	make up-duckdb
 
-down-sql: ## Stop all SQL databases
-	docker compose stop postgres mysql mariadb
+down-file: ## Stop all file-based databases (SQLite + DuckDB)
+	make down-sqlite
+	make down-duckdb
 
-up-nosql: ## Start all NoSQL databases
-	docker compose up -d mongo redis cassandra elasticsearch clickhouse couchbase
+
+up-sql: ## Start all SQL databases (+ GUIs)
+	docker compose up -d postgres pgadmin mysql mariadb phpmyadmin
+
+down-sql: ## Stop all SQL databases (+ GUIs)
+	docker compose stop postgres pgadmin mysql mariadb phpmyadmin
+
+
+up-nosql: ## Start all NoSQL databases (+ GUIs where available)
+	docker compose up -d mongo mongo-express redis redis-insight cassandra elasticsearch clickhouse couchbase
 
 down-nosql: ## Stop all NoSQL databases
-	docker compose stop mongo redis cassandra elasticsearch clickhouse couchbase
+	docker compose stop mongo mongo-express redis redis-insight cassandra elasticsearch clickhouse couchbase
 
+
+up-all: ## Start all databases (File-based + SQL + NoSQL)
+	make up-file
+	make up-sql
+	make up-nosql
+	
+down-all: ## Stop all databases (File-based + SQL + NoSQL)
+	make down-file
+	make down-sql
+	make down-nosql
+
+########################################
+# Reset Commands
+########################################
+
+reset-sqlite: ## Delete SQLite database file
+	@echo "Removing SQLite database..."
+	@rm -f data/sqlite/db/database.db || true
+
+reset-duckdb: ## Delete DuckDB database file
+	@echo "Removing DuckDB database..."
+	@rm -f data/duckdb/db/database.duckdb || true
+
+
+reset-postgres: ## Remove PostgreSQL + pgAdmin containers and volumes
+	docker compose down -v --remove-orphans postgres pgadmin
+
+reset-mysql: ## Remove MySQL + phpMyAdmin containers and volumes
+	docker compose down -v --remove-orphans mysql phpmyadmin
+
+reset-mariadb: ## Remove MariaDB + phpMyAdmin containers and volumes
+	docker compose down -v --remove-orphans mariadb phpmyadmin
+
+
+reset-mongo: ## Remove Mongo + Mongo Express containers and volumes
+	docker compose down -v --remove-orphans mongo mongo-express
+
+reset-redis: ## Remove Redis + RedisInsight containers and volumes
+	docker compose down -v --remove-orphans redis redis-insight
+
+reset-cassandra: ## Remove Cassandra containers and volumes
+	docker compose down -v --remove-orphans cassandra
+
+reset-elasticsearch: ## Remove Elasticsearch containers and volumes
+	docker compose down -v --remove-orphans elasticsearch
+
+reset-clickhouse: ## Remove ClickHouse containers and volumes
+	docker compose down -v --remove-orphans clickhouse
+
+reset-couchbase: ## Remove Couchbase containers and volumes
+	docker compose down -v --remove-orphans couchbase
+
+
+reset-file: ## Reset all file-based databases (SQLite + DuckDB)
+	make reset-sqlite
+	make reset-duckdb
+
+reset-sql: ## Reset all SQL databases (containers + volumes)
+	make reset-postgres
+	make reset-mysql
+	make reset-mariadb
+
+reset-nosql: ## Reset all NoSQL databases (containers + volumes)
+	make reset-mongo
+	make reset-redis
+	make reset-cassandra
+	make reset-elasticsearch
+	make reset-clickhouse
+	make reset-couchbase
+
+reset-all: ## Reset all databases (SQL + NoSQL + file-based)
+	make reset-file
+	make reset-sql
+	make reset-nosql
 
 ########################################
 # Help

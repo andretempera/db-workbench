@@ -4,8 +4,7 @@
 /data/**/*
 !/data/**/       
 !/data/**/.gitkeep
-!/data/duckdb/scripts/create_duckdb.py
-!/data/sqlite/scripts/create_sqlite.py
+!/data/**/scripts/init.*
 
 
 

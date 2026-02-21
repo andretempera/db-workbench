@@ -1,3 +1,4 @@
 duckdb
-pyyaml      # if your Python script generates docker-compose files
-docker      # if you want to use Docker SDK in Python
+pyyaml
+docker
+pandas

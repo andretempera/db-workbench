@@ -1,13 +1,18 @@
 services:
+  # -------------------------
+  # SQL Databases
+  # -------------------------
   postgres:
-    image: postgres:16
+    image: postgres:18
     container_name: postgres
     environment:
+      POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
-      - ./local-databases/data/postgres/db:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
 
   mysql:
     image: mysql:8
@@ -17,7 +22,7 @@ services:
     ports:
       - "${MYSQL_PORT}:3306"
     volumes:
-      - ./local-databases/data/mysql/db:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
 
   mariadb:
     image: mariadb:11
@@ -27,8 +32,11 @@ services:
     ports:
       - "${MARIADB_PORT}:3306"
     volumes:
-      - ./local-databases/data/mariadb/db:/var/lib/mysql
+      - mariadb_data:/var/lib/mysql
 
+  # -------------------------
+  # NoSQL Databases
+  # -------------------------
   mongo:
     image: mongo:7
     container_name: mongo
@@ -38,7 +46,7 @@ services:
     ports:
       - "${MONGO_PORT}:27017"
     volumes:
-      - ./local-databases/data/mongo/db:/data/db
+      - mongo_data:/data/db
 
   redis:
     image: redis:8
@@ -47,7 +55,7 @@ services:
     ports:
       - "${REDIS_PORT}:6379"
     volumes:
-      - ./local-databases/data/redis/db:/data
+      - redis_data:/data
 
   cassandra:
     image: cassandra:4
@@ -57,10 +65,10 @@ services:
     ports:
       - "${CASSANDRA_PORT}:9042"
     volumes:
-      - ./local-databases/data/cassandra/db:/var/lib/cassandra
+      - cassandra_data:/var/lib/cassandra
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:8
     container_name: elasticsearch
     environment:
       - "ELASTIC_PASSWORD=${ELASTIC_PASSWORD}"
@@ -68,10 +76,10 @@ services:
     ports:
       - "${ELASTIC_PORT}:9200"
     volumes:
-      - ./local-databases/data/elasticsearch/db:/usr/share/elasticsearch/data
+      - elasticsearch_data:/usr/share/elasticsearch/data
 
   clickhouse:
-    image: yandex/clickhouse-server:23.8
+    image: clickhouse/clickhouse-server:23
     container_name: clickhouse
     environment:
       CLICKHOUSE_USER: ${CLICKHOUSE_USER}
@@ -79,10 +87,10 @@ services:
     ports:
       - "${CLICKHOUSE_PORT}:8123"
     volumes:
-      - ./local-databases/data/clickhouse/db:/var/lib/clickhouse
+      - clickhouse_data:/var/lib/clickhouse
 
   couchbase:
-    image: couchbase:7.2
+    image: couchbase:7
     container_name: couchbase
     environment:
       COUCHBASE_ADMIN_USERNAME: ${COUCHBASE_ADMIN_USERNAME}
@@ -90,8 +98,48 @@ services:
     ports:
       - "${COUCHBASE_PORT}:8091"
     volumes:
-      - ./local-databases/data/couchbase/db:/opt/couchbase/var
+      - couchbase_data:/opt/couchbase/var
 
+  # -------------------------
+  # Web GUIs
+  # -------------------------
+  pgadmin:
+    image: dpage/pgadmin4:9
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "${PGADMIN_PORT}:80"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "${PHPMYADMIN_PORT}:80"
+
+  mongo-express:
+    image: mongo-express:1
+    container_name: mongo-express
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      ME_CONFIG_MONGODB_SERVER: mongo
+    ports:
+      - "${MONGOEXPRESS_PORT}:8081"
+
+  redis-insight:
+    image: redislabs/redisinsight:2
+    container_name: redis-insight
+    ports:
+      - "${REDISINSIGHT_PORT}:8001"
+
+  # -------------------------
+  # File-based
+  # -------------------------
   duckdb:
     image: duckdb/duckdb:latest
     container_name: duckdb
@@ -101,3 +149,15 @@ services:
     tty: true
     stdin_open: true
     command: ["database.duckdb"]
+
+
+volumes:
+  postgres_data:
+  mysql_data:
+  mariadb_data:
+  mongo_data:
+  redis_data:
+  cassandra_data:
+  elasticsearch_data:
+  clickhouse_data:
+  couchbase_data:
