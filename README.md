@@ -10,7 +10,6 @@ You don’t need to know Docker or database CLI syntax to get started - just use
 > It is **not** a production-ready infrastructure setup.
 
 ## Quick Start
-
 ```bash
 git clone https://github.com/andretempera/local-databases.git
 cd local-databases
@@ -29,10 +28,55 @@ make up-postgres
 Then connect via:
 - `make cli-postgres`
 - pgAdmin at http://localhost:5050 (default)
-- DBeaver
-- Or any database client
+- DBeaver (Or any database client)
 
 Test any other database using the `make` commands.
+
+## Makefile Help Commands
+
+For a quick reference of available commands, you can use the following:
+
+### All Commands
+```bash
+make help
+```
+
+### Grouped Commands
+```bash
+make help-file      # Shows commands for all file-based databases (SQLite, DuckDB)
+make help-sql       # Shows commands for all SQL databases
+make help-nosql     # Shows commands for all NoSQL databases
+```
+
+### Individual Database Commands
+```bash
+make help-sqlite
+make help-duckdb
+make help-postgres
+make help-mysql
+make help-mariadb
+make help-mongo
+make help-redis
+make help-cassandra
+make help-elasticsearch
+make help-clickhouse
+make help-couchbase
+```
+
+> These individual help commands provide a focused list of `up-`, `cli-`, `down-`, and `reset-` commands for that database.
+
+## Init Scripts
+
+Most databases include **initialization scripts** to help you verify that the database is working properly. These scripts are **optional**, but they provide a minimal test table with one queryable row so you can confirm everything is functioning.
+
+### Location
+When available, init scripts are always located in `data/<database_name>/scripts/` folder. They can have several different extensions (`.py`, `.sql`, `.js`, etc.) depending on the database.
+
+### Purpose
+- The script automatically creates a small test table (`test`) if it does not exist.
+- It inserts a single row with known values, but **without duplicating** it on multiple runs.
+- It provides a minimal setup for testing queries and GUI connections via `SELECT * FROM test;`.
+
 
 ## Requirements
 
@@ -47,23 +91,23 @@ Test any other database using the `make` commands.
 
 `local-databases` is built around a simple idea: make spinning up and experimenting with databases frictionless. The project intentionally avoids over-engineering and complex orchestration in favor of transparent Docker configurations and predictable local file structures.
 
-`local-databases` is designed to provide quick, functional access to multiple databases. It is not intended to teach Docker usage or the specifics of database CLI commands. Most of the setup and long commands are abstracted via the Makefile to let you focus on experimenting, learning, and testing databases rather than infrastructure details.
+It is designed to provide quick, functional access to multiple databases. It is **not** intended to teach Docker usage or advanced CLI commands. Most of the setup and long commands are abstracted via the Makefile to let you focus on experimenting, learning, and testing databases rather than infrastructure details.
 
-It is not meant to replicate production environments or provide hardened infrastructure. Instead, it serves as a practical sandbox for exploring SQL and NoSQL systems, testing schema designs, learning engine-specific behavior, and comparing tooling across ecosystems.
-
-Simplicity and reproducibility take precedence over feature completeness.  
-If a database can be launched, inspected, modified, and discarded easily, it fits the spirit of this project.
 
 ## Features
 
 ### Data Persistence Model
 
 - Containerized databases use Docker named volumes
-- File-based databases store files inside data/
+- File-based databases store files inside `data/db/`
 - Backups should be created using dump/export tools
 - Raw container engine files are not exposed intentionally
 
 ### Supported Databases
+
+**File-Based**
+- SQLite  
+- DuckDB  
 
 **SQL**
 - PostgreSQL  
@@ -78,19 +122,13 @@ If a database can be launched, inspected, modified, and discarded easily, it fit
 - ClickHouse  
 - Couchbase  
 
-**File-Based**
-- SQLite  
-- DuckDB  
-
 ### Web GUIs
-
 - PostgreSQL → pgAdmin  
 - MySQL / MariaDB → phpMyAdmin  
 - MongoDB → Mongo Express  
 - Redis → RedisInsight  
 
 ### Project Highlights
-
 - Persistent local storage via Docker volumes
 - Organized per-database folder structure
 - One-command startup/shutdown via Makefile
@@ -98,8 +136,8 @@ If a database can be launched, inspected, modified, and discarded easily, it fit
 - File-based databases integrated into the same workflow
 - Clean `.gitignore` preserving structure but ignoring DB files
 
-## Project Structure
 
+## Project Structure
 ```text
 local-databases/
 ├── Makefile
@@ -114,11 +152,11 @@ local-databases/
 │   └── SETUP.md
 └── data/
     ├── postgres/
-    │   ├── scripts/
+    │   ├── scripts/   # init file location
     │   ├── schemas/
     │   ├── backups/
     │   └── logs/
-    ├── mysql/
+    ├── mysql/         # similar structure across remaining databases
     ├── mariadb/
     ├── mongo/
     ├── redis/
@@ -127,19 +165,22 @@ local-databases/
     ├── clickhouse/
     ├── couchbase/
     ├── sqlite/
-    │   ├── db/               # database.db
-    │   └── scripts/
+    │   ├── db/
+    │   │    └── database.db
+    │   └── scripts
+    │        └── init.py
     └── duckdb/
-        ├── db/               # database.duckdb
-        └── scripts/
+        ├── db/
+        │    └── database.duckdb
+        └── scripts
+             └── init.py
 ```
 
-Each database has:
-
-- `scripts/` → initialization or test scripts
-- `schemas/` → schema definitions
-- `backups/` → backups
-- `logs/` → experimentation logs
+> Each database may include:
+> - `scripts/` → initialization or test scripts
+> - `schemas/` → schema definitions
+> - `backups/` → backups
+> - `logs/` → experimentation logs
 
 For containerized databases, actual engine data is stored in Docker-managed volumes.
 
@@ -181,7 +222,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## 🛠 Makefile Usage
+## Makefile Usage
 
 ### Individual Databases
 
@@ -233,7 +274,7 @@ Running multiple heavy databases simultaneously may impact performance.
 
 ## Connecting to Databases
 
-### Using DBeaver
+### Using DBeaver (or similar DB clients)
 
 - Host: `localhost`
 - Port: defined in `.env`
@@ -246,19 +287,20 @@ Running multiple heavy databases simultaneously may impact performance.
 - MongoDB → `http://localhost:<MONGOEXPRESS_PORT>`
 - Redis → `http://localhost:<REDISINSIGHT_PORT>`
 
-## File-Based Databases
+### Using CLI (Examples)
 
-- SQLite → `data/sqlite/db/database.db`
-- DuckDB → `data/duckdb/db/database.duckdb`
-
-SQLite is created automatically via `make up-sqlite`.
-
-DuckDB can be created using:
 ```bash
-make up-duckdb        # start DuckDB (Docker CLI session or Python script)
-make duckdb-python    # open DuckDB via Python API
-make duckdb-docker    # open DuckDB via Docker CLI
+make cli-sqlite
+make cli-duckdb-python
+make cli-duckdb-docker
+
+make cli-postgres
+make cli-mysql
+
+make cli-mongo
+make cli-cassandra
 ```
+
 
 ## Resetting Databases
 
@@ -315,7 +357,7 @@ As the project evolves, the following may be added (roughly ordered by feasibili
 - [ ] IBM Db2 Community Edition  
 - [ ] Oracle Database XE  
 
-## 📜 License
+## License
 
 MIT License
 

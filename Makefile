@@ -234,13 +234,118 @@ reset-all: ## Reset all databases (SQL + NoSQL + file-based)
 	make reset-nosql
 
 ########################################
-# Help
+# Help Commands
 ########################################
 
-.PHONY: help
-help: ## Show this help message
+.PHONY: help help-file help-sql help-nosql \
+        help-sqlite help-duckdb \
+        help-postgres help-mysql help-mariadb \
+        help-mongo help-redis help-cassandra help-elasticsearch help-clickhouse help-couchbase
+
+# Generic full help
+help: ## Show all commands
 	@echo ""
 	@echo "local-databases            Available Commands"
 	@echo "-------------------------  --------------------------------"
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_-]+:.*##/ { printf "  %-25s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+	@echo ""
+
+# Grouped help commands
+help-file: ## Show file-based database commands
+	@echo ""
+	@echo "File-based Databases Commands"
+	@echo "-----------------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-(sqlite|duckdb):.*##/ {printf "  %-25s %s\n", $$1, $$2} /^cli-(sqlite|duckdb):.*##/ {printf "  %-25s %s\n", $$1, $$2} /^down-(sqlite|duckdb):.*##/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
+help-sql: ## Show SQL database commands
+	@echo ""
+	@echo "SQL Databases Commands"
+	@echo "---------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-(postgres|mysql|mariadb):.*##/ {printf "  %-25s %s\n", $$1, $$2} /^cli-(postgres|mysql|mariadb):.*##/ {printf "  %-25s %s\n", $$1, $$2} /^down-(postgres|mysql|mariadb):.*##/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
+help-nosql: ## Show NoSQL database commands
+	@echo ""
+	@echo "NoSQL Databases Commands"
+	@echo "------------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-(mongo|redis|cassandra|elasticsearch|clickhouse|couchbase):.*##/ {printf "  %-25s %s\n", $$1, $$2} /^cli-(mongo|redis|cassandra|elasticsearch|clickhouse|couchbase):.*##/ {printf "  %-25s %s\n", $$1, $$2} /^down-(mongo|redis|cassandra|elasticsearch|clickhouse|couchbase):.*##/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
+# Individual database help commands
+help-sqlite: ## Show SQLite commands
+	@echo ""
+	@echo "SQLite Commands"
+	@echo "-------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-sqlite:|^cli-sqlite:|^down-sqlite:|^reset-sqlite:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
+help-duckdb: ## Show DuckDB commands
+	@echo ""
+	@echo "DuckDB Commands"
+	@echo "-------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-duckdb:|^cli-duckdb-python:|^cli-duckdb-docker:|^down-duckdb:|^reset-duckdb:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
+help-postgres: ## Show PostgreSQL commands
+	@echo ""
+	@echo "PostgreSQL Commands"
+	@echo "-------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-postgres:|^cli-postgres:|^down-postgres:|^reset-postgres:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
+help-mysql: ## Show MySQL commands
+	@echo ""
+	@echo "MySQL Commands"
+	@echo "-------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-mysql:|^cli-mysql:|^down-mysql:|^reset-mysql:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
+help-mariadb: ## Show MariaDB commands
+	@echo ""
+	@echo "MariaDB Commands"
+	@echo "-------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-mariadb:|^cli-mariadb:|^down-mariadb:|^reset-mariadb:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
+help-mongo: ## Show MongoDB commands
+	@echo ""
+	@echo "MongoDB Commands"
+	@echo "-------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-mongo:|^cli-mongo:|^down-mongo:|^reset-mongo:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
+help-redis: ## Show Redis commands
+	@echo ""
+	@echo "Redis Commands"
+	@echo "-------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-redis:|^cli-redis:|^down-redis:|^reset-redis:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
+help-cassandra: ## Show Cassandra commands
+	@echo ""
+	@echo "Cassandra Commands"
+	@echo "-------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-cassandra:|^cli-cassandra:|^down-cassandra:|^reset-cassandra:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
+help-elasticsearch: ## Show Elasticsearch commands
+	@echo ""
+	@echo "Elasticsearch Commands"
+	@echo "-------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-elasticsearch:|^cli-elasticsearch:|^down-elasticsearch:|^reset-elasticsearch:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
+help-clickhouse: ## Show ClickHouse commands
+	@echo ""
+	@echo "ClickHouse Commands"
+	@echo "-------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-clickhouse:|^cli-clickhouse:|^down-clickhouse:|^reset-clickhouse:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
+help-couchbase: ## Show Couchbase commands
+	@echo ""
+	@echo "Couchbase Commands"
+	@echo "-------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-couchbase:|^cli-couchbase:|^down-couchbase:|^reset-couchbase:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
