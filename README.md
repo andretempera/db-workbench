@@ -197,6 +197,11 @@ pip install -r requirements.txt
 - Host: `localhost`
 - Ports, usernames & passwords: defined in `.env`
 
+DuckDB can connect directly to DBeaver by pointing it to the location of the `database.duckdb` in this project.  
+For SQLite, it is not possible to access the same database file simultaneously from Windows and WSL. Use either:
+- DBeaver inside WSL (recommended for scripts running in WSL), or
+- Move, copy or create a new database file to a Windows path and access it from Windows only.
+
 **Using Web GUIs**
 - PostgreSQL → `http://localhost:<PGADMIN_PORT>`
 - MySQL/MariaDB → `http://localhost:<PHPMYADMIN_PORT>`

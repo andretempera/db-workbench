@@ -223,15 +223,42 @@ Login:
 Administrator / rootpass
 ```
 
-## Connecting via DBeaver (or Other Clients)
+## Working with Local Databases in the Project
+### 1. File-Based Databases (SQLite & DuckDB)
+These databases live as files (`database.db` for SQLite, `database.duckdb` for DuckDB).  
+Initialization & CLI: Use Makefile commands (e.g., `make up-sqlite`, `make cli-sqlite`).
 
-For containerized databases:
-- Host: `localhost`
-- Port, username & password: defined in `.env`
+DBeaver can connect to DuckDB by creating a new connection and pointing to the `database.duckdb` file.  
+SQLite uses file-level locking. If the database file is accessed from WSL, it cannot safely be opened simultaneously from Windows. It is only possible to connect DBeaver to SQLite when both DBeaver and the `database.db` file are running on the same system:
+- If project's `database.db` is on WSL then DBeaver needs to also run in WSL
+```bash
+sudo snap install dbeaver-ce
+dbeaver-ce
+```
+- If DBeaver is installed on Windows, then the `database.db` file needs to be on Windows
 
-For file-based databases:
-- SQLite → `data/sqlite/db/database.db`
-- DuckDB → `data/duckdb/db/database.duckdb`
+
+### 2. SQL Databases (Postgres, MySQL, MariaDB)
+Initialization & CLI: Use Makefile commands (e.g., `make up-postgres`, `make cli-postgres`).  
+
+DBeaver can connect using the corresponding `.env` variables (e.g., `POSTGRES_*`, `MYSQL_*`, `MARIADB_*`).
+
+All SQL databases are server-based, so concurrent access is safe.
+
+### 3. NoSQL Databases (MongoDB, Redis, Cassandra, Elasticsearch, ClickHouse, Couchbase)
+
+Initialization & CLI: Use Makefile commands (e.g., `make up-mongo`, `make cli-mongo`).
+
+Connect via DBeaver or the respective GUI if supported (MongoDB, Redis).
+
+### 4. General Recommendations
+
+**File-Based DBs:** For SQLite, use the included CLI only (recommended). For DuckDB, use either the CLI (Python/Docker) or DBeaver.
+
+**Server-Based DBs (SQL / NoSQL):** Safe to access from DBeaver, Python scripts, and Docker simultaneously.
+
+**Documentation Tip:** Always include `.env` credentials and ports to make client connections straightforward.
+
 
 ## Makefile Help
 The Makefile is self-documenting.  
