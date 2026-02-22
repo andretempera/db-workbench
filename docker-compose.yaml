@@ -59,6 +59,7 @@ services:
       - "${REDIS_PORT}:6379"
     volumes:
       - redis_data:/data
+      - ./data/redis/scripts/init.redis:/data/init.redis
 
   cassandra:
     image: cassandra:4

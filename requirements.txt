@@ -2,3 +2,5 @@ duckdb
 pyyaml
 docker
 pandas
+couchbase==3.4.1
+requests

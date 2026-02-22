@@ -116,7 +116,7 @@ up-clickhouse: ## Start ClickHouse
 	docker compose up -d clickhouse
 
 cli-clickhouse: ## Enter ClickHouse client
-	docker compose exec -it clickhouse clickhouse-client --user $$CLICKHOUSE_USER --password $$CLICKHOUSE_PASSWORD
+	docker compose exec -it clickhouse clickhouse-client --user $$CLICKHOUSE_USER --password $$CLICKHOUSE_PASSWORD  --database=default
 
 down-clickhouse: ## Stop ClickHouse
 	docker compose stop clickhouse
