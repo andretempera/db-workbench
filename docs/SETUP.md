@@ -1,318 +1,269 @@
 # Setup
 
-This guide walks you through setting up the **local-databases** project, installing required software, using CLI commands, running init scripts, and connecting to all included databases via Web GUIs and DBeaver.
+This guide walks you through installing requirements, starting databases, verifying initialization, and connecting to the engines included in **db-workbench**.
 
-> All referenced usernames, passwords, and ports below are **defaults from `.env.example`**.  
-> If you change anything in `.env`, update accordingly.
+> All usernames, passwords, and ports referenced below use the defaults from `.env.example`.  
+> If you modify `.env`, adjust values accordingly.
 
 
 ## Requirements
-
 ### Docker
-Docker is required to run all containerized databases.
+Required for all containerized databases.  
+Install:
+- Windows / macOS → Docker Desktop
+- Linux → Docker Engine + Compose plugin via your package manager
 
-**Installation:**
-
-- Windows / macOS: Docker Desktop  
-- Linux: Install Docker Engine + Compose plugin via your distro’s package manager
-
-**Verify installation:**
-
-`docker --version`
-
-`docker compose version`
-
+Verify:
+```bash
+docker --version
+docker compose version
+```
 
 ### Python 3.10+
-Python is required for:
+Required for:
 - File-based databases (SQLite, DuckDB)
 - Initialization scripts
 
-**Install:**
-- Windows / macOS: python.org downloads
-- Linux: apt install python3 python3-venv (or equivalent)
+Install:
+- Windows / macOS → python.org
+- Linux → `apt install python3 python3-venv` (or equivalent)
 
-**Verify installation:**
-
-`python3 --version`
-
-`pip3 --version`
-
+Verify:
+```bash
+python3 --version
+pip3 --version
+```
 
 ### Git
-Required to clone the repository.
-
-**Verify installation:**
-
-`git --version`
-
+Required to clone the repository.  
+Verify:
+```bash
+git --version
+```
 
 ### Make
-Used to run all database commands via the Makefile.
+Used to run all project commands via the Makefile.  
+Verify:
+```bash
+make --version
+```
 
-**Verify installation:**
-
-`make --version`
-
-**Install:**
-- Windows: via Chocolatey or WSL
-- macOS: brew install make
-- Linux: apt install make (or equivalent)
-
+Install:
+- Windows → Chocolatey or WSL
+- macOS → `brew install make`
+- Linux → `apt install make` (or equivalent)
 
 ### Optional: DBeaver
-Universal database GUI client.
-
-**Download:**
-
-https://dbeaver.io/download/
-
+Universal database GUI client.  
+Download: https://dbeaver.io/download/  
 Community Edition is sufficient.
 
 
-## Setup Steps
-1. Clone Repository
+## Installation
+### 1. Clone Repository
 ```bash
-git clone https://github.com/andretempera/local-databases.git
-cd local-databases
+git clone https://github.com/andretempera/db-workbench.git
+cd db-workbench
 ```
 
-
-2. Create .env file
+### 2. Create `.env`
 ```bash
 cp .env.example .env
 ```
+Defaults are safe for local experimentation.    
+You may customize ports, usernames, and passwords if needed.
 
-Defaults are safe for local experimentation.
 
-
-3. Create Python Virtual Environment (Required for SQLite & DuckDB)
+### 3. Create Python Virtual Environment
+Required for SQLite and DuckDB support.
 ```bash
 python3 -m venv .venv
 ```
-
-&nbsp; &nbsp; &nbsp; macOS/Linux:
+macOS / Linux:
 ```bash
 source .venv/bin/activate
 ```
-
-&nbsp; &nbsp; &nbsp; Windows:
+Windows:
 ```bash
 .venv\Scripts\activate
-
+```
+Then install dependencies:
+```bash
 pip install -r requirements.txt
 ```
 
-
-## Makefile Help Commands
-The Makefile includes built-in help commands.
-
-Show everything:
-```bash
-make help
-```
-
-Show grouped commands:
-```bash
-make help-file
-make help-sql
-make help-nosql
-```
-
-Show individual database commands:
-```bash
-make help-sqlite
-make help-duckdb
-make help-postgres
-make help-mysql
-make help-mariadb
-make help-mongo
-make help-redis
-make help-cassandra
-make help-elasticsearch
-make help-clickhouse
-make help-couchbase
-```
-
-Each individual help command shows:
-- up-<database_name>
-- cli-<database_name>
-- down-<database_name>
-- reset-<database_name>
-
-
 ## Starting Databases
-Individual examples:
+Start an individual database:
 ```bash
 make up-postgres
 make up-mongo
 make up-sqlite
 make up-duckdb
 ```
-
-Grouped examples:
+Start all databases by type:
 ```bash
 make up-sql
 make up-nosql
 make up-file
 make up-all
 ```
-
-Stopping:
+Stop databases:
 ```bash
 make down-postgres
-make down-mongo
 make down-sql
-make down-nosql
 make down-all
 ```
-
-Resetting (DANGEROUS):
+Reset databases:
 ```bash
 make reset-postgres
-make reset-mongo
-make reset-sql
 make reset-nosql
-make reset-file
 make reset-all
 ```
-
-**WARNING:** Reset commands permanently delete containers, volumes, and/or database files.
-
-
-## CLI Usage
-You can access database shells directly. Here are a few examples:
-
-PostgreSQL: &nbsp; `make cli-postgres`
-
-MySQL: &nbsp; `make cli-mysql`
-
-MongoDB: &nbsp; `make cli-mongo`
-
-Redis: &nbsp; `make cli-redis`
-
-SQLite: &nbsp; `make cli-sqlite`
-
-DuckDB (Python CLI): &nbsp; `make cli-duckdb-python`
-
-DuckDB (Docker CLI): &nbsp; `make cli-duckdb-docker`
+**Warning:** This is a destructive operation. Reset commands permanently delete containers, volumes, and/or database files.
 
 
-## Init Scripts (Quick Test Tables)
-Most databases include simple initialization scripts that:
-- Create a simple table named "test"
-- Insert a single row
-- Avoid duplicate inserts on repeated runs
+## Initialization Scripts (What to Expect)
+Most databases include a minimal initialization script that runs on first startup of the container or database file.    
+It will:
+- Create a table named `test` (if it does not exist)
+- Insert a single row:
+  - `id = 1`
+  - `name = 'Andre'`
+  - `project = 'db-workbench'`
+- Avoid duplicate inserts across repeated runs
 
-These are meant to verify the database is working properly.
+This allows you to immediately verify the database is functioning correctly.
 
-**Table Structure and Content:**
-
-id       |   name   |   project
----------|----------|--------------------
-INTEGER  |   TEXT   | TEXT 
-1        |   Andre  | local-databases
-
-## Test Examples
-
-SQLite:
-```bash
-make cli-sqlite
-SELECT * FROM test;
-```
-Expected output:
-
-1|Andre|local-databases
-
-DuckDB (Python CLI):
-```bash
-make cli-duckdb-python
-conn.execute("SELECT * FROM test").fetchall()
-```
-Expected output:
-
-[(1, 'Andre', 'local-databases')]
-
-PostgreSQL:
+Example (SQL engines):
 ```bash
 make cli-postgres
 SELECT * FROM test;
 ```
 
 Expected output:
-```text
- id | name  |     project     
-----+-------+-----------------
-  1 | Andre | local-databases
+```
+ id | name  |     project
+----+-------+---------------
+  1 | Andre | db-workbench
 (1 row)
 ```
 
-If the row exists, your database is working correctly.
+Example (DuckDB Python CLI):
+```bash
+make cli-duckdb-python
+conn.execute("SELECT * FROM test").fetchall()
+```
+Expected output:
+```
+[(1, 'Andre', 'db-workbench')]
+```
+If the row exists, the database is working properly.
 
+
+## CLI Access
+Access database shells directly:
+```bash
+make cli-postgres
+make cli-mysql
+make cli-mongo
+make cli-redis
+make cli-sqlite
+make cli-duckdb-python
+make cli-duckdb-docker
+```
+CLI commands initialize on the default database when possible.
 
 ## Web GUI Connections
-Make sure:
+Ensure:
 - Docker is running
-- Relevant containers are up
+- The relevant database container is started
 
 ### PostgreSQL / pgAdmin
-http://localhost:5050
+`http://localhost:<PGADMIN_PORT>`
 
-admin@admin.com / rootpass
+Default login:
+```
+admin@admin.com
+rootpass
+```
 
-Create server -> Connections:
+Inside pgAdmin:
+Create → Server → Connection:
 - Host: postgres
 - Port: 5432
-- Database: postgres
-- User: postgres
-- Password: rootpass
-
-
-### MySQL / MariaDB / phpMyAdmin
-
-http://localhost:5080
-
-Login: root / rootpass
-
-
-### MongoDB / Mongo Express
-http://localhost:8081
-
-Login: root / rootpass
-
-
-### Redis / RedisInsight
-http://localhost:8001
-
-Use password from .env
-
-
-### Couchbase
-http://localhost:8091
-
-Administrator / rootpass
-
-
-### DBeaver Connections (Applicable to other DB clients)
-**Example: PostgreSQL**
-- Host: localhost
-- Port: 5432
-- Database: postgres
 - Username: postgres
 - Password: rootpass
 
-Repeat similarly for other databases using ports defined in `.env`.
+### MySQL / MariaDB / phpMyAdmin
+`http://localhost:<PHPMYADMIN_PORT>`
 
-**File-based databases:**
+Login:
+```
+root / rootpass
+```
 
-SQLite: Open `data/sqlite/db/database.db`
+### MongoDB / Mongo Express
+`http://localhost:<MONGOEXPRESS_PORT>`
 
-DuckDB: Open `data/duckdb/db/database.duckdb`
+Login:
+```
+root / rootpass
+```
 
+### Redis / RedisInsight
+`http://localhost:<REDISINSIGHT_PORT>`
+
+Use password defined in `.env`.
+
+### Couchbase
+`http://localhost:<COUCHBASE_PORT>`
+
+Login:
+```
+Administrator / rootpass
+```
+
+## Connecting via DBeaver (or Other Clients)
+
+For containerized databases:
+- Host: `localhost`
+- Port, username & password: defined in `.env`
+
+For file-based databases:
+- SQLite → `data/sqlite/db/database.db`
+- DuckDB → `data/duckdb/db/database.duckdb`
+
+## Makefile Help
+The Makefile is self-documenting.  
+Show all commands:
+```bash
+make help
+```
+Show grouped commands:
+```bash
+make help-file
+make help-sql
+make help-nosql
+```
+Show commands for a specific database:
+```bash
+make help-<database_name>
+```
 
 ## Troubleshooting
 If something does not work:
 - Ensure Docker is running
-- Check container logs with `docker compose logs <service_name>`
-- Ensure correct port in `.env`
-- Run `make help-<database_name>` to confirm available commands
+- Ensure required ports in `.env` are not already in use
+- Check container logs:
+```bash
+docker compose logs <service_name>
+```
+- Confirm available commands:
+```bash
+make help-<database_name>
+```
+
+If a container fails to start, it is usually due to:
+- Port conflicts
+- Insufficient RAM (Cassandra, Elasticsearch, Couchbase are heavier)
+- Docker not running

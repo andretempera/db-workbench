@@ -1,17 +1,17 @@
 # Contributing
 
-Thank you for your interest in the project and in possibly contributing!
+Thank you for your interest in `db-workbench` and for considering contributing.
 
 At the moment, this is a personal learning project and I am not accepting pull requests.
 
-However, I welcome feedback, ideas, and bug reports via Issues.  
-If you have suggestions or notice something that could be improved, please open an issue.
+Feedback, ideas, and bug reports are very welcome via Issues.  
+If you notice something that could be improved or encounter a problem, please open an issue.
 
-If you do open an issue, please include:
+When reporting an issue, please include:
 - The database involved
 - The command you ran
 - Any relevant logs or error messages
 
-In the future, contributions may be accepted once the project becomes more mature.
+Contributions may be opened in the future as the project matures.
 
 Cheers!

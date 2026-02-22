@@ -32,7 +32,7 @@ def init():
 
     conn.execute("""
         INSERT INTO test (id, name, project)
-        VALUES (1, 'Andre', 'local-databases')
+        VALUES (1, 'Andre', 'db-workbench')
         ON CONFLICT (id) DO NOTHING;
     """)
 

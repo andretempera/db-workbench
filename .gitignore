@@ -5,17 +5,23 @@
 !/data/**/       
 !/data/**/.gitkeep
 !/data/**/scripts/init.*
-
-
+*.db
+*.duckdb
+*.sqlite
+*.sqlite3
 
 # -------------------------
-# Python virtual environment
+# Python virtual environment / cache
 # -------------------------
 venv/
 .venv/
 .env
 __pycache__/
 *.pyc
+*.egg-info/
+*.egg
+dist/
+build/
 
 # -------------------------
 # OS / IDE files
@@ -33,3 +39,5 @@ Thumbs.db
 *.log
 *.pid
 docker-compose.override.yml
+.env.local
+.env.*.local
