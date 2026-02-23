@@ -103,7 +103,12 @@ db-workbench/
 ├── LICENSE
 ├── docs/
 │   ├── CONTRIBUTING.md
-│   └── SETUP.md
+│   ├── SETUP.md
+│   └── cheatsheets/
+│       ├── README.md
+│       ├── file/
+│       ├── sql/
+│       └── nosql/
 └── data/
     ├── postgres/
     ├── mysql/       
@@ -266,7 +271,7 @@ docker compose logs <service_name>
 
 ## Roadmap – Future Database Additions
 The current version focuses on lightweight, Docker-friendly databases suitable for local experimentation.  
-As the project evolves, the following may be added (roughly ordered by feasibility):
+As the project evolves, the following may be added:
 - [ ] Neo4j – Graph database with official Docker image and web UI  
 - [ ] InfluxDB – Time-series database with built-in UI  
 - [ ] CockroachDB – Distributed SQL, easy single-node setup  
@@ -289,4 +294,4 @@ DB Workbench is:
 - Disposable
 - Practical
 
-It is an extensible database laboratory designed for local hands-on experimentation — not orchestration.
+It is an extensible database laboratory designed for local hands-on experimentation - not orchestration.
