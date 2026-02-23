@@ -1,6 +1,6 @@
-CREATE DATABASE IF NOT EXISTS testdb;
+CREATE DATABASE IF NOT EXISTS db_workbench;
 
-CREATE TABLE IF NOT EXISTS testdb.test
+CREATE TABLE IF NOT EXISTS db_workbench.test
 (
     id UInt32,
     name String,
@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS testdb.test
 ) ENGINE = MergeTree()
 ORDER BY id;
 
--- Remove existing row with id = 1 to prevent duplicates
-ALTER TABLE testdb.test DELETE WHERE id = 1;
-
-INSERT INTO testdb.test VALUES (1, 'Andre', 'db-workbench');
+INSERT INTO db_workbench.test
+SELECT 1, 'Andre', 'db-workbench'
+WHERE NOT EXISTS (
+    SELECT 1 FROM db_workbench.test WHERE id = 1
+);

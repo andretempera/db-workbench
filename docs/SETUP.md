@@ -100,6 +100,8 @@ make up-mongo
 make up-sqlite
 make up-duckdb
 ```
+When you run `make up-<database_name>`, initialization scripts are executed automatically. No separate `make init` step is required.
+
 Start all databases by type:
 ```bash
 make up-sql
@@ -121,16 +123,43 @@ make reset-all
 ```
 **Warning:** This is a destructive operation. Reset commands permanently delete containers, volumes, and/or database files.
 
+Special command:
+```bash
+make doctor
+```
+This will check for issues with Docker, `.env`, `.venv` and ports.
+
+### Quick Verification
+After `make up-<database_name>` you can now run:
+```bash
+# SQL example
+SELECT * FROM test;
+
+# MongoDB example
+db.test.find();
+
+# Redis example
+GET db_workbench:test:1;
+
+# Elasticsearch example
+GET /test/_doc/1;
+
+# Couchbase example
+collection.get("test:1")
+```
+
+### Cheatsheets
+If you need help getting started with any database, you can find cheatsheets for all databases in `docs/cheatsheets` containing the most common commands.
+
 
 ## Initialization Scripts (What to Expect)
 Most databases include a minimal initialization script that runs on first startup of the container or database file.    
 It will:
-- Create a table named `test` (if it does not exist)
-- Insert a single row:
-  - `id = 1`
-  - `name = 'Andre'`
-  - `project = 'db-workbench'`
-- Avoid duplicate inserts across repeated runs
+- Default to a workspace called `db_workbench`** (or a similarly named bucket/index for NoSQL engines).
+- Automatically create a table/collection/bucket named `test` (if it does not exist).
+- Insert a single test row: `id = 1`, `name = Andre`, `project = db-workbench`
+- Avoid duplicate inserts across repeated runs.
+- Automatically execute on `make up-<database_name>`.
 
 This allows you to immediately verify the database is functioning correctly.
 
@@ -163,15 +192,15 @@ If the row exists, the database is working properly.
 ## CLI Access
 Access database shells directly:
 ```bash
-make cli-postgres
-make cli-mysql
-make cli-mongo
-make cli-redis
+make cli-postgres       # defaults to db_workbench database
+make cli-mysql          # defaults to db_workbench database
+make cli-mongo          # defaults to db_workbench database/bucket
+make cli-redis          # defaults to db_workbench key prefix
 make cli-sqlite
 make cli-duckdb-python
 make cli-duckdb-docker
 ```
-CLI commands initialize on the default database when possible.
+**Note:** All databases initialize a default workspace called db_workbench (or equivalent for NoSQL engines) with a minimal test row already present.
 
 ## Web GUI Connections
 Ensure:
@@ -181,61 +210,58 @@ Ensure:
 ### PostgreSQL / pgAdmin
 `http://localhost:<PGADMIN_PORT>`
 
-Default login:
-```
-admin@admin.com
-rootpass
-```
+Login: `admin@admin.com / rootpass`
 
 Inside pgAdmin:
 Create → Server → Connection:
-- Host: postgres
-- Port: 5432
-- Username: postgres
-- Password: rootpass
+- Host: `postgres`
+- Port: `5432`
+- Username: `postgres`
+- Password: `rootpass`
 
 ### MySQL / MariaDB / phpMyAdmin
-`http://localhost:<PHPMYADMIN_PORT>`
+`http://localhost:<PHPMYADMIN_MYSQL_PORT>`
+or
+`http://localhost:<PHPMYADMIN_MARIADB_PORT>`
 
-Login:
-```
-root / rootpass
-```
+Login: `root / rootpass`
 
 ### MongoDB / Mongo Express
 `http://localhost:<MONGOEXPRESS_PORT>`
 
-Login:
-```
-root / rootpass
-```
+Login: `root / rootpass`
 
 ### Redis / RedisInsight
 `http://localhost:<REDISINSIGHT_PORT>`
 
 Use password defined in `.env`.
 
-### Couchbase
+### ClickHouse / ClickHouse Web UI
+`http://localhost:<CLICKHOUSE_PORT>`
+
+Login not required.  
+The default workspace `db_workbench` is pre-created with a test row.
+
+### Couchbase / Couchbase Console
 `http://localhost:<COUCHBASE_PORT>`
 
-Login:
-```
-Administrator / rootpass
-```
+Login: `Administrator / rootpass`
+
+Default bucket: `db_workbench`
 
 ## Working with Local Databases in the Project
 ### 1. File-Based Databases (SQLite & DuckDB)
-These databases live as files (`database.db` for SQLite, `database.duckdb` for DuckDB).  
+These databases live as files (`db_workbench.db` for SQLite, `db_workbench.duckdb` for DuckDB).  
 Initialization & CLI: Use Makefile commands (e.g., `make up-sqlite`, `make cli-sqlite`).
 
-DBeaver can connect to DuckDB by creating a new connection and pointing to the `database.duckdb` file.  
-SQLite uses file-level locking. If the database file is accessed from WSL, it cannot safely be opened simultaneously from Windows. It is only possible to connect DBeaver to SQLite when both DBeaver and the `database.db` file are running on the same system:
-- If project's `database.db` is on WSL then DBeaver needs to also run in WSL
+DBeaver can connect to DuckDB by creating a new connection and pointing to the `db_workbench.duckdb` file.  
+SQLite uses file-level locking. If the database file is accessed from WSL, it cannot safely be opened simultaneously from Windows. It is only possible to connect DBeaver to SQLite when both DBeaver and the `db_workbench.db` file are running on the same system:
+- If project's `db_workbench.db` is on WSL then DBeaver needs to also run in WSL
 ```bash
 sudo snap install dbeaver-ce
 dbeaver-ce
 ```
-- If DBeaver is installed on Windows, then the `database.db` file needs to be on Windows
+- If DBeaver is installed on Windows, then the `db_workbench.db` file needs to be on Windows
 
 
 ### 2. SQL Databases (Postgres, MySQL, MariaDB)
@@ -278,14 +304,16 @@ make help-<database_name>
 ```
 
 ## Troubleshooting
-If something does not work:
+You should use the `make doctor` special command for a quick check before running a database. If a warning is triggered:
 - Ensure Docker is running
+- Ensure you have copied `.env.example` to `.env`
+- Ensure you are running from `.venv` and have installed requirements
 - Ensure required ports in `.env` are not already in use
 - Check container logs:
 ```bash
 docker compose logs <service_name>
 ```
-- Confirm available commands:
+- Ensure you are using the correct commands:
 ```bash
 make help-<database_name>
 ```

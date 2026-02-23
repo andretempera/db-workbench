@@ -1,3 +1,2 @@
 # init.redis
-# Single test key with JSON value
-SET test:1 '{"id":1,"name":"Andre","project":"db-workbench"}'
+SET db_workbench:test:1 '{"id":1,"name":"Andre","project":"db-workbench"}'

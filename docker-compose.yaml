@@ -1,5 +1,18 @@
 services:
   # -------------------------
+  # File-based Databases
+  # -------------------------
+  duckdb:
+    image: duckdb/duckdb:latest
+    container_name: duckdb
+    volumes:
+      - ./data/duckdb/db:/workspace
+    working_dir: /workspace
+    tty: true
+    stdin_open: true
+    command: ["database.duckdb"]
+ 
+  # -------------------------
   # SQL Databases
   # -------------------------
   postgres:
@@ -19,10 +32,10 @@ services:
     image: mysql:8
     container_name: mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DB}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DB}
     ports:
       - "${MYSQL_PORT}:3306"
     volumes:
@@ -33,10 +46,10 @@ services:
     image: mariadb:11
     container_name: mariadb
     environment:
-      MARIADB_ROOT_PASSWORD: ${MARIADB_PASSWORD}
-      MARIADB_DATABASE: ${MARIADB_DB}
       MARIADB_USER: ${MARIADB_USER}
       MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DB}
     ports:
       - "${MARIADB_PORT}:3306"
     volumes:
@@ -61,12 +74,13 @@ services:
   redis:
     image: redis:8
     container_name: redis
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
     ports:
       - "${REDIS_PORT}:6379"
     volumes:
       - redis_data:/data
       - ./data/redis/scripts/init.redis:/data/init.redis
+      - ./data/redis/scripts/init.sh:/docker-entrypoint-initdb.d/init.sh
+    command: ["sh", "/docker-entrypoint-initdb.d/init.sh"]
 
   cassandra:
     image: cassandra:4
@@ -77,6 +91,9 @@ services:
       - "${CASSANDRA_PORT}:9042"
     volumes:
       - cassandra_data:/var/lib/cassandra
+      - ./data/cassandra/scripts/init.cql:/data/init.cql
+      - ./data/cassandra/scripts/init.sh:/data/init.sh
+    command: ["sh", "/data/cassandra/scripts/init.sh"]
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8
@@ -89,6 +106,9 @@ services:
       - "${ELASTIC_PORT}:9200"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
+      - ./data/elasticsearch/scripts/init.py:/data/elasticsearch/scripts/init.py
+      - ./data/elasticsearch/scripts/wait-for-es.sh:/data/elasticsearch/scripts/init.sh
+    command: ["sh", "/data/elasticsearch/scripts/init.sh"]
 
   clickhouse:
     image: clickhouse/clickhouse-server:23
@@ -100,6 +120,9 @@ services:
       - "${CLICKHOUSE_PORT}:8123"
     volumes:
       - clickhouse_data:/var/lib/clickhouse
+      - ./data/clickhouse/scripts/init.sql:/data/clickhouse/scripts/init.sql
+      - ./data/clickhouse/scripts/init.sh:/data/clickhouse/scripts/init.sh
+    command: ["sh", "/data/clickhouse/scripts/init.sh"]
 
   couchbase:
     image: couchbase:7
@@ -107,11 +130,13 @@ services:
     environment:
       COUCHBASE_ADMIN_USERNAME: ${COUCHBASE_USER}
       COUCHBASE_ADMIN_PASSWORD: ${COUCHBASE_PASSWORD}
-      COUCHBASE_BUCKET: ${COUCHBASE_BUCKET}
     ports:
       - "${COUCHBASE_PORT}:8091"
     volumes:
       - couchbase_data:/opt/couchbase/var
+      - ./data/couchbase/scripts/init.py:/data/couchbase/scripts/init.py
+      - ./data/couchbase/scripts/init.sh:/data/couchbase/scripts/init.sh
+    command: ["sh", "/data/couchbase/scripts/init.sh"]
 
   # -------------------------
   # Web GUIs
@@ -124,15 +149,32 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
     ports:
       - "${PGADMIN_PORT}:80"
+    depends_on:
+      - postgres
 
-  phpmyadmin:
+  phpmyadmin-mysql:
     image: phpmyadmin/phpmyadmin:5
-    container_name: phpmyadmin
+    container_name: phpmyadmin-mysql
     environment:
       PMA_HOST: mysql
       MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      PMA_DEFAULT_DB: ${MYSQL_DB}
     ports:
-      - "${PHPMYADMIN_PORT}:80"
+      - "${PHPMYADMIN_MYSQL_PORT}:80"
+    depends_on:
+      - mysql
+
+  phpmyadmin-mariadb:
+    image: phpmyadmin/phpmyadmin:5
+    container_name: phpmyadmin-mariadb
+    environment:
+      PMA_HOST: mariadb
+      MYSQL_ROOT_PASSWORD: ${MARIADB_PASSWORD}
+      PMA_DEFAULT_DB: ${MARIADB_DB}
+    ports:
+      - "${PHPMYADMIN_MARIADB_PORT}:80"
+    depends_on:
+      - mariadb
 
   mongo-express:
     image: mongo-express:1
@@ -141,27 +183,19 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER}
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
       ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_DEFAULT_DB: db_workbench
     ports:
       - "${MONGOEXPRESS_PORT}:8081"
+    depends_on:
+      - mongo
 
   redis-insight:
     image: redislabs/redisinsight:2
     container_name: redis-insight
     ports:
       - "${REDISINSIGHT_PORT}:8001"
-
-  # -------------------------
-  # File-based
-  # -------------------------
-  duckdb:
-    image: duckdb/duckdb:latest
-    container_name: duckdb
-    volumes:
-      - ./data/duckdb/db:/workspace
-    working_dir: /workspace
-    tty: true
-    stdin_open: true
-    command: ["database.duckdb"]
+    depends_on:
+      - redis
 
 volumes:
   postgres_data:

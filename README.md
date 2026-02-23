@@ -40,7 +40,9 @@ Then connect via:
 - pgAdmin at http://localhost:5050 (default)
 - DBeaver (Or any other DB client)
 
-Test any other database using the `make` commands.
+After `make up-<database_name>`, you can query the `db_workbench` workspace (database, bucket, or index) to find a pre-populated test row for quick verification.
+
+This quickstart example refers to `postgres`, but you can use any other database the same way via `make` commands.
 
 
 ## Philosophy
@@ -54,21 +56,40 @@ Each database runs independently and is treated as its own controlled environmen
 `db-workbench` is meant to be disposable, reproducible, and practical. Start it, experiment, break things, reset, and repeat. It is a workbench, not a platform.
 
 
-## Currently Supported Databases
+## Databases
 
-| Type           | Database         | Web GUI         |
-|----------------|------------------|-----------------|
-| File-Based     | SQLite           | —               |
-| File-Based     | DuckDB           | —               |
-| SQL            | PostgreSQL       | pgAdmin         |
-| SQL            | MySQL            | phpMyAdmin      |
-| SQL            | MariaDB          | phpMyAdmin      |
-| NoSQL          | MongoDB          | Mongo Express   |
-| NoSQL          | Redis            | RedisInsight    |
-| NoSQL          | Cassandra        | —               |
-| NoSQL          | Elasticsearch    | —               |
-| NoSQL          | ClickHouse       | —               |
-| NoSQL          | Couchbase        | —               |
+### Currently Supported:
+
+| Type           | Database         | Web GUI           | Default Workspace   |
+|----------------|------------------|-------------------|---------------------|
+| File-Based     | SQLite           | —                 | db_workbench.db     |
+| File-Based     | DuckDB           | —                 | db_workbench.duckdb |
+| SQL            | PostgreSQL       | pgAdmin           | db_workbench        |
+| SQL            | MySQL            | phpMyAdmin        | db_workbench        |
+| SQL            | MariaDB          | phpMyAdmin        | db_workbench        |
+| NoSQL          | MongoDB          | Mongo Express     | db_workbench:       |
+| NoSQL          | Redis            | RedisInsight      | db_workbench        |
+| NoSQL          | Cassandra        | —                 | db_workbench        |
+| NoSQL          | Elasticsearch    | —                 | db_workbench        |
+| NoSQL          | ClickHouse       | ClickHouse Web UI | db_workbench        |
+| NoSQL          | Couchbase        | Couchbase Console | db_workbench        |  
+
+### Technical Overview:
+
+| Database      | Model        | Storage Style | Typical Use Case       |
+|---------------|--------------|---------------|------------------------|
+| SQLite        | Relational   | Row-based     | Lightweight apps       |
+| DuckDB        | Relational   | Columnar      | Analytics / OLAP       |
+| PostgreSQL    | Relational   | Row-based     | OLTP / Production apps |
+| MySQL         | Relational   | Row-based     | Web applications       |
+| MariaDB       | Relational   | Row-based     | MySQL-compatible apps  |
+| MongoDB       | Document     | BSON          | Flexible schemas       |
+| Redis         | Key-Value    | In-memory     | Caching / fast lookup  |
+| Cassandra     | Wide-column  | Distributed   | High write throughput  |
+| Elasticsearch | Search index | Inverted      | Full-text search       |
+| ClickHouse    | Columnar     | Column-based  | Large-scale analytics  |
+| Couchbase     | Document     | JSON          | Distributed apps       |
+
 
 
 ## Project Structure
@@ -125,6 +146,7 @@ Each database may include:
 - Initialization scripts - pre-populated test tables to verify database functionality immediately.
 - Safe experimentation - each database can be reset individually without affecting others.
 - Extensible - adding new engines is straightforward via the unified compose file and folder structure.
+- Comprehensive documentation and cheatsheets - each database has a ready-to-use reference for commands, workflows, and mental models to accelerate learning and experimentation.
 
 
 ## Makefile Commands
@@ -135,6 +157,8 @@ make down-<database_name>     # Stops Docker container
 make cli-<database_name>      # Connects to database CLI
 make reset-<database_name>    # Removes all data in db/ folder and removes Docker container
 ```
+On `make up-<database_name>` the initialization is automatic and no separate `make init` command is required.
+
 **Warning:** Reset commands permanently delete database containers, volumes, and/or files. Use with caution.  
 
 Databases can also be grouped by type: `file`, `sql`, `nosql` or `all`:
@@ -151,18 +175,19 @@ make help                     # Shows all help commands
 make help-<database_type>     # Shows help commands for all databases of selected type
 make help-<database_name>     # Shows individual database help commands
 ```
+A special `make doctor` command is also included to run a quick check for any issues with Docker, `.env`, `.venv` and ports.
 
 
 ## Initialization Scripts
-Most databases include `init.*`  scripts to help you verify that the database is working properly. These scripts are optional, but they provide a minimal test table with one queryable row so you can confirm everything is functioning.
+Most databases include `init.*`  scripts to help you verify that the database is working properly. These scripts are optional, but they provide a minimal test table with one queryable row so you can confirm everything is functioning. 
 
-**Location**  
-When available, init scripts are always located in `data/<database_name>/scripts/` folder. They can have several different extensions (`.py`, `.sql`, `.js`, etc.) depending on the database.
-
-**Purpose**
-- The script automatically creates a small test table (`test`) if it does not exist
-- It inserts a single row with known values without duplicating it across multiple runs
-- It provides a minimal setup for testing queries and GUI connections via `SELECT * FROM test;` statement or equivalent
+**Key points:**
+- Each database initializes a **default workspace called `db_workbench`** (or a similarly named bucket/index for NoSQL engines).
+- The scripts automatically create a minimal test table/collection/bucket (`test`) inside `db_workbench` if it does not exist.
+- A single test row is inserted for consistency: `id = 1`, `name = Andre`, `project = db-workbench`
+- All scripts are idempotent — running them multiple times will not duplicate the test row.
+- Scripts are automatically executed when you run `make up-<database_name>` (for containerized engines) or on first access (for file-based engines like SQLite/DuckDB).
+- Location: `data/<database_name>/scripts/` (extensions vary: `.sql`, `.py`, `.js`, etc.)
 
 
 ## Setup
@@ -197,16 +222,21 @@ pip install -r requirements.txt
 - Host: `localhost`
 - Ports, usernames & passwords: defined in `.env`
 
-DuckDB can connect directly to DBeaver by pointing it to the location of the `database.duckdb` in this project.  
+DuckDB can connect directly to DBeaver by pointing it to the location of the `db_workbench.duckdb` in this project.  
 For SQLite, it is not possible to access the same database file simultaneously from Windows and WSL. Use either:
 - DBeaver inside WSL (recommended for scripts running in WSL), or
-- Move, copy or create a new database file to a Windows path and access it from Windows only.
+- Move, copy or create a new `*.db*` file to a Windows path and access it from Windows only.
 
 **Using Web GUIs**
 - PostgreSQL → `http://localhost:<PGADMIN_PORT>`
-- MySQL/MariaDB → `http://localhost:<PHPMYADMIN_PORT>`
+- MySQL → `http://localhost:<PHPMYADMIN_MYSQL_PORT>`
+- MariaDB → `http://localhost:<PHPMYADMIN_MARIADB_PORT>`
 - MongoDB → `http://localhost:<MONGOEXPRESS_PORT>`
 - Redis → `http://localhost:<REDISINSIGHT_PORT>`
+- Clickhouse →  `http://localhost:<CLICKHOUSE_PORT>`
+- Couchbase →  `http://localhost:<COUCHBASE_PORT>`
+
+A `make gui-<database_name>` command is included for convenience.
 
 **Using CLI (Examples)**
 ```bash
@@ -223,7 +253,10 @@ make cli-cassandra
 
 
 ## Troubleshooting
-- Ensure Docker is running before executing `make` commands.
+- Use `make doctor` special command for a quick check before runnning a database.
+- Ensure Docker is running before executing database `make` commands.
+- Make sure you have copied `.env.example` to `.env`.
+- Make sure you are running the database from `.venv`.
 - If a port is already in use, modify it in `.env`.
 - Check container logs:
 ```bash

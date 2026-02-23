@@ -21,7 +21,7 @@ def ensure_folder(path):
 def init():
     ensure_folder(DATA_DIR)
 
-    conn = sqlite3.connect(os.path.join(DATA_DIR, "database.db"))
+    conn = sqlite3.connect(os.path.join(DATA_DIR, "db_workbench.db"))
 
     conn.execute("""
         CREATE TABLE IF NOT EXISTS test (

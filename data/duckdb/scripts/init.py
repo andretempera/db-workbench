@@ -20,7 +20,7 @@ def ensure_folder(path):
 def init():
     ensure_folder(DATA_DIR)
 
-    conn = duckdb.connect(os.path.join(DATA_DIR, "database.duckdb"))
+    conn = duckdb.connect(os.path.join(DATA_DIR, "db_workbench.duckdb"))
 
     conn.execute("""
         CREATE TABLE IF NOT EXISTS test (

@@ -1,5 +1,3 @@
-USE mysql;
-
 CREATE TABLE IF NOT EXISTS test (
     id INT PRIMARY KEY,
     name VARCHAR(100),
