@@ -32,9 +32,7 @@ services:
     image: mysql:8
     container_name: mysql
     environment:
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DB}
     ports:
       - "${MYSQL_PORT}:3306"
@@ -46,9 +44,7 @@ services:
     image: mariadb:11
     container_name: mariadb
     environment:
-      MARIADB_USER: ${MARIADB_USER}
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
-      MARIADB_ROOT_PASSWORD: ${MARIADB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MARIADB_DATABASE: ${MARIADB_DB}
     ports:
       - "${MARIADB_PORT}:3306"
@@ -157,7 +153,6 @@ services:
     container_name: phpmyadmin-mysql
     environment:
       PMA_HOST: mysql
-      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
       PMA_DEFAULT_DB: ${MYSQL_DB}
     ports:
       - "${PHPMYADMIN_MYSQL_PORT}:80"
@@ -169,7 +164,6 @@ services:
     container_name: phpmyadmin-mariadb
     environment:
       PMA_HOST: mariadb
-      MYSQL_ROOT_PASSWORD: ${MARIADB_PASSWORD}
       PMA_DEFAULT_DB: ${MARIADB_DB}
     ports:
       - "${PHPMYADMIN_MARIADB_PORT}:80"

@@ -53,7 +53,7 @@ up-postgres: ## Start PostgreSQL + pgAdmin
 	docker compose up -d postgres pgadmin
 
 cli-postgres: ## Enter PostgreSQL CLI
-	docker compose exec -it postgres psql -h $$POSTGRES_HOST -p $$POSTGRES_PORT -U $$POSTGRES_USER -d $${POSTGRES_DB:-db_workbench}
+	docker compose exec -it postgres psql -h ${POSTGRES_HOST} -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -d ${POSTGRES_DB}
 
 gui-postgres: ## Launch pgAdmin for PostgreSQL
 	@echo "Click link to open GUI: http://localhost:${PGADMIN_PORT}"
@@ -69,7 +69,7 @@ up-mysql: ## Start MySQL + phpMyAdmin
 	docker compose up -d mysql phpmyadmin-mysql
 
 cli-mysql: ## Enter MySQL CLI
-	docker compose exec -it mysql mysql -h $$MYSQL_HOST -P $$MYSQL_PORT -u $$MYSQL_USER -p$$MYSQL_PASSWORD -D $${MYSQL_DB:-db_workbench}
+	docker compose exec -it mysql mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT} -u root -p${MYSQL_ROOT_PASSWORD} -D ${MYSQL_DB}
 
 gui-mysql: ## Launch phpMyAdmin for MySQL
 	@echo "Click link to open GUI: http://localhost:${PHPMYADMIN_MYSQL_PORT}"
@@ -85,7 +85,7 @@ up-mariadb: ## Start MariaDB + phpMyAdmin
 	docker compose up -d mariadb phpmyadmin-mariadb
 
 cli-mariadb: ## Enter MariaDB CLI
-	docker compose exec -it mariadb mariadb -h $$MARIADB_HOST -P $$MARIADB_PORT -u $$MARIADB_USER -p$$MARIADB_PASSWORD -D $${MARIADB_DB:-db_workbench}
+	docker compose exec -it mariadb mariadb -h ${MARIADB_HOST} -P 3306 -u root -p${MARIADB_ROOT_PASSWORD} -D ${MARIADB_DB}
 
 gui-mariadb: ## Launch phpMyAdmin for MariaDB
 	@echo "Click link to open GUI: http://localhost:${PHPMYADMIN_MARIADB_PORT}"
@@ -209,10 +209,10 @@ reset-file: ## Reset all file-based databases (SQLite + DuckDB)
 
 
 up-sql: ## Start all SQL databases (+ GUIs)
-	docker compose up -d postgres pgadmin mysql mariadb phpmyadmin
+	docker compose up -d postgres pgadmin mysql mariadb phpmyadmin-mysql phpmyadmin-mariadb
 
 down-sql: ## Stop all SQL databases (+ GUIs)
-	docker compose stop postgres pgadmin mysql mariadb phpmyadmin
+	docker compose stop postgres pgadmin mysql mariadb phpmyadmin-mysql phpmyadmin-mariadb
 
 reset-sql: ## Reset all SQL databases (containers + volumes)
 	make reset-postgres

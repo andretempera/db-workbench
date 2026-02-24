@@ -249,6 +249,32 @@ Login: `Administrator / rootpass`
 
 Default bucket: `db_workbench`
 
+## DBeaver Connection
+This is a quick-reference table to make establishing connections on DBeaver easier. This table uses `.env` defaults.
+
+| Database Engine  | Server Host     | Port    | Database             | Username       | Password  |
+|------------------|-----------------|---------|----------------------|----------------|-----------|
+| SQLite           | Local file path | N/A     | db_workbench.db      | N/A            | N/A       |
+| DuckDB           | Local file path | N/A     | db_workbench.duckdb  | N/A            | N/A       |
+| PostgreSQL       | localhost       | 5432    | db_workbench         | postgres       | rootpass  |
+| MySQL            | localhost       | 3306    | db_workbench         | root           | rootpass  |
+| MariaDB          | localhost       | 3307    | db_workbench         | root           | rootpass  |
+| MongoDB          | 127.0.0.1       | 27017   | db_workbench         | N/A            | N/A       |
+| Redis            | 127.0.0.1       | 6379    | db_workbench         | N/A            | N/A       |
+| Cassandra        | 127.0.0.1       | 9042    | db_workbench         | N/A            | N/A       |
+| Elasticsearch    | 127.0.0.1       | 9200    | db_workbench         | N/A            | N/A       |
+| ClickHouse       | 127.0.0.1       | 8123    | db_workbench         | N/A            | N/A       |
+| Couchbase        | 127.0.0.1       | 8091    | db_workbench         | Administrator  | password  |
+
+**Notes:**
+- `Database Engine` is the database you are connecting to, chosen from "New Database Connection" list.
+- `Server Host` should always be `localhost` (or `127.0.0.1`) when connecting from DBeaver through Docker.
+- `Database` sets the default database to use, `db_workbench` is the default for this project. Check "Show all databases" box if you want access to system databases.
+- Some databases may require going to Driver Properties and setting `allowPublicKeyRetrieval=TRUE`.
+- Connection name defaults to what you select as `Database`, but you can rename it by right-clicking and selecting "Rename" or pressing "F2"
+- Other DB clients may connect similarly, but they have not been tested in this project.
+
+
 ## Working with Local Databases in the Project
 ### 1. File-Based Databases (SQLite & DuckDB)
 These databases live as files (`db_workbench.db` for SQLite, `db_workbench.duckdb` for DuckDB).  
