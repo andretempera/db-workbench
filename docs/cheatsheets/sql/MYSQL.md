@@ -6,7 +6,8 @@
       <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mysql/mysql-original.svg" width="75" />
     </td>
     <td style="vertical-align: middle;">
-      MySQL is a widely-used, open-source relational database system known for reliability, ease of use, and broad ecosystem support. It follows a traditional relational model using <b>databases</b>, <b>schemas</b>, <b>tables</b>, and <b>rows</b>.
+      MySQL is a widely-used, open-source relational database system known for reliability, ease of use, and broad ecosystem support. It follows a traditional relational model using <b>databases</b>, <b>schemas</b>, <b>tables</b>, and <b>rows</b>. <br>
+      Visit <a>https://www.mysql.com/</a> for more information.
     </td>
   </tr>
 </table>

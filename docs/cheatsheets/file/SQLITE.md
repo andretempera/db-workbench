@@ -6,7 +6,8 @@
       <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/sqlite/sqlite-original.svg" width="75" />
     </td>
     <td style="vertical-align: middle;">
-      SQLite is a lightweight, <b>file-based</b> relational database system. It stores data in a single file and supports standard SQL, transactions, and relational tables. Ideal for local experiments, development, and embedded applications.
+      SQLite is a lightweight, <b>file-based</b> relational database system. It stores data in a single file and supports standard SQL, transactions, and relational tables. Ideal for local experiments, development, and embedded applications. <br>
+      Visit <a>https://sqlite.org/index.html</a> for more information.
     </td>
   </tr>
 </table>

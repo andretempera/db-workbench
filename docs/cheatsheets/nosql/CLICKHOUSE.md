@@ -6,7 +6,8 @@
       <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/clickhouse/clickhouse-original.svg" width="75" />
     </td>
     <td style="vertical-align: middle;">
-      ClickHouse is a high-performance, columnar database designed for analytical queries. Data is organized in <b>databases</b>, <b>tables</b>, and <b>columns</b>, optimized for OLAP workloads and aggregations on large datasets.
+      ClickHouse is a high-performance, columnar database designed for analytical queries. Data is organized in <b>databases</b>, <b>tables</b>, and <b>columns</b>, optimized for OLAP workloads and aggregations on large datasets. <br>
+      Visit <a>https://clickhouse.com/</a> for more information.
     </td>
   </tr>
 </table>

@@ -6,7 +6,8 @@
       <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/cassandra/cassandra-original.svg" width="75" />
     </td>
     <td style="vertical-align: middle;">
-      Apache Cassandra is a distributed wide-column NoSQL database designed for high write throughput and horizontal scalability. Data is stored in <b>keyspaces</b>, which contain <b>tables</b>, and tables are optimized for fast writes and partitioned storage.
+      Apache Cassandra is a distributed wide-column NoSQL database designed for high write throughput and horizontal scalability. Data is stored in <b>keyspaces</b>, which contain <b>tables</b>, and tables are optimized for fast writes and partitioned storage. <br>
+      Visit <a>https://cassandra.apache.org/_/index.html</a> for more information.
     </td>
   </tr>
 </table>

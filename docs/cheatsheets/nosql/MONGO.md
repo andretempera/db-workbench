@@ -6,7 +6,8 @@
       <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mongodb/mongodb-original.svg" width="75" />
     </td>
     <td style="vertical-align: middle;">
-      MongoDB is a NoSQL document database that stores data in flexible <b>JSON-like</b> documents (<b>BSON</b>). It is schema-flexible and designed for scalability and rapid development.
+      MongoDB is a NoSQL document database that stores data in flexible <b>JSON-like</b> documents (<b>BSON</b>). It is schema-flexible and designed for scalability and rapid development. <br>
+      Visit <a>https://www.mongodb.com/</a> for more information.
     </td>
   </tr>
 </table>

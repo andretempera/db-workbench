@@ -6,7 +6,8 @@
       <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/couchbase/couchbase-original.svg" width="75" />
     </td>
     <td style="vertical-align: middle;">
-      Couchbase is a distributed, document-oriented database that stores <b>JSON documents</b> in buckets. It supports key-value operations, N1QL (SQL-like query language), and indexes for efficient queries.
+      Couchbase is a distributed, document-oriented database that stores <b>JSON documents</b> in buckets. It supports key-value operations, N1QL (SQL-like query language), and indexes for efficient queries. <br>
+      Visit <a>https://www.couchbase.com/</a> for more information.
     </td>
   </tr>
 </table>

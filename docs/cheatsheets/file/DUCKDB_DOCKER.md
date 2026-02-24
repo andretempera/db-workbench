@@ -6,7 +6,8 @@
       <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/duckdb/duckdb-original.svg" width="75" />
     </td>
     <td style="vertical-align: middle;">
-      DuckDB is an in-process, columnar analytical database designed for fast OLAP queries. It can be used via Python, R, or a CLI, and works with a single local database file.
+      DuckDB is an in-process, columnar analytical database designed for fast OLAP queries. It can be used via Python, R, or a CLI, and works with a single local database file. <br>
+      Visit <a>https://duckdb.org/</a> for more information.
     </td>
   </tr>
 </table>

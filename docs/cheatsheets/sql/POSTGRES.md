@@ -6,7 +6,8 @@
       <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original.svg" width="75" />
     </td>
     <td style="vertical-align: middle;">
-      PostgreSQL is a powerful, open-source relational database system known for reliability, standards compliance, and advanced SQL features. It follows a traditional relational model using <b>databases</b>, <b>schemas</b>, <b>tables</b>, and <b>rows</b>.
+      PostgreSQL is a powerful, open-source relational database system known for reliability, standards compliance, and advanced SQL features. It follows a traditional relational model using <b>databases</b>, <b>schemas</b>, <b>tables</b>, and <b>rows</b>. <br>
+      Visit <a>https://www.postgresql.org/</a> for more information.
     </td>
   </tr>
 </table>

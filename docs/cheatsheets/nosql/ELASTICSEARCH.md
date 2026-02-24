@@ -6,7 +6,8 @@
       <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/elasticsearch/elasticsearch-original.svg" width="75" />
     </td>
     <td style="vertical-align: middle;">
-      Elasticsearch is a distributed search and analytics engine. Data is stored in <b>indices</b>, which contain <b>documents</b> in JSON format. It is optimized for full-text search, aggregations, and near real-time analytics.
+      Elasticsearch is a distributed search and analytics engine. Data is stored in <b>indices</b>, which contain <b>documents</b> in JSON format. It is optimized for full-text search, aggregations, and near real-time analytics. <br>
+      Visit <a>https://www.elastic.co/elasticsearch</a> for more information.
     </td>
   </tr>
 </table>

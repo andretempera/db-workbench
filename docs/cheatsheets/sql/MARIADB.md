@@ -3,10 +3,11 @@
 <table>
   <tr>
     <td width="90" style="vertical-align: middle; padding-right: 10px;">
-      <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mariadb/mariadb-original.svg" width="75" />
+      <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mariadb/mariadb-original-wordmark.svg" width="75" />
     </td>
     <td style="vertical-align: middle;">
-      MariaDB is a community-developed, open-source relational database system, fully compatible with MySQL, with additional features, performance enhancements, and storage engines. It uses <b>databases</b>, <b>schemas</b>, <b>tables</b>, and <b>rows</b>.
+      MariaDB is a community-developed, open-source relational database system, fully compatible with MySQL, with additional features, performance enhancements, and storage engines. It uses <b>databases</b>, <b>schemas</b>, <b>tables</b>, and <b>rows</b>. <br>
+      Visit <a>https://mariadb.org/</a> for more information.
     </td>
   </tr>
 </table>
