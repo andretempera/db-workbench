@@ -136,8 +136,10 @@ reset-redis: ## Remove Redis + RedisInsight containers and volumes
 up-cassandra: ## Start Cassandra
 	docker compose up -d cassandra
 
-cli-cassandra: ## Enter Cassandra CQL shell
-	docker compose exec -it cassandra cqlsh $$CASSANDRA_HOST $$CASSANDRA_PORT -u $$CASSANDRA_USER -p $$CASSANDRA_PASSWORD -k db_workbench
+cli-cassandra: ## Enter Cassandra CQL shell (+ init script)
+	docker compose exec -it cassandra bash -c "\
+	cqlsh $$CASSANDRA_HOST $$CASSANDRA_PORT -u $$CASSANDRA_USER -p $$CASSANDRA_PASSWORD -f /docker-entrypoint-initdb.d/init.cql; \
+	exec cqlsh $$CASSANDRA_HOST $$CASSANDRA_PORT -u $$CASSANDRA_USER -p $$CASSANDRA_PASSWORD -k db_workbench"
 
 down-cassandra: ## Stop Cassandra
 	docker compose stop cassandra

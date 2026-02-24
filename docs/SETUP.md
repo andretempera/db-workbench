@@ -56,7 +56,7 @@ Install:
 ### Optional: DBeaver
 Universal database GUI client.  
 Download: https://dbeaver.io/download/  
-Community Edition is sufficient.
+Community Edition works well for SQL databses, PRO version is required for most NoSQL databases.
 
 
 ## Installation

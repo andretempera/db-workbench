@@ -13,4 +13,5 @@ CREATE TABLE IF NOT EXISTS test (
 );
 
 INSERT INTO test (id, name, project)
-VALUES (1, 'Andre', 'db-workbench');
+VALUES (1, 'Andre', 'db-workbench')
+IF NOT EXISTS;
