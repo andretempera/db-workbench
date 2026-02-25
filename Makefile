@@ -28,15 +28,15 @@ reset-sqlite: ## Delete SQLite database file
 up-duckdb: ## Initialize DuckDB database file
 	python3 data/duckdb/scripts/init.py
 
-cli-duckdb: ## Incomplete command (requires either cli-duckdb-python or cli-duckdb-docker)
-	@echo "Incomplete command. Use either 'make cli-duckdb-python' or 'make cli-duckdb-docker'."
+cli-duckdb: ## Incomplete command (choice of native CLI vs Python CLI)
+	@echo "Incomplete command. Use either 'make cli-duckdb-native' or 'make cli-duckdb-python'."
+
+cli-duckdb-native: ## Enter DuckDB native CLI (via Docker)
+	docker run --rm -it -v "$$PWD/data/duckdb/db:/workspace" -w /workspace duckdb/duckdb duckdb db_workbench.duckdb
 
 cli-duckdb-python: ## Enter DuckDB via Python CLI
 	python3 -c "import duckdb, pandas as pd; conn = duckdb.connect('${DUCKDB_DB_PATH}'); import code; code.interact(local=globals())"
 
-cli-duckdb-docker: ## Enter DuckDB via Docker CLI
-	docker run --rm -it -v "$$PWD/data/duckdb/db:/workspace" -w /workspace duckdb/duckdb duckdb db_workbench.duckdb
-	
 down-duckdb: ## No-op (file-based unless using Docker manually)
 	@echo "DuckDB (Python mode) has nothing to stop."
 
@@ -180,8 +180,15 @@ reset-clickhouse: ## Remove ClickHouse containers and volumes
 up-couchbase: ## Start Couchbase
 	docker compose up -d couchbase
 
-cli-couchbase: ## Connect to Couchbase CLI
-	docker compose exec -it couchbase /bin/bash
+cli-couchbase: ## Incomplete command (choice of native CLI vs Python CLI)
+	@echo "Incomplete command. Use either 'make cli-couchbase-native' or 'make cli-couchbase-python'."
+
+cli-couchbase-native: ## Connect to Couchbase CLI  (+ init script)
+	docker compose exec -it couchbase bash -c "/data/couchbase/scripts/native_shell.sh; exec /bin/bash"
+
+cli-couchbase-python: ## Connect to Couchbase via Python SDK (+ init script)
+	python3 ./data/couchbase/scripts/init_native.py
+	python3 -i ./data/couchbase/scripts/sdk_shell.py
 
 gui-couchbase: ## Launch Couchbase Web Console
 	@echo "Click link to open GUI: http://localhost:${COUCHBASE_PORT}"
@@ -317,7 +324,7 @@ help-duckdb: ## Show DuckDB commands
 	@echo ""
 	@echo "  DuckDB Commands"
 	@echo "  -----------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-duckdb:.*##/ {printf "  %-25s %s\n", $$1, $$2} /^cli-duckdb(-python|-docker)?:.*##/ {printf "  %-25s %s\n", $$1, $$2} /^down-duckdb:.*##/ {printf "  %-25s %s\n", $$1, $$2} /^reset-duckdb:.*##/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"} /^up-duckdb:.*##/ {printf "  %-25s %s\n", $$1, $$2} /^cli-duckdb(-native|-python)?:.*##/ {printf "  %-25s %s\n", $$1, $$2} /^down-duckdb:.*##/ {printf "  %-25s %s\n", $$1, $$2} /^reset-duckdb:.*##/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 help-postgres: ## Show PostgreSQL commands
@@ -380,7 +387,7 @@ help-couchbase: ## Show Couchbase commands
 	@echo ""
 	@echo "  Couchbase Commands"
 	@echo "  --------------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-couchbase:|^cli-couchbase:|^gui-couchbase:|^down-couchbase:|^reset-couchbase:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"} /^up-couchbase:|^cli-couchbase(-native|-python)?:.*##/ {printf "  %-25s %s\n", $$1, $$2} /^gui-couchbase:|^down-couchbase:|^reset-couchbase:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 
@@ -391,7 +398,7 @@ help-file: ## Show file-based database commands
 	@echo "  -------------------------------"
 	@awk 'BEGIN {FS=":.*##"} /^up-sqlite:|^cli-sqlite:|^down-sqlite:|^reset-sqlite:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
-	@awk 'BEGIN {FS=":.*##"} /^up-duckdb:|^cli-duckdb:|^cli-duckdb-python:|^cli-duckdb-docker:|^down-duckdb:|^reset-duckdb:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS=":.*##"} /^up-duckdb:|^cli-duckdb:|^cli-duckdb-native:|^cli-duckdb-python:|^down-duckdb:|^reset-duckdb:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 help-sql: ## Show SQL database commands
@@ -419,7 +426,7 @@ help-nosql: ## Show NoSQL database commands
 	@echo ""
 	@awk 'BEGIN {FS=":.*##"} /^up-clickhouse:|^cli-clickhouse:|^gui-clickhouse:|^down-clickhouse:|^reset-clickhouse:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
-	@awk 'BEGIN {FS=":.*##"} /^up-couchbase:|^cli-couchbase:|^gui-couchbase:|^down-couchbase:|^reset-couchbase:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS=":.*##"} /^up-couchbase:|^cli-couchbase(-native|-python)?:.*##/ {printf "  %-25s %s\n", $$1, $$2} /^gui-couchbase:|^down-couchbase:|^reset-couchbase:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 # Generic full help
