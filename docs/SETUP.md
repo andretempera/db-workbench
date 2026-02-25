@@ -259,15 +259,15 @@ This is a quick-reference table to make establishing connections on DBeaver easi
 | PostgreSQL       | localhost       | 5432    | db_workbench         | postgres       | rootpass  |
 | MySQL            | localhost       | 3306    | db_workbench         | root           | rootpass  |
 | MariaDB          | localhost       | 3307    | db_workbench         | root           | rootpass  |
-| MongoDB          | 127.0.0.1       | 27017   | db_workbench         | N/A            | N/A       |
-| Redis            | 127.0.0.1       | 6379    | db_workbench         | N/A            | N/A       |
-| Cassandra        | 127.0.0.1       | 9042    | db_workbench         | N/A            | N/A       |
-| Elasticsearch    | 127.0.0.1       | 9200    | db_workbench         | N/A            | N/A       |
-| ClickHouse       | 127.0.0.1       | 8123    | db_workbench         | N/A            | N/A       |
-| Couchbase        | 127.0.0.1       | 8091    | db_workbench         | Administrator  | password  |
+| MongoDB *        | localhost       | 27017   | db_workbench         | N/A            | N/A       |
+| Redis *          | localhost       | 6379    | db_workbench         | N/A            | N/A       |
+| Cassandra *      | localhost       | 9042    | db_workbench         | N/A            | N/A       |
+| Elasticsearch    | localhost       | 9200    | db_workbench         | N/A            | N/A       |
+| ClickHouse       | localhost       | 8123    | db_workbench         | root           | rootpass  |
+| Couchbase *      | localhost       | 8091    | db_workbench         | Administrator  | password  |
 
 **Notes:**
-- `Database Engine` is the database you are connecting to, chosen from "New Database Connection" list.
+- `Database Engine` is the database you are connecting to, chosen from "New Database Connection" list. If marked with `*`, requires PRO version to connect.
 - `Server Host` should always be `localhost` (or `127.0.0.1`) when connecting from DBeaver through Docker.
 - `Database` sets the default database to use, `db_workbench` is the default for this project. Check "Show all databases" box if you want access to system databases.
 - Some databases may require going to Driver Properties and setting `allowPublicKeyRetrieval=TRUE`.

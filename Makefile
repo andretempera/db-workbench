@@ -165,7 +165,7 @@ up-clickhouse: ## Start ClickHouse
 	docker compose up -d clickhouse
 
 cli-clickhouse: ## Enter ClickHouse client
-	docker compose exec -it clickhouse clickhouse-client --host $$CLICKHOUSE_HOST --port $$CLICKHOUSE_PORT --user $$CLICKHOUSE_USER --password $$CLICKHOUSE_PASSWORD --database=default
+	docker compose exec -it clickhouse clickhouse-client --user $$CLICKHOUSE_USER --password $$CLICKHOUSE_PASSWORD --database db_workbench
 
 gui-clickhouse: ## Launch ClickHouse Web UI
 	@echo "Click link to open GUI: http://localhost:${CLICKHOUSE_PORT}"
