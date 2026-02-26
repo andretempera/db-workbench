@@ -5,8 +5,8 @@
 !/data/**/       
 !/data/**/.gitkeep
 !/data/**/scripts/init.*
-!/data/**/scripts/native_shell.sh
-!/data/**/scripts/sdk_shell.py
+!/data/**/scripts/init_native.sh
+!/data/**/scripts/init_sdk.py
 *.db
 *.duckdb
 *.sqlite

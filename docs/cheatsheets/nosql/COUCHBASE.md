@@ -1,4 +1,4 @@
-# Couchbase Cheatsheet
+# Couchbase Cheatsheet - Native CLI
 
 <table>
   <tr>
@@ -15,39 +15,38 @@
 Default workspace: `db_workbench` (bucket)
 
 ## Mental Model
+```txt
+Cluster
+ └── Bucket (workspace)
+      └── Scope (optional grouping)
+           └── Collection (optional grouping)
+                └── Document (JSON, flexible schema, like a row in SQL)
+```
+- **Cluster** contains one or more buckets.
 - **Bucket** = workspace; `db_workbench` exists by default.
+- **Scopes and Collections** optional grouping documents inside a bucket (`_default` always exists).
 - **Document** = JSON object stored in a bucket (like a row in SQL).
-- **Collections / Scopes** allow grouping documents inside a bucket (optional in simple setups).
-- Queries use **N1QL**, a SQL-like language for JSON documents.
-- Keys are unique per document; documents can have flexible, dynamic schemas.
 - Couchbase is optimized for **distributed access, caching, and flexible schema designs**.
 
 ## Commands
-
 ### 1. Connect
 ```bash
-make cli-couchbase
-# Or using Python SDK:
-from couchbase.cluster import Cluster
-from couchbase.auth import PasswordAuthenticator
-cluster = Cluster('couchbase://localhost', PasswordAuthenticator('Administrator','password'))
-bucket = cluster.bucket('db_workbench')
-collection = bucket.default_collection()
+make cli-couchbase-native
 ```
 
-### 2. Show Current Workspace (Bucket)
+### 2. Set Query Context (like "USE DATABASE" command)
 ```sql
-SELECT b.* FROM `db_workbench` b LIMIT 1; -- Example of referencing the default bucket
+\SET -query_context `db_workbench`._default;
 ```
 
-### 3. List Workspaces (Buckets)
+### 3. Show Current Workspace (Bucket)
+```sql
+SELECT name FROM system:buckets WHERE name = "db_workbench";
+```
+
+### 4. List Workspaces (Buckets)
 ```sql
 SELECT name FROM system:buckets;
-```
-
-### 4. Switch Workspace (Bucket)
-```sql
-USE `db_workbench`;
 ```
 
 ### 5. Create Workspace (Bucket)
@@ -55,59 +54,70 @@ USE `db_workbench`;
 CREATE BUCKET `example_bucket`;
 ```
 
-### 6. List Structures (Collections)
+### 6. Create Primary Index (if not exists)
 ```sql
-SELECT name FROM system:collections WHERE keyspace_id='db_workbench';
+CREATE PRIMARY INDEX IF NOT EXISTS ON `db_workbench`;
 ```
 
-### 7. Create Structure (Collection)
+### 7. List Structures (Collections, like tables)
 ```sql
-CREATE COLLECTION `users` ON BUCKET `db_workbench`;
+SELECT name FROM system:collections WHERE `bucket`='db_workbench';
 ```
 
-### 8. Insert Data
+### 8. Create Structure (Collection, like creating a table);
 ```sql
-INSERT INTO `db_workbench`.`_default`.`users` (KEY, VALUE)
-VALUES ("user::1", {"id": 1, "name": "Andre", "project": "db-workbench"});
+CREATE COLLECTION `users` ON `bucket` `db_workbench`;
 ```
 
-### 9. Query All Data
+### 9. Insert Data (Equivalent to inserting a new row in a table)
 ```sql
-SELECT * FROM `db_workbench`.`_default`.`users`;
+INSERT INTO `db_workbench`._default.`users` (KEY, VALUE)
+VALUES ("user::2", {
+  "id": 2,
+  "name": "Alice",
+  "age": 30
+});
 ```
 
-### 10. Query With Condition
+### 10. Query All Data
 ```sql
-SELECT * FROM `db_workbench`.`_default`.`users`
-WHERE id = 1;
+SELECT * FROM `db_workbench`._default.`users`;
 ```
 
-### 11. Update Data
+### 11. Query With Condition
 ```sql
-UPDATE `db_workbench`.`_default`.`users`
-SET project = "db-workbench-updated"
-WHERE id = 1;
+SELECT * FROM `db_workbench`._default.`users`
+WHERE id = 2;
 ```
 
-### 12. Delete Data
+### 12. Update Data
 ```sql
-DELETE FROM `db_workbench`.`_default`.`users`
-WHERE id = 1;
+UPDATE `db_workbench`._default.`users`
+SET age = 31
+WHERE id = 2;
 ```
 
-### 13. Drop Structure (Collection)
+### 13. Delete Data
+```sql
+DELETE FROM `db_workbench`._default.`users`
+WHERE id = 2;
+```
+
+### 14. Drop Structure (Collection)
 ```sql
 DROP COLLECTION `users` ON BUCKET `db_workbench`;
 ```
 
-### 14. Drop Workspace (Bucket)
+### 15. Drop Workspace (Bucket)
 ```sql
 DROP BUCKET `example_bucket`;
 ```
 
-### 15. Exit
+### 16. Exit CLI
 ```bash
-exit  # Exit CLI
+\quit;
+# or
+Ctrl + D
 ```
 
 ---

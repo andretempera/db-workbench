@@ -184,14 +184,14 @@ cli-couchbase: ## Incomplete command (choice of native CLI vs Python CLI)
 	@echo "Incomplete command. Use either 'make cli-couchbase-native' or 'make cli-couchbase-python'."
 
 cli-couchbase-native: ## Connect to Couchbase CLI  (+ init script)
-	docker compose exec -it couchbase bash -c "/data/couchbase/scripts/native_shell.sh; exec /bin/bash"
+	docker compose exec -it couchbase bash -c "/data/couchbase/scripts/init.sh cli; exec /bin/bash"
 
 cli-couchbase-python: ## Connect to Couchbase via Python SDK (+ init script)
-	python3 ./data/couchbase/scripts/init_native.py
-	python3 -i ./data/couchbase/scripts/sdk_shell.py
+	docker compose exec couchbase bash -c "/data/couchbase/scripts/init.sh python"
 
-gui-couchbase: ## Launch Couchbase Web Console
-	@echo "Click link to open GUI: http://localhost:${COUCHBASE_PORT}"
+gui-couchbase: ## Launch Couchbase Web Console (+ init script)
+	docker compose exec couchbase bash -c "/data/couchbase/scripts/init.sh gui"
+	@echo "Click link to open GUI: http://localhost:${COUCHBASE_PORT}/ui/index.html"
 
 down-couchbase: ## Stop Couchbase
 	docker compose stop couchbase

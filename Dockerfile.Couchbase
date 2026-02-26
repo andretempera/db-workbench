@@ -1,0 +1,16 @@
+FROM couchbase:community-8.0.0
+
+# Install Python, pip, curl, and virtualenv
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip curl python3-venv && \
+    python3 -m pip install --upgrade pip
+
+# Set up a virtual environment and install dependencies
+RUN python3 -m venv /opt/couchbase/venv && \
+    /opt/couchbase/venv/bin/pip install couchbase
+
+# Set the virtual environment to be used in the container
+ENV PATH="/opt/couchbase/venv/bin:$PATH"
+
+# Make sure your init scripts are executable
+RUN chmod +x /data/couchbase/scripts/init.sh /data/couchbase/scripts/init_sdk.py

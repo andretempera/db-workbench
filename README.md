@@ -97,6 +97,7 @@ Each database runs independently and is treated as its own controlled environmen
 db-workbench/
 ├── Makefile
 ├── docker-compose.yaml
+├── Dockerfile.Couchbase
 ├── .env.example
 ├── .gitignore
 ├── README.md
@@ -190,8 +191,8 @@ Most databases include `init.*`  scripts to help you verify that the database is
 - Each database initializes a **default workspace called `db_workbench`** (or a similarly named bucket/index for NoSQL engines).
 - The scripts automatically create a minimal test table/collection/bucket (`test`) inside `db_workbench` if it does not exist.
 - A single test row is inserted for consistency: `id = 1`, `name = Andre`, `project = db-workbench`
-- All scripts are idempotent — running them multiple times will not duplicate the test row.
-- Scripts are automatically executed when you run `make up-<database_name>` (for containerized engines) or on first access (for file-based engines like SQLite/DuckDB).
+- All scripts are idempotent - running them multiple times will not duplicate the test row.
+- Scripts are automatically executed when you run `make up-<database_name>` for some engines or on CLI access for others.
 - Location: `data/<database_name>/scripts/` (extensions vary: `.sql`, `.py`, `.js`, etc.)
 
 
@@ -246,7 +247,7 @@ A `make gui-<database_name>` command is included for convenience.
 **Using CLI (Examples)**
 ```bash
 make cli-sqlite
-make cli-duckdb-python
+make cli-duckdb-native
 make cli-duckdb-docker
 
 make cli-postgres
