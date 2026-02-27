@@ -1,4 +1,4 @@
-# DuckDB Cheatsheet - CLI / Docker CLI
+# DuckDB Cheatsheet
 
 <table>
   <tr>

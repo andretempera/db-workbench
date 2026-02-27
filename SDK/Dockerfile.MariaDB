@@ -1,7 +1,7 @@
 FROM python:3.11-slim
 
-# Install Couchbase SDK (and any future dependencies)
-RUN pip install --no-cache-dir couchbase
+# Install MariaDB SDK (mysql-connector-python)
+RUN pip install --no-cache-dir mysql-connector-python
 
 # Set the working directory to /scripts
 WORKDIR /scripts

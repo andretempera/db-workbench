@@ -1,7 +1,7 @@
 FROM python:3.11-slim
 
-# Install Couchbase SDK (and any future dependencies)
-RUN pip install --no-cache-dir couchbase
+# Install Redis SDK (redis-py)
+RUN pip install --no-cache-dir redis
 
 # Set the working directory to /scripts
 WORKDIR /scripts

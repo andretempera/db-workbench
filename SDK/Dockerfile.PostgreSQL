@@ -1,7 +1,8 @@
 FROM python:3.11-slim
 
-# Install Couchbase SDK (and any future dependencies)
-RUN pip install --no-cache-dir couchbase
+# Install PostgreSQL SDK (psycopg2)
+RUN apt-get update && apt-get install -y libpq-dev && \
+    pip install --no-cache-dir psycopg2-binary
 
 # Set the working directory to /scripts
 WORKDIR /scripts

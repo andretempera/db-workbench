@@ -11,6 +11,23 @@ endif
 # File-Based Databases
 ########################################
 
+up-duckdb: ## Initialize DuckDB database file
+	python3 data/duckdb/scripts/init.py
+
+cli-duckdb: ## Enter DuckDB native CLI (via Docker)
+	duckdb db_workbench.duckdb
+
+sdk-duckdb: ## Enter DuckDB via Python SDK CLI
+	python3 -c "import duckdb, pandas as pd; conn = duckdb.connect('${DUCKDB_DB_PATH}'); import code; code.interact(local=globals())"
+
+down-duckdb: ## No-op (file-based unless using Docker manually)
+	@echo "DuckDB (Python mode) has nothing to stop."
+
+reset-duckdb: ## Delete DuckDB database file
+	@echo "Removing DuckDB database..."
+	@rm -f ${DUCKDB_DB_PATH} || true
+
+
 up-sqlite: ## Initialize SQLite database file
 	python3 data/sqlite/scripts/init.py
 
@@ -25,44 +42,24 @@ reset-sqlite: ## Delete SQLite database file
 	@rm -f ${SQLITE_DB_PATH} || true
 
 
-up-duckdb: ## Initialize DuckDB database file
-	python3 data/duckdb/scripts/init.py
-
-cli-duckdb: ## Incomplete command (choice of native CLI vs Python CLI)
-	@echo "Incomplete command. Use either 'make cli-duckdb-native' or 'make cli-duckdb-python'."
-
-cli-duckdb-native: ## Enter DuckDB native CLI (via Docker)
-	docker run --rm -it -v "$$PWD/data/duckdb/db:/workspace" -w /workspace duckdb/duckdb duckdb db_workbench.duckdb
-
-cli-duckdb-python: ## Enter DuckDB via Python CLI
-	python3 -c "import duckdb, pandas as pd; conn = duckdb.connect('${DUCKDB_DB_PATH}'); import code; code.interact(local=globals())"
-
-down-duckdb: ## No-op (file-based unless using Docker manually)
-	@echo "DuckDB (Python mode) has nothing to stop."
-
-reset-duckdb: ## Delete DuckDB database file
-	@echo "Removing DuckDB database..."
-	@rm -f ${DUCKDB_DB_PATH} || true
-
-
 ########################################
 # SQL Databases
 ########################################
 
-up-postgres: ## Start PostgreSQL + pgAdmin
-	docker compose up -d postgres pgadmin
+up-mariadb: ## Start MariaDB + phpMyAdmin
+	docker compose up -d mariadb phpmyadmin-mariadb
 
-cli-postgres: ## Enter PostgreSQL CLI
-	docker compose exec -it postgres psql -h ${POSTGRES_HOST} -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -d ${POSTGRES_DB}
+cli-mariadb: ## Enter MariaDB CLI
+	docker compose exec -it mariadb mariadb -h ${MARIADB_HOST} -P 3306 -u root -p${MARIADB_ROOT_PASSWORD} -D ${MARIADB_DB}
 
-gui-postgres: ## Launch pgAdmin for PostgreSQL
-	@echo "Click link to open GUI: http://localhost:${PGADMIN_PORT}"
+gui-mariadb: ## Launch phpMyAdmin for MariaDB
+	@echo "Click link to open GUI: http://localhost:${PHPMYADMIN_MARIADB_PORT}"
 
-down-postgres: ## Stop PostgreSQL + pgAdmin
-	docker compose stop postgres pgadmin
+down-mariadb: ## Stop MariaDB + phpMyAdmin
+	docker compose stop mariadb phpmyadmin-mariadb
 
-reset-postgres: ## Remove PostgreSQL + pgAdmin containers and volumes
-	docker compose down -v --remove-orphans postgres pgadmin
+reset-mariadb: ## Remove MariaDB + phpMyAdmin containers and volumes
+	docker compose down -v --remove-orphans mariadb phpmyadmin-mariadb
 
 
 up-mysql: ## Start MySQL + phpMyAdmin
@@ -81,25 +78,91 @@ reset-mysql: ## Remove MySQL + phpMyAdmin containers and volumes
 	docker compose down -v --remove-orphans mysql phpmyadmin-mysql
 
 
-up-mariadb: ## Start MariaDB + phpMyAdmin
-	docker compose up -d mariadb phpmyadmin-mariadb
+up-postgres: ## Start PostgreSQL + pgAdmin
+	docker compose up -d postgres pgadmin
 
-cli-mariadb: ## Enter MariaDB CLI
-	docker compose exec -it mariadb mariadb -h ${MARIADB_HOST} -P 3306 -u root -p${MARIADB_ROOT_PASSWORD} -D ${MARIADB_DB}
+cli-postgres: ## Enter PostgreSQL CLI
+	docker compose exec -it postgres psql -h ${POSTGRES_HOST} -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -d ${POSTGRES_DB}
 
-gui-mariadb: ## Launch phpMyAdmin for MariaDB
-	@echo "Click link to open GUI: http://localhost:${PHPMYADMIN_MARIADB_PORT}"
+gui-postgres: ## Launch pgAdmin for PostgreSQL
+	@echo "Click link to open GUI: http://localhost:${PGADMIN_PORT}"
 
-down-mariadb: ## Stop MariaDB + phpMyAdmin
-	docker compose stop mariadb phpmyadmin-mariadb
+down-postgres: ## Stop PostgreSQL + pgAdmin
+	docker compose stop postgres pgadmin
 
-reset-mariadb: ## Remove MariaDB + phpMyAdmin containers and volumes
-	docker compose down -v --remove-orphans mariadb phpmyadmin-mariadb
+reset-postgres: ## Remove PostgreSQL + pgAdmin containers and volumes
+	docker compose down -v --remove-orphans postgres pgadmin
 
 
 ########################################
 # NoSQL Databases
 ########################################
+
+up-cassandra: ## Start Cassandra
+	docker compose up -d cassandra
+
+cli-cassandra: ## Enter Cassandra CQL shell (+ init script)
+	docker compose exec -it cassandra bash -c "\
+	cqlsh $$CASSANDRA_HOST $$CASSANDRA_PORT -u $$CASSANDRA_USER -p $$CASSANDRA_PASSWORD -f /docker-entrypoint-initdb.d/init.cql; \
+	exec cqlsh $$CASSANDRA_HOST $$CASSANDRA_PORT -u $$CASSANDRA_USER -p $$CASSANDRA_PASSWORD -k db_workbench"
+
+down-cassandra: ## Stop Cassandra
+	docker compose stop cassandra
+
+reset-cassandra: ## Remove Cassandra containers and volumes
+	docker compose down -v --remove-orphans cassandra
+
+
+up-clickhouse: ## Start ClickHouse
+	docker compose up -d clickhouse
+
+cli-clickhouse: ## Enter ClickHouse client
+	docker compose exec -it clickhouse clickhouse-client --user $$CLICKHOUSE_USER --password $$CLICKHOUSE_PASSWORD --database db_workbench
+
+gui-clickhouse: ## Launch ClickHouse Web UI
+	@echo "Click link to open GUI: http://localhost:${CLICKHOUSE_PORT}"
+
+down-clickhouse: ## Stop ClickHouse
+	docker compose stop clickhouse
+
+reset-clickhouse: ## Remove ClickHouse containers and volumes
+	docker compose down -v --remove-orphans clickhouse
+
+
+up-couchbase: ## Start Couchbase
+	docker compose up -d couchbase
+	docker compose build couchbase-sdk
+
+cli-couchbase: ## Connect to Couchbase CLI  (+ init script)
+	docker compose exec -it couchbase bash -c "/data/couchbase/scripts/init.sh cli; exec /bin/bash"
+
+sdk-couchbase: ## Connect to Couchbase via Python SDK (+ init script)
+	docker compose up -d couchbase-sdk
+	docker compose exec couchbase-sdk python /scripts/init_sdk.py
+
+gui-couchbase: ## Launch Couchbase Web Console (+ init script)
+	docker compose exec couchbase bash -c "/data/couchbase/scripts/init.sh gui"
+	@echo "Click link to open GUI: http://localhost:${COUCHBASE_PORT}/ui/index.html"
+
+down-couchbase: ## Stop Couchbase
+	docker compose stop couchbase couchbase-sdk
+
+reset-couchbase: ## Remove Couchbase containers and volumes
+	docker compose down -v --remove-orphans couchbase couchbase-sdk
+
+
+up-elasticsearch: ## Start Elasticsearch
+	docker compose up -d elasticsearch
+	
+cli-elasticsearch: ## Connect to Elasticsearch console
+	curl -u $$ELASTIC_USER:$$ELASTIC_PASSWORD http://$$ELASTIC_HOST:$$ELASTIC_PORT
+
+down-elasticsearch: ## Stop Elasticsearch
+	docker compose stop elasticsearch
+
+reset-elasticsearch: ## Remove Elasticsearch containers and volumes
+	docker compose down -v --remove-orphans elasticsearch
+
 
 up-mongo: ## Start MongoDB + Mongo Express
 	docker compose up -d mongo mongo-express
@@ -133,117 +196,49 @@ reset-redis: ## Remove Redis + RedisInsight containers and volumes
 	docker compose down -v --remove-orphans redis redis-insight
 
 
-up-cassandra: ## Start Cassandra
-	docker compose up -d cassandra
-
-cli-cassandra: ## Enter Cassandra CQL shell (+ init script)
-	docker compose exec -it cassandra bash -c "\
-	cqlsh $$CASSANDRA_HOST $$CASSANDRA_PORT -u $$CASSANDRA_USER -p $$CASSANDRA_PASSWORD -f /docker-entrypoint-initdb.d/init.cql; \
-	exec cqlsh $$CASSANDRA_HOST $$CASSANDRA_PORT -u $$CASSANDRA_USER -p $$CASSANDRA_PASSWORD -k db_workbench"
-
-down-cassandra: ## Stop Cassandra
-	docker compose stop cassandra
-
-reset-cassandra: ## Remove Cassandra containers and volumes
-	docker compose down -v --remove-orphans cassandra
-
-
-up-elasticsearch: ## Start Elasticsearch
-	docker compose up -d elasticsearch
-	
-cli-elasticsearch: ## Connect to Elasticsearch console
-	curl -u $$ELASTIC_USER:$$ELASTIC_PASSWORD http://$$ELASTIC_HOST:$$ELASTIC_PORT
-
-down-elasticsearch: ## Stop Elasticsearch
-	docker compose stop elasticsearch
-
-reset-elasticsearch: ## Remove Elasticsearch containers and volumes
-	docker compose down -v --remove-orphans elasticsearch
-
-
-up-clickhouse: ## Start ClickHouse
-	docker compose up -d clickhouse
-
-cli-clickhouse: ## Enter ClickHouse client
-	docker compose exec -it clickhouse clickhouse-client --user $$CLICKHOUSE_USER --password $$CLICKHOUSE_PASSWORD --database db_workbench
-
-gui-clickhouse: ## Launch ClickHouse Web UI
-	@echo "Click link to open GUI: http://localhost:${CLICKHOUSE_PORT}"
-
-down-clickhouse: ## Stop ClickHouse
-	docker compose stop clickhouse
-
-reset-clickhouse: ## Remove ClickHouse containers and volumes
-	docker compose down -v --remove-orphans clickhouse
-
-
-up-couchbase: ## Start Couchbase
-	docker compose up -d couchbase
-	docker compose build couchbase-sdk
-
-cli-couchbase: ## Incomplete command (choice of native CLI vs Python CLI)
-	@echo "Incomplete command. Use either 'make cli-couchbase-native' or 'make cli-couchbase-python'."
-
-cli-couchbase-native: ## Connect to Couchbase CLI  (+ init script)
-	docker compose exec -it couchbase bash -c "/data/couchbase/scripts/init.sh cli; exec /bin/bash"
-
-cli-couchbase-python: ## Connect to Couchbase via Python SDK (+ init script)
-	docker compose up -d couchbase-sdk
-	docker compose exec couchbase-sdk python /scripts/init_sdk.py
-
-gui-couchbase: ## Launch Couchbase Web Console (+ init script)
-	docker compose exec couchbase bash -c "/data/couchbase/scripts/init.sh gui"
-	@echo "Click link to open GUI: http://localhost:${COUCHBASE_PORT}/ui/index.html"
-
-down-couchbase: ## Stop Couchbase
-	docker compose stop couchbase
-
-reset-couchbase: ## Remove Couchbase containers and volumes
-	docker compose down -v --remove-orphans couchbase
-
-
 ########################################
 # Grouped Commands
 ########################################
 
 up-file: ## Start all file-based databases (SQLite + DuckDB)
+	make up-duckdb	
 	make up-sqlite
-	make up-duckdb
 
 down-file: ## Stop all file-based databases (SQLite + DuckDB)
+	make down-duckdb	
 	make down-sqlite
-	make down-duckdb
 
 reset-file: ## Reset all file-based databases (SQLite + DuckDB)
+	make reset-duckdb	
 	make reset-sqlite
-	make reset-duckdb
 
 
-up-sql: ## Start all SQL databases (+ GUIs)
-	docker compose up -d postgres pgadmin mysql mariadb phpmyadmin-mysql phpmyadmin-mariadb
+up-sql: ## Start all SQL databases and available GUIs, build respective SDKs images
+	docker compose up -d mariadb phpmyadmin-mariadb mysql phpmyadmin-mysql postgres pgadmin
 
-down-sql: ## Stop all SQL databases (+ GUIs)
-	docker compose stop postgres pgadmin mysql mariadb phpmyadmin-mysql phpmyadmin-mariadb
+down-sql: ## Stop all SQL databases, SDKs and GUIs
+	docker compose stop mariadb phpmyadmin-mariadb mysql phpmyadmin-mysql postgres pgadmin
 
 reset-sql: ## Reset all SQL databases (containers + volumes)
-	make reset-postgres
-	make reset-mysql
 	make reset-mariadb
+	make reset-mysql
+	make reset-postgres
 
 
-up-nosql: ## Start all NoSQL databases (+ GUIs where available)
-	docker compose up -d mongo mongo-express redis redis-insight cassandra elasticsearch clickhouse couchbase
+up-nosql: ## Start all NoSQL databases and available GUIs, build respective SDKs images
+	docker compose up -d cassandra clickhouse couchbase elasticsearch mongo mongo-express redis redis-insight 
+	docker compose build couchbase-sdk
 
 down-nosql: ## Stop all NoSQL databases
-	docker compose stop mongo mongo-express redis redis-insight cassandra elasticsearch clickhouse couchbase
+	docker compose stop cassandra clickhouse couchbase couchbase-sdk elasticsearch mongo mongo-express redis redis-insight
 
 reset-nosql: ## Reset all NoSQL databases (containers + volumes)
-	make reset-mongo
-	make reset-redis
 	make reset-cassandra
-	make reset-elasticsearch
 	make reset-clickhouse
 	make reset-couchbase
+	make reset-elasticsearch
+	make reset-mongo
+	make reset-redis
 
 
 up-all: ## Start all databases (File-based + SQL + NoSQL)
@@ -315,6 +310,13 @@ doctor: ## Check local environment for potential issues
 		help-file help-sql help-nosql help help-all
 
 # Individual database help commands
+help-duckdb: ## Show DuckDB commands
+	@echo ""
+	@echo "  DuckDB Commands"
+	@echo "  -----------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-duckdb:|^cli-duckdb:|^sdk-duckdb:|^down-duckdb:|^reset-duckdb:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
 help-sqlite: ## Show SQLite commands
 	@echo ""
 	@echo "  SQLite Commands"
@@ -322,18 +324,12 @@ help-sqlite: ## Show SQLite commands
 	@awk 'BEGIN {FS = ":.*##"} /^up-sqlite:|^cli-sqlite:|^down-sqlite:|^reset-sqlite:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
-help-duckdb: ## Show DuckDB commands
-	@echo ""
-	@echo "  DuckDB Commands"
-	@echo "  -----------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-duckdb:.*##/ {printf "  %-25s %s\n", $$1, $$2} /^cli-duckdb(-native|-python)?:.*##/ {printf "  %-25s %s\n", $$1, $$2} /^down-duckdb:.*##/ {printf "  %-25s %s\n", $$1, $$2} /^reset-duckdb:.*##/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-	@echo ""
 
-help-postgres: ## Show PostgreSQL commands
+help-mariadb: ## Show MariaDB commands
 	@echo ""
-	@echo "  PostgreSQL Commands"
-	@echo "  ---------------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-postgres:|^cli-postgres:|^gui-postgres:|^down-postgres:|^reset-postgres:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo "  MariaDB Commands"
+	@echo "  ------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-mariadb:|^cli-mariadb:|^gui-mariadb:|^down-mariadb:|^reset-mariadb:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 help-mysql: ## Show MySQL commands
@@ -343,11 +339,40 @@ help-mysql: ## Show MySQL commands
 	@awk 'BEGIN {FS = ":.*##"} /^up-mysql:|^cli-mysql:|^gui-mysql:|^down-mysql:|^reset-mysql:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
-help-mariadb: ## Show MariaDB commands
+help-postgres: ## Show PostgreSQL commands
 	@echo ""
-	@echo "  MariaDB Commands"
-	@echo "  ------------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-mariadb:|^cli-mariadb:|^gui-mariadb:|^down-mariadb:|^reset-mariadb:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo "  PostgreSQL Commands"
+	@echo "  ---------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-postgres:|^cli-postgres:|^gui-postgres:|^down-postgres:|^reset-postgres:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
+
+help-cassandra: ## Show Cassandra commands
+	@echo ""
+	@echo "  Cassandra Commands"
+	@echo "  --------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-cassandra:|^cli-cassandra:|^down-cassandra:|^reset-cassandra:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
+help-clickhouse: ## Show ClickHouse commands
+	@echo ""
+	@echo "  ClickHouse Commands"
+	@echo "  ---------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-clickhouse:|^cli-clickhouse:|^gui-clickhouse:|^down-clickhouse:|^reset-clickhouse:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
+help-couchbase: ## Show Couchbase commands
+	@echo ""
+	@echo "  Couchbase Commands"
+	@echo "  --------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-couchbase:|^cli-couchbase:|^sdk-couchbase:|^gui-couchbase:|^down-couchbase:|^reset-couchbase:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
+help-elasticsearch: ## Show Elasticsearch commands
+	@echo ""
+	@echo "  Elasticsearch Commands"
+	@echo "  ------------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-elasticsearch:|^cli-elasticsearch:|^down-elasticsearch:|^reset-elasticsearch:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 help-mongo: ## Show MongoDB commands
@@ -364,71 +389,43 @@ help-redis: ## Show Redis commands
 	@awk 'BEGIN {FS = ":.*##"} /^up-redis:|^cli-redis:|^gui-redis:|^down-redis:|^reset-redis:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
-help-cassandra: ## Show Cassandra commands
-	@echo ""
-	@echo "  Cassandra Commands"
-	@echo "  --------------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-cassandra:|^cli-cassandra:|^down-cassandra:|^reset-cassandra:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-	@echo ""
-
-help-elasticsearch: ## Show Elasticsearch commands
-	@echo ""
-	@echo "  Elasticsearch Commands"
-	@echo "  ------------------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-elasticsearch:|^cli-elasticsearch:|^down-elasticsearch:|^reset-elasticsearch:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-	@echo ""
-
-help-clickhouse: ## Show ClickHouse commands
-	@echo ""
-	@echo "  ClickHouse Commands"
-	@echo "  ---------------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-clickhouse:|^cli-clickhouse:|^gui-clickhouse:|^down-clickhouse:|^reset-clickhouse:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-	@echo ""
-
-help-couchbase: ## Show Couchbase commands
-	@echo ""
-	@echo "  Couchbase Commands"
-	@echo "  --------------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-couchbase:|^cli-couchbase(-native|-python)?:.*##/ {printf "  %-25s %s\n", $$1, $$2} /^gui-couchbase:|^down-couchbase:|^reset-couchbase:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-	@echo ""
-
 
 # Grouped help commands
 help-file: ## Show file-based database commands
 	@echo ""
 	@echo "  File-based Databases Commands"
 	@echo "  -------------------------------"
-	@awk 'BEGIN {FS=":.*##"} /^up-sqlite:|^cli-sqlite:|^down-sqlite:|^reset-sqlite:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS=":.*##"} /^up-duckdb:|^cli-duckdb:|^sdk-duckdb:|^down-duckdb:|^reset-duckdb:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
-	@awk 'BEGIN {FS=":.*##"} /^up-duckdb:|^cli-duckdb:|^cli-duckdb-native:|^cli-duckdb-python:|^down-duckdb:|^reset-duckdb:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS=":.*##"} /^up-sqlite:|^cli-sqlite:|^down-sqlite:|^reset-sqlite:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 help-sql: ## Show SQL database commands
 	@echo ""
 	@echo "  SQL Databases Commands"
 	@echo "  ------------------------"
-	@awk 'BEGIN {FS=":.*##"} /^up-postgres:|^cli-postgres:|^gui-postgres:|^down-postgres:|^reset-postgres:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS=":.*##"} /^up-mariadb:|^cli-mariadb:|^gui-mariadb:|^down-mariadb:|^reset-mariadb:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 	@awk 'BEGIN {FS=":.*##"} /^up-mysql:|^cli-mysql:|^gui-mysql:|^down-mysql:|^reset-mysql:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
-	@awk 'BEGIN {FS=":.*##"} /^up-mariadb:|^cli-mariadb:|^gui-mariadb:|^down-mariadb:|^reset-mariadb:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS=":.*##"} /^up-postgres:|^cli-postgres:|^gui-postgres:|^down-postgres:|^reset-postgres:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 help-nosql: ## Show NoSQL database commands
 	@echo ""
 	@echo "  NoSQL Databases Commands"
 	@echo "  --------------------------"
-	@awk 'BEGIN {FS=":.*##"} /^up-mongo:|^cli-mongo:|^gui-mongo:|^down-mongo:|^reset-mongo:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-	@echo ""
-	@awk 'BEGIN {FS=":.*##"} /^up-redis:|^cli-redis:|^gui-redis:|^down-redis:|^reset-redis:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-	@echo ""
 	@awk 'BEGIN {FS=":.*##"} /^up-cassandra:|^cli-cassandra:|^down-cassandra:|^reset-cassandra:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-	@echo ""
-	@awk 'BEGIN {FS=":.*##"} /^up-elasticsearch:|^cli-elasticsearch:|^down-elasticsearch:|^reset-elasticsearch:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 	@awk 'BEGIN {FS=":.*##"} /^up-clickhouse:|^cli-clickhouse:|^gui-clickhouse:|^down-clickhouse:|^reset-clickhouse:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
-	@awk 'BEGIN {FS=":.*##"} /^up-couchbase:|^cli-couchbase(-native|-python)?:.*##/ {printf "  %-25s %s\n", $$1, $$2} /^gui-couchbase:|^down-couchbase:|^reset-couchbase:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS=":.*##"} /^up-couchbase:|^cli-couchbase:|^sdk-couchbase:|^gui-couchbase:|^down-couchbase:|^reset-couchbase:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+	@awk 'BEGIN {FS=":.*##"} /^up-elasticsearch:|^cli-elasticsearch:|^down-elasticsearch:|^reset-elasticsearch:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+	@awk 'BEGIN {FS=":.*##"} /^up-mongo:|^cli-mongo:|^gui-mongo:|^down-mongo:|^reset-mongo:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+	@awk 'BEGIN {FS=":.*##"} /^up-redis:|^cli-redis:|^gui-redis:|^down-redis:|^reset-redis:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 # Generic full help

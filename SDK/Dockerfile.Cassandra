@@ -1,7 +1,7 @@
 FROM python:3.11-slim
 
-# Install Couchbase SDK (and any future dependencies)
-RUN pip install --no-cache-dir couchbase
+# Install Cassandra SDK (cassandra-driver)
+RUN pip install --no-cache-dir cassandra-driver
 
 # Set the working directory to /scripts
 WORKDIR /scripts

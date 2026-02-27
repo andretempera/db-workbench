@@ -97,7 +97,6 @@ Each database runs independently and is treated as its own controlled environmen
 db-workbench/
 ├── Makefile
 ├── docker-compose.yaml
-├── Dockerfile.Couchbase
 ├── .env.example
 ├── .gitignore
 ├── README.md
@@ -150,18 +149,22 @@ Each database may include:
 
 **Additional Features**
 - GUI support - built-in web GUIs for quick inspection.
-- Initialization scripts - pre-populated test tables to verify database functionality immediately.
+- SDK support - built-in access to Python SDK CLI
+- Full data sharing between access modes (CLI, SDK and GUI)
+- Initialization scripts - pre-populated idempotent test tables to verify database functionality immediately.
 - Safe experimentation - each database can be reset individually without affecting others.
 - Extensible - adding new engines is straightforward via the unified compose file and folder structure.
 - Comprehensive documentation and cheatsheets - each database has a ready-to-use reference for commands, workflows, and mental models to accelerate learning and experimentation.
 
 
 ## Makefile Commands
-Each database supports:
+Each database may support:
 ```bash
 make up-<database_name>       # Initializes database environment (container or file-based)
 make down-<database_name>     # Stops Docker container
 make cli-<database_name>      # Connects to database CLI
+make sdk-<database_name>      # Connects to SDK Python CLI
+make gui-<database_name>      # Connects to Web UI
 make reset-<database_name>    # Removes all data in db/ folder and removes Docker container
 ```
 On `make up-<database_name>` the initialization is automatic and no separate `make init` command is required.
@@ -225,6 +228,47 @@ pip install -r requirements.txt
 ```
 
 ## Connecting to Databases
+**Using CLI**
+
+The `make cli-<database_name>` commands provide access to each database CLI in a simple and direct way.  
+Some examples:
+```bash
+make cli-sqlite
+make cli-duckdb
+
+make cli-postgres
+make cli-mysql
+
+make cli-cassandra
+make cli-mongo
+```
+
+**Using SDK**
+
+The `make sdk-<database_name>` commands allow access to each database SDK Python CLI for additional functionalities.  
+Some examples:
+```bash
+make sdk-sqlite
+make sdk-duckdb
+
+make sdk-postgres
+make sdk-mysql
+
+make sdk-cassandra
+make sdk-mongo
+```
+
+**Using Web GUIs**
+
+A `make gui-<database_name>` command is included for convenience. Web GUIs, when available, are accessed through localhost and respective port:
+- MariaDB → `http://localhost:<PHPMYADMIN_MARIADB_PORT>`
+- MySQL → `http://localhost:<PHPMYADMIN_MYSQL_PORT>`
+- PostgreSQL → `http://localhost:<PGADMIN_PORT>`
+- Clickhouse →  `http://localhost:<CLICKHOUSE_PORT>`
+- Couchbase →  `http://localhost:<COUCHBASE_PORT>/ui/index.html`
+- MongoDB → `http://localhost:<MONGOEXPRESS_PORT>`
+- Redis → `http://localhost:<REDISINSIGHT_PORT>`
+
 **Using DBeaver (or similar DB clients)**
 - Host: `localhost`
 - Ports, usernames & passwords: defined in `.env`
@@ -234,29 +278,7 @@ For SQLite, it is not possible to access the same database file simultaneously f
 - DBeaver inside WSL (recommended for scripts running in WSL), or
 - Move, copy or create a new `*.db*` file to a Windows path and access it from Windows only.
 
-**Using Web GUIs**
-- PostgreSQL → `http://localhost:<PGADMIN_PORT>`
-- MySQL → `http://localhost:<PHPMYADMIN_MYSQL_PORT>`
-- MariaDB → `http://localhost:<PHPMYADMIN_MARIADB_PORT>`
-- MongoDB → `http://localhost:<MONGOEXPRESS_PORT>`
-- Redis → `http://localhost:<REDISINSIGHT_PORT>`
-- Clickhouse →  `http://localhost:<CLICKHOUSE_PORT>`
-- Couchbase →  `http://localhost:<COUCHBASE_PORT>`
-
-A `make gui-<database_name>` command is included for convenience.
-
-**Using CLI (Examples)**
-```bash
-make cli-sqlite
-make cli-duckdb-native
-make cli-duckdb-docker
-
-make cli-postgres
-make cli-mysql
-
-make cli-mongo
-make cli-cassandra
-```
+While Community Edition works very well for SQL databases, connections to most NoSQL databases are only available in the PRO version
 
 
 ## Troubleshooting
@@ -271,7 +293,7 @@ docker compose logs <service_name>
 ```
 
 
-## Roadmap – Future Database Additions
+## Roadmap – Future Additions
 The current version focuses on lightweight, Docker-friendly databases suitable for local experimentation.  
 As the project evolves, the following may be added:
 - [ ] Neo4j – Graph database with official Docker image and web UI  

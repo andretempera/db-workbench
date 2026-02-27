@@ -1,5 +1,4 @@
 duckdb
 pandas
 elasticsearch
-couchbase
 python-dotenv

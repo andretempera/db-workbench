@@ -1,7 +1,7 @@
 FROM python:3.11-slim
 
-# Install Couchbase SDK (and any future dependencies)
-RUN pip install --no-cache-dir couchbase
+# Install Elasticsearch SDK (elasticsearch-py)
+RUN pip install --no-cache-dir elasticsearch
 
 # Set the working directory to /scripts
 WORKDIR /scripts
