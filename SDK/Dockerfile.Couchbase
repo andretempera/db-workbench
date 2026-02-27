@@ -1,0 +1,11 @@
+# Use a slim Python image
+FROM python:3.11-slim
+
+# Install Couchbase SDK (and any future dependencies)
+RUN pip install --no-cache-dir couchbase
+
+# Set the working directory to /scripts
+WORKDIR /scripts
+
+# Default command to keep the container running
+CMD ["tail", "-f", "/dev/null"]

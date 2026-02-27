@@ -102,6 +102,7 @@ db-workbench/
 ├── .gitignore
 ├── README.md
 ├── LICENSE
+├── SDK/
 ├── docs/
 │   ├── CONTRIBUTING.md
 │   ├── SETUP.md

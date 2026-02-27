@@ -1,18 +1,5 @@
 services:
   # -------------------------
-  # File-based Databases
-  # -------------------------
-  duckdb:
-    image: duckdb/duckdb:latest
-    container_name: duckdb
-    volumes:
-      - ./data/duckdb/db:/workspace
-    working_dir: /workspace
-    tty: true
-    stdin_open: true
-    command: ["database.duckdb"]
- 
-  # -------------------------
   # SQL Databases
   # -------------------------
   postgres:
@@ -163,7 +150,6 @@ services:
       start_period: 20s
 
   couchbase:
-    build: .
     image: couchbase:community-8.0.0
     container_name: couchbase
     environment:
@@ -175,12 +161,46 @@ services:
       - couchbase_data:/opt/couchbase/var
       - ./data/couchbase/scripts/init.sh:/data/couchbase/scripts/init.sh:ro
       - ./data/couchbase/scripts/init_sdk.py:/data/couchbase/scripts/init_sdk.py:ro
+    command: ["couchbase-server", "-d", "trace"]
     healthcheck:
-      test: ["CMD-SHELL", "curl -s -u $${COUCHBASE_USER}:$${COUCHBASE_PASSWORD} http://127.0.0.1:8091/pools/default/nodeServices | grep kv || exit 1"]
+      test: ["CMD-SHELL", "curl -s http://127.0.0.1:8091/pools/default"]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 20s
+      start_period: 60s
+
+
+  # -------------------------
+  # SDK Containers
+  # -------------------------
+  duckdb:
+    image: duckdb/duckdb:latest
+    container_name: duckdb
+    volumes:
+      - ./data/duckdb/db:/workspace
+    working_dir: /workspace
+    tty: true
+    stdin_open: true
+    command: ["db_workbench.duckdb"]
+  
+  couchbase-sdk:
+    build:
+      context: .
+      dockerfile: SDK/Dockerfile.Couchbase
+    container_name: couchbase-sdk
+    depends_on:
+      couchbase:
+        condition: service_healthy
+    environment:
+      COUCHBASE_HOST: couchbase
+      COUCHBASE_USER: ${COUCHBASE_USER}
+      COUCHBASE_PASSWORD: ${COUCHBASE_PASSWORD}
+      COUCHBASE_BUCKET: db_workbench
+    volumes:
+      - ./data/couchbase/scripts:/scripts
+      - couchbase_data:/opt/couchbase/var
+    working_dir: /scripts
+    command: tail -f /dev/null
 
   # -------------------------
   # Web GUIs

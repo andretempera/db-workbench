@@ -179,6 +179,7 @@ reset-clickhouse: ## Remove ClickHouse containers and volumes
 
 up-couchbase: ## Start Couchbase
 	docker compose up -d couchbase
+	docker compose build couchbase-sdk
 
 cli-couchbase: ## Incomplete command (choice of native CLI vs Python CLI)
 	@echo "Incomplete command. Use either 'make cli-couchbase-native' or 'make cli-couchbase-python'."
@@ -187,7 +188,8 @@ cli-couchbase-native: ## Connect to Couchbase CLI  (+ init script)
 	docker compose exec -it couchbase bash -c "/data/couchbase/scripts/init.sh cli; exec /bin/bash"
 
 cli-couchbase-python: ## Connect to Couchbase via Python SDK (+ init script)
-	docker compose exec couchbase bash -c "/data/couchbase/scripts/init.sh python"
+	docker compose up -d couchbase-sdk
+	docker compose exec couchbase-sdk python /scripts/init_sdk.py
 
 gui-couchbase: ## Launch Couchbase Web Console (+ init script)
 	docker compose exec couchbase bash -c "/data/couchbase/scripts/init.sh gui"
