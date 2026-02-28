@@ -1,7 +1,10 @@
 FROM python:3.11-slim
 
 # Install MariaDB SDK (mysql-connector-python)
-RUN pip install --no-cache-dir mysql-connector-python
+RUN apt-get update && \
+    apt-get install -y libpq-dev && \
+    rm -rf /var/lib/apt/lists/* && \
+    pip install --no-cache-dir mysql-connector-python
 
 # Set the working directory to /scripts
 WORKDIR /scripts

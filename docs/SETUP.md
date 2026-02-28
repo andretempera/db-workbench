@@ -95,18 +95,18 @@ pip install -r requirements.txt
 ## Starting Databases
 Start an individual database:
 ```bash
+make up-duckdb
+make up-sqlite
 make up-postgres
 make up-mongo
-make up-sqlite
-make up-duckdb
 ```
 When you run `make up-<database_name>`, initialization scripts are executed automatically. No separate `make init` step is required.
 
 Start all databases by type:
 ```bash
+make up-file
 make up-sql
 make up-nosql
-make up-file
 make up-all
 ```
 Stop databases:
@@ -135,17 +135,17 @@ After `make up-<database_name>` you can now run:
 # SQL example
 SELECT * FROM test;
 
+# Couchbase example
+collection.get("test:1")
+
+# Elasticsearch example
+GET /test/_doc/1;
+
 # MongoDB example
 db.test.find();
 
 # Redis example
 GET db_workbench:test:1;
-
-# Elasticsearch example
-GET /test/_doc/1;
-
-# Couchbase example
-collection.get("test:1")
 ```
 
 ### Cheatsheets
@@ -153,7 +153,7 @@ If you need help getting started with any database, you can find cheatsheets for
 
 
 ## Initialization Scripts (What to Expect)
-Most databases include a minimal initialization script that runs on first startup of the container or database file.    
+Most databases include a minimal initialization script that runs automatically, either on first startup of the container or database file, or dedicated scripts associated to make commands.    
 It will:
 - Default to a workspace called `db_workbench`** (or a similarly named bucket/index for NoSQL engines).
 - Automatically create a table/collection/bucket named `test` (if it does not exist).
@@ -177,16 +177,16 @@ Expected output:
 (1 row)
 ```
 
-Example (DuckDB Python CLI):
+Example (Couchbase CLI):
 ```bash
-make cli-duckdb-python
-conn.execute("SELECT * FROM test").fetchall()
+SELECT * FROM `db_workbench`
 ```
 Expected output:
+```bash
+# TODO: Couchbase result example
 ```
-[(1, 'Andre', 'db-workbench')]
-```
-If the row exists, the database is working properly.
+
+If this data exists, the database is working properly.
 
 
 ## CLI Access
@@ -200,7 +200,10 @@ make cli-sqlite
 make cli-duckdb-python
 make cli-duckdb-docker
 ```
-**Note:** All databases initialize a default workspace called db_workbench (or equivalent for NoSQL engines) with a minimal test row already present.
+
+
+## CLI Access
+
 
 ## Web GUI Connections
 Ensure:
@@ -243,7 +246,7 @@ Login not required.
 The default workspace `db_workbench` is pre-created with a test row.
 
 ### Couchbase / Couchbase Console
-`http://localhost:<COUCHBASE_PORT>`
+`http://localhost:<COUCHBASE_PORT>/ui/index.html`
 
 Login: `Administrator / rootpass`
 

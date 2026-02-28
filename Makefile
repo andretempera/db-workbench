@@ -11,19 +11,20 @@ endif
 # File-Based Databases
 ########################################
 
-up-duckdb: ## Initialize DuckDB database file
+up-duckdb: ## Start DuckDB database file
 	python3 data/duckdb/scripts/init.py
 
 cli-duckdb: ## Enter DuckDB native CLI (via Docker)
-	duckdb db_workbench.duckdb
+	docker run --rm -it --name duckdb-cli -v "$$PWD/data/duckdb/db:/workspace" -w /workspace duckdb/duckdb duckdb db_workbench.duckdb
 
 sdk-duckdb: ## Enter DuckDB via Python SDK CLI
 	python3 -c "import duckdb, pandas as pd; conn = duckdb.connect('${DUCKDB_DB_PATH}'); import code; code.interact(local=globals())"
 
-down-duckdb: ## No-op (file-based unless using Docker manually)
-	@echo "DuckDB (Python mode) has nothing to stop."
+down-duckdb: ## No-op (file-based)
+	@echo "DuckDB is file-based. Nothing to stop."
 
-reset-duckdb: ## Delete DuckDB database file
+reset-duckdb: ## Delete DuckDB database file and remove CLI container
+	docker compose down -v --remove-orphans duckdb-cli
 	@echo "Removing DuckDB database..."
 	@rm -f ${DUCKDB_DB_PATH} || true
 
@@ -33,6 +34,9 @@ up-sqlite: ## Initialize SQLite database file
 
 cli-sqlite: ## Enter SQLite CLI
 	sqlite3 ${SQLITE_DB_PATH}
+
+sdk-sqlite: ## Enter SQLite via Python SDK CLI
+	python3 -c "import sqlite3; conn = sqlite3.connect('${SQLITE_DB_PATH}'); import code; code.interact(local=globals())"
 
 down-sqlite: ## No-op (file-based)
 	@echo "SQLite is file-based. Nothing to stop."
@@ -55,11 +59,15 @@ cli-mariadb: ## Enter MariaDB CLI
 gui-mariadb: ## Launch phpMyAdmin for MariaDB
 	@echo "Click link to open GUI: http://localhost:${PHPMYADMIN_MARIADB_PORT}"
 
+sdk-mariadb: ## Connect to MariaDB via Python SDK (+ init script)
+	docker compose up -d mariadb-sdk
+	docker compose exec mariadb-sdk python /scripts/init_sdk.py
+
 down-mariadb: ## Stop MariaDB + phpMyAdmin
-	docker compose stop mariadb phpmyadmin-mariadb
+	docker compose stop mariadb phpmyadmin-mariadb mariadb-sdk
 
 reset-mariadb: ## Remove MariaDB + phpMyAdmin containers and volumes
-	docker compose down -v --remove-orphans mariadb phpmyadmin-mariadb
+	docker compose down -v --remove-orphans mariadb phpmyadmin-mariadb mariadb-sdk
 
 
 up-mysql: ## Start MySQL + phpMyAdmin
@@ -71,8 +79,12 @@ cli-mysql: ## Enter MySQL CLI
 gui-mysql: ## Launch phpMyAdmin for MySQL
 	@echo "Click link to open GUI: http://localhost:${PHPMYADMIN_MYSQL_PORT}"
 
+sdk-mysql: ## Connect to MySQL via Python SDK (+ init script)
+	docker compose up -d mysql-sdk
+	docker compose exec mysql-sdk python /scripts/init_sdk.py
+
 down-mysql: ## Stop MySQL + phpMyAdmin
-	docker compose stop mysql phpmyadmin-mysql
+	docker compose stop mysql phpmyadmin-mysql mysql-sdk
 
 reset-mysql: ## Remove MySQL + phpMyAdmin containers and volumes
 	docker compose down -v --remove-orphans mysql phpmyadmin-mysql
@@ -87,11 +99,15 @@ cli-postgres: ## Enter PostgreSQL CLI
 gui-postgres: ## Launch pgAdmin for PostgreSQL
 	@echo "Click link to open GUI: http://localhost:${PGADMIN_PORT}"
 
+sdk-postgres: ## Connect to PostgreSQL via Python SDK (+ init script)
+	docker compose up -d postgres-sdk
+	docker compose exec postgres-sdk python /scripts/init_sdk.py
+
 down-postgres: ## Stop PostgreSQL + pgAdmin
-	docker compose stop postgres pgadmin
+	docker compose stop postgres pgadmin postgres-sdk
 
 reset-postgres: ## Remove PostgreSQL + pgAdmin containers and volumes
-	docker compose down -v --remove-orphans postgres pgadmin
+	docker compose down -v --remove-orphans postgres pgadmin postgres-sdk
 
 
 ########################################
@@ -136,13 +152,13 @@ up-couchbase: ## Start Couchbase
 cli-couchbase: ## Connect to Couchbase CLI  (+ init script)
 	docker compose exec -it couchbase bash -c "/data/couchbase/scripts/init.sh cli; exec /bin/bash"
 
-sdk-couchbase: ## Connect to Couchbase via Python SDK (+ init script)
-	docker compose up -d couchbase-sdk
-	docker compose exec couchbase-sdk python /scripts/init_sdk.py
-
 gui-couchbase: ## Launch Couchbase Web Console (+ init script)
 	docker compose exec couchbase bash -c "/data/couchbase/scripts/init.sh gui"
 	@echo "Click link to open GUI: http://localhost:${COUCHBASE_PORT}/ui/index.html"
+
+sdk-couchbase: ## Connect to Couchbase via Python SDK (+ init script)
+	docker compose up -d couchbase-sdk
+	docker compose exec couchbase-sdk python /scripts/init_sdk.py
 
 down-couchbase: ## Stop Couchbase
 	docker compose stop couchbase couchbase-sdk
@@ -214,10 +230,14 @@ reset-file: ## Reset all file-based databases (SQLite + DuckDB)
 
 
 up-sql: ## Start all SQL databases and available GUIs, build respective SDKs images
-	docker compose up -d mariadb phpmyadmin-mariadb mysql phpmyadmin-mysql postgres pgadmin
+	make up-mariadb
+	make up-mysql
+	make up-postgres
 
 down-sql: ## Stop all SQL databases, SDKs and GUIs
-	docker compose stop mariadb phpmyadmin-mariadb mysql phpmyadmin-mysql postgres pgadmin
+	make down-mariadb
+	make down-mysql
+	make down-postgres
 
 reset-sql: ## Reset all SQL databases (containers + volumes)
 	make reset-mariadb
@@ -226,11 +246,20 @@ reset-sql: ## Reset all SQL databases (containers + volumes)
 
 
 up-nosql: ## Start all NoSQL databases and available GUIs, build respective SDKs images
-	docker compose up -d cassandra clickhouse couchbase elasticsearch mongo mongo-express redis redis-insight 
-	docker compose build couchbase-sdk
+	make up-cassandra
+	make up-clickhouse
+	make up-couchbase
+	make up-elasticsearch
+	make up-mongo
+	make up-redis
 
 down-nosql: ## Stop all NoSQL databases
-	docker compose stop cassandra clickhouse couchbase couchbase-sdk elasticsearch mongo mongo-express redis redis-insight
+	make down-cassandra
+	make down-clickhouse
+	make down-couchbase
+	make down-elasticsearch
+	make down-mongo
+	make down-redis
 
 reset-nosql: ## Reset all NoSQL databases (containers + volumes)
 	make reset-cassandra
@@ -321,7 +350,7 @@ help-sqlite: ## Show SQLite commands
 	@echo ""
 	@echo "  SQLite Commands"
 	@echo "  -----------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-sqlite:|^cli-sqlite:|^down-sqlite:|^reset-sqlite:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"} /^up-sqlite:|^cli-sqlite:|^sdk-sqlite:|^down-sqlite:|^reset-sqlite:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 
@@ -329,21 +358,21 @@ help-mariadb: ## Show MariaDB commands
 	@echo ""
 	@echo "  MariaDB Commands"
 	@echo "  ------------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-mariadb:|^cli-mariadb:|^gui-mariadb:|^down-mariadb:|^reset-mariadb:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"} /^up-mariadb:|^cli-mariadb:|^sdk-mariadb:|^gui-mariadb:|^down-mariadb:|^reset-mariadb:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 help-mysql: ## Show MySQL commands
 	@echo ""
 	@echo "  MySQL Commands"
 	@echo "------------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-mysql:|^cli-mysql:|^gui-mysql:|^down-mysql:|^reset-mysql:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"} /^up-mysql:|^cli-mysql:|^sdk-mysql:|^gui-mysql:|^down-mysql:|^reset-mysql:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 help-postgres: ## Show PostgreSQL commands
 	@echo ""
 	@echo "  PostgreSQL Commands"
 	@echo "  ---------------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-postgres:|^cli-postgres:|^gui-postgres:|^down-postgres:|^reset-postgres:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"} /^up-postgres:|^cli-postgres:|^sdk-postgres:|^gui-postgres:|^down-postgres:|^reset-postgres:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 
@@ -351,14 +380,14 @@ help-cassandra: ## Show Cassandra commands
 	@echo ""
 	@echo "  Cassandra Commands"
 	@echo "  --------------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-cassandra:|^cli-cassandra:|^down-cassandra:|^reset-cassandra:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"} /^up-cassandra:|^cli-cassandra:|^sdk-cassandra:|^down-cassandra:|^reset-cassandra:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 help-clickhouse: ## Show ClickHouse commands
 	@echo ""
 	@echo "  ClickHouse Commands"
 	@echo "  ---------------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-clickhouse:|^cli-clickhouse:|^gui-clickhouse:|^down-clickhouse:|^reset-clickhouse:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"} /^up-clickhouse:|^cli-clickhouse:|^sdk-clickhouse:|^gui-clickhouse:|^down-clickhouse:|^reset-clickhouse:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 help-couchbase: ## Show Couchbase commands
@@ -372,21 +401,21 @@ help-elasticsearch: ## Show Elasticsearch commands
 	@echo ""
 	@echo "  Elasticsearch Commands"
 	@echo "  ------------------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-elasticsearch:|^cli-elasticsearch:|^down-elasticsearch:|^reset-elasticsearch:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"} /^up-elasticsearch:|^cli-elasticsearch:|^sdk-elasticsearch:|^down-elasticsearch:|^reset-elasticsearch:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 help-mongo: ## Show MongoDB commands
 	@echo ""
 	@echo "  MongoDB Commands"
 	@echo "  ------------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-mongo:|^cli-mongo:|^gui-mongo:|^down-mongo:|^reset-mongo:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"} /^up-mongo:|^cli-mongo:|^sdk-mongo:|^gui-mongo:|^down-mongo:|^reset-mongo:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 help-redis: ## Show Redis commands
 	@echo ""
 	@echo "  Redis Commands"
 	@echo "  ----------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-redis:|^cli-redis:|^gui-redis:|^down-redis:|^reset-redis:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"} /^up-redis:|^cli-redis:|^sdk-redis:|^gui-redis:|^down-redis:|^reset-redis:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 
@@ -397,35 +426,35 @@ help-file: ## Show file-based database commands
 	@echo "  -------------------------------"
 	@awk 'BEGIN {FS=":.*##"} /^up-duckdb:|^cli-duckdb:|^sdk-duckdb:|^down-duckdb:|^reset-duckdb:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
-	@awk 'BEGIN {FS=":.*##"} /^up-sqlite:|^cli-sqlite:|^down-sqlite:|^reset-sqlite:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS=":.*##"} /^up-sqlite:|^cli-sqlite:|^sdk-sqlite:|^down-sqlite:|^reset-sqlite:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 help-sql: ## Show SQL database commands
 	@echo ""
 	@echo "  SQL Databases Commands"
 	@echo "  ------------------------"
-	@awk 'BEGIN {FS=":.*##"} /^up-mariadb:|^cli-mariadb:|^gui-mariadb:|^down-mariadb:|^reset-mariadb:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS=":.*##"} /^up-mariadb:|^cli-mariadb:|^sdk-mariadb:|^gui-mariadb:|^down-mariadb:|^reset-mariadb:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
-	@awk 'BEGIN {FS=":.*##"} /^up-mysql:|^cli-mysql:|^gui-mysql:|^down-mysql:|^reset-mysql:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS=":.*##"} /^up-mysql:|^cli-mysql:|^sdk-mysql:|^gui-mysql:|^down-mysql:|^reset-mysql:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
-	@awk 'BEGIN {FS=":.*##"} /^up-postgres:|^cli-postgres:|^gui-postgres:|^down-postgres:|^reset-postgres:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS=":.*##"} /^up-postgres:|^cli-postgres:|^sdk-postgres:|^gui-postgres:|^down-postgres:|^reset-postgres:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 help-nosql: ## Show NoSQL database commands
 	@echo ""
 	@echo "  NoSQL Databases Commands"
 	@echo "  --------------------------"
-	@awk 'BEGIN {FS=":.*##"} /^up-cassandra:|^cli-cassandra:|^down-cassandra:|^reset-cassandra:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS=":.*##"} /^up-cassandra:|^cli-cassandra:|^sdk-cassandra:|^down-cassandra:|^reset-cassandra:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 	@awk 'BEGIN {FS=":.*##"} /^up-clickhouse:|^cli-clickhouse:|^gui-clickhouse:|^down-clickhouse:|^reset-clickhouse:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 	@awk 'BEGIN {FS=":.*##"} /^up-couchbase:|^cli-couchbase:|^sdk-couchbase:|^gui-couchbase:|^down-couchbase:|^reset-couchbase:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
-	@awk 'BEGIN {FS=":.*##"} /^up-elasticsearch:|^cli-elasticsearch:|^down-elasticsearch:|^reset-elasticsearch:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS=":.*##"} /^up-elasticsearch:|^cli-elasticsearch:|^sdk-elasticsearch:|^down-elasticsearch:|^reset-elasticsearch:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
-	@awk 'BEGIN {FS=":.*##"} /^up-mongo:|^cli-mongo:|^gui-mongo:|^down-mongo:|^reset-mongo:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS=":.*##"} /^up-mongo:|^cli-mongo:|^sdk-mongo:|^gui-mongo:|^down-mongo:|^reset-mongo:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
-	@awk 'BEGIN {FS=":.*##"} /^up-redis:|^cli-redis:|^gui-redis:|^down-redis:|^reset-redis:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS=":.*##"} /^up-redis:|^cli-redis:|^sdk-redis:|^gui-redis:|^down-redis:|^reset-redis:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 # Generic full help

@@ -1,5 +1,19 @@
 services:
   # -------------------------
+  # File-based Databases
+  # -------------------------
+
+  duckdb-cli:
+    image: duckdb/duckdb:latest
+    container_name: duckdb-cli
+    volumes:
+      - ./data/duckdb/db:/workspace
+    working_dir: /workspace
+    tty: true
+    stdin_open: true
+    command: ["db_workbench.duckdb"]
+
+  # -------------------------
   # SQL Databases
   # -------------------------
 
@@ -16,10 +30,10 @@ services:
       - ./data/mariadb/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      start_period: 10s
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
+      start_period: 10s
   
   mysql:
     image: mysql:9.6.0
@@ -113,7 +127,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 60s
+      start_period: 30s
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.3.0
@@ -175,6 +189,40 @@ services:
   # SDK Containers
   # -------------------------
 
+  mariadb-sdk:
+    build:
+      context: .
+      dockerfile: SDK/Dockerfile.MariaDB
+    container_name: mariadb-sdk
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      MARIADB_HOST: ${MARIADB_HOST}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DB}
+    volumes:
+      - ./data/mariadb/scripts:/scripts
+    working_dir: /scripts
+    command: tail -f /dev/null
+    
+  mysql-sdk:
+    build:
+      context: .
+      dockerfile: SDK/Dockerfile.MySQL
+    container_name: mysql-sdk
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DB}
+    volumes:
+      - ./data/mysql/scripts:/scripts
+    working_dir: /scripts
+    command: tail -f /dev/null
+
   postgres-sdk:
     build:
       context: .
@@ -190,7 +238,6 @@ services:
       POSTGRES_DB: db_workbench
     volumes:
       - ./data/postgres/scripts:/scripts
-      - postgres_data:/var/lib/postgresql/data
     working_dir: /scripts
     command: tail -f /dev/null
 
@@ -212,6 +259,25 @@ services:
       - couchbase_data:/opt/couchbase/var
     working_dir: /scripts
     command: tail -f /dev/null
+
+  mongodb-sdk:
+    build:
+      context: .
+      dockerfile: SDK/Dockerfile.MongoDB
+    container_name: mongodb-sdk
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      MONGO_HOST: ${MONGO_HOST}
+      MONGO_USER: ${MONGO_USER}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+    volumes:
+      - ./data/mongo/scripts:/scripts
+    working_dir: /scripts
+    command: tail -f /dev/null
+
+  
 
   # -------------------------
   # Web GUIs

@@ -59,37 +59,34 @@ Each database runs independently and is treated as its own controlled environmen
 ## Databases
 
 ### Currently Supported:
-
 | Type           | Database         | Web GUI           | Default Workspace   |
 |----------------|------------------|-------------------|---------------------|
-| File-Based     | SQLite           | —                 | db_workbench.db     |
 | File-Based     | DuckDB           | —                 | db_workbench.duckdb |
-| SQL            | PostgreSQL       | pgAdmin           | db_workbench        |
-| SQL            | MySQL            | phpMyAdmin        | db_workbench        |
+| File-Based     | SQLite           | —                 | db_workbench.db     |
 | SQL            | MariaDB          | phpMyAdmin        | db_workbench        |
-| NoSQL          | MongoDB          | Mongo Express     | db_workbench:       |
-| NoSQL          | Redis            | RedisInsight      | db_workbench        |
+| SQL            | MySQL            | phpMyAdmin        | db_workbench        |
+| SQL            | PostgreSQL       | pgAdmin           | db_workbench        |
 | NoSQL          | Cassandra        | —                 | db_workbench        |
-| NoSQL          | Elasticsearch    | —                 | db_workbench        |
 | NoSQL          | ClickHouse       | ClickHouse Web UI | db_workbench        |
 | NoSQL          | Couchbase        | Couchbase Console | db_workbench        |  
+| NoSQL          | Elasticsearch    | —                 | db_workbench        |
+| NoSQL          | MongoDB          | Mongo Express     | db_workbench:       |
+| NoSQL          | Redis            | RedisInsight      | db_workbench        |
 
 ### Technical Overview:
-
 | Database      | Model        | Storage Style | Typical Use Case       |
 |---------------|--------------|---------------|------------------------|
-| SQLite        | Relational   | Row-based     | Lightweight apps       |
 | DuckDB        | Relational   | Columnar      | Analytics / OLAP       |
-| PostgreSQL    | Relational   | Row-based     | OLTP / Production apps |
-| MySQL         | Relational   | Row-based     | Web applications       |
+| SQLite        | Relational   | Row-based     | Lightweight apps       |
 | MariaDB       | Relational   | Row-based     | MySQL-compatible apps  |
-| MongoDB       | Document     | BSON          | Flexible schemas       |
-| Redis         | Key-Value    | In-memory     | Caching / fast lookup  |
+| MySQL         | Relational   | Row-based     | Web applications       |
+| PostgreSQL    | Relational   | Row-based     | OLTP / Production apps |
 | Cassandra     | Wide-column  | Distributed   | High write throughput  |
-| Elasticsearch | Search index | Inverted      | Full-text search       |
 | ClickHouse    | Columnar     | Column-based  | Large-scale analytics  |
 | Couchbase     | Document     | JSON          | Distributed apps       |
-
+| Elasticsearch | Search index | Inverted      | Full-text search       |
+| MongoDB       | Document     | BSON          | Flexible schemas       |
+| Redis         | Key-Value    | In-memory     | Caching / fast lookup  |
 
 
 ## Project Structure
@@ -233,31 +230,15 @@ pip install -r requirements.txt
 The `make cli-<database_name>` commands provide access to each database CLI in a simple and direct way.  
 Some examples:
 ```bash
-make cli-sqlite
 make cli-duckdb
+make cli-sqlite
 
-make cli-postgres
 make cli-mysql
+make cli-postgres
 
 make cli-cassandra
 make cli-mongo
 ```
-
-**Using SDK**
-
-The `make sdk-<database_name>` commands allow access to each database SDK Python CLI for additional functionalities.  
-Some examples:
-```bash
-make sdk-sqlite
-make sdk-duckdb
-
-make sdk-postgres
-make sdk-mysql
-
-make sdk-cassandra
-make sdk-mongo
-```
-
 **Using Web GUIs**
 
 A `make gui-<database_name>` command is included for convenience. Web GUIs, when available, are accessed through localhost and respective port:
@@ -268,6 +249,22 @@ A `make gui-<database_name>` command is included for convenience. Web GUIs, when
 - Couchbase →  `http://localhost:<COUCHBASE_PORT>/ui/index.html`
 - MongoDB → `http://localhost:<MONGOEXPRESS_PORT>`
 - Redis → `http://localhost:<REDISINSIGHT_PORT>`
+
+**Using SDK**
+
+The `make sdk-<database_name>` commands allow access to each database SDK Python CLI for additional functionalities.  
+Some examples:
+```bash
+make sdk-duckdb
+make sdk-sqlite
+
+make sdk-mysql
+make sdk-postgres
+
+make sdk-cassandra
+make sdk-mongo
+```
+Each database SDK runs in its own dedicated container.
 
 **Using DBeaver (or similar DB clients)**
 - Host: `localhost`
