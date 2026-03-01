@@ -12,100 +12,214 @@
   </tr>
 </table>
 
-Default workspace: `db_workbench.db`
-
 ## Mental Model
-- SQLite has no server; the **database is a single file**.  
-- Tables are the main storage units, storing **rows and columns**.  
-- No schemas or clusters; everything lives in the file.  
-- SQL syntax is standard but some PostgreSQL-specific commands are not supported.  
-- Changes are transactional by default (ACID-compliant).  
+```txt
+Database (single file)
+ └── Table (grouping)
+      └── Data (stored in rows/records)
+```
+- SQLite is serverless - there is no separate server process.
+- A **database** is a single file on disk (e.g., `db_workbench.db`). It contains tables, indexes, views, and other objects.
+- A **table** is the grouping that organizes data
+- **Data** is stored as **rows** (records) and **columns** (fields).
+- SQLite uses dynamic typing (type affinity system rather than strict column enforcement by default).
+- Commands like `.tables`, `.schema`, and `.exit` are SQLite CLI client commands, not standard SQL.
 
-## Commands
-### 1. Connect
+**Note:** The default workspace for this project is `db_workbench`. 
+
+## Basic Commands & Workflow
+### 1. Start Environment
+- Open MySQL CLI:
 ```bash
-make cli-sqlite
-```
-Opens the SQLite shell connected to `db_workbench.db`
-
-### 2. Show Current Workspace
-```sql
-PRAGMA database_list; -- Shows attached databases (main = db_workbench.db)
+  make cli-mysql
 ```
 
-### 3. List Workspaces (Databases)
+### 2. Inspect Existing Setup
+- Show all databases:
 ```sql
-.databases  -- Lists attached database files
+  \l
 ```
 
-### 4. Switch Workspace
+- Show tables:
 ```sql
-ATTACH 'example.db' AS example_db; -- Attaches another database file
+  \dt
 ```
 
-### 5. Create Workspace
-From system shell, use `sqlite3 data/sqlite/example.db`. It will create the file if needed and enter SQLite shell automatically.
-
-### 6. List Structures (Tables)
+- Show table structure:
 ```sql
-.tables  -- Lists tables in current database
+  \d test
 ```
 
-### 7. Create Structure (Table)
+- Query all data in the `test` table:
 ```sql
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+  SELECT * FROM test;
+```
+
+### 3. Insert a Row
+- Insert a new row into the `test` table:
+```sql
+  INSERT INTO test (id, name, project)
+  VALUES (2, 'Paula', 'new-project');
+```
+
+- Check the data after insertion:
+```sql
+  SELECT * FROM test;  -- View the table to see the new row added
+```
+
+### 4. Update Data
+- Update data in the `test` table:
+```sql
+  UPDATE test
+  SET project = 'updated-project'
+  WHERE id = 2;  -- Updates row based on id number
+```
+
+- Check the data after update:
+```sql
+  SELECT * FROM test;  -- View the table again to check the updated row
+```
+
+### 5. Delete Data
+- Delete a row from the `test` table:
+```sql
+  DELETE FROM test
+  WHERE id = 2;  -- Deletes row based on id number
+```
+
+	Check the data after deletion:
+```sql
+  SELECT * FROM test;  -- Table should have just one entry again
+```
+
+### 6. Create a New Database
+- Create a new database:
+```sql
+  CREATE DATABASE new_database;
+```
+
+- List all databases again:
+```sql
+  \l  -- Newly created database should be visible
+```
+
+- Switch to the new database:
+```sql
+  \c new_database;
+```
+
+### 7. Add a New Table
+- Create a new table:
+```sql
+  CREATE TABLE IF NOT EXISTS top_secret (
+    id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
-    age INTEGER
-); -- Creates a new table
+    organization TEXT,
+    country TEXT,
+    years_active INTEGER);
 ```
 
-### 8. Describe Structure
+- List tables again:
 ```sql
-.schema users  -- Shows table structure
+  \dt  -- Newly created table should be visible
 ```
 
-### 9. Insert Data
+- Insert data into the new table:
 ```sql
-INSERT INTO users (name, age)
-VALUES ('Alice', 30); -- Inserts one row
+  INSERT INTO top_secret (name, organization, country, years_active)
+  VALUES ('James', 'MI6', 'UK', 20),
+    ('Ethan', 'IMF', 'USA', 30),
+    ('Nikita', 'Section One', 'Russia', 8),
+    ('Jason', 'CIA', 'USA', 12),
+    ('Sydney', 'SD-6', 'USA', 10);
 ```
 
-### 10. Query All Data
+- Check the new table's data:
 ```sql
-SELECT * FROM users; -- Returns all rows
+  SELECT * FROM top_secret;
 ```
 
-### 11. Query With Condition
+### 8. Conditional queries
+- Match criteria:
 ```sql
-SELECT * FROM users
-WHERE age > 25; -- Filters rows
+  SELECT * FROM top_secret
+  WHERE organization = 'CIA';
 ```
 
-### 12. Update Data
+- Find MAX value in entire table:
 ```sql
-UPDATE users
-SET age = 31
-WHERE name = 'Alice'; -- Updates matching rows
+  SELECT MAX(years_active)
+  FROM top_secret; -- also works with MIN()
 ```
 
-### 13. Delete Data
+- Threshold criteria:
 ```sql
-DELETE FROM users
-WHERE name = 'Alice'; -- Deletes matching rows
+  SELECT * FROM top_secret
+  WHERE years_active < 15;  -- also works with <=, > and >=
 ```
 
-### 14. Drop Structure
+- Multiple criteria:
 ```sql
-DROP TABLE users; -- Permanently removes table
+  SELECT * FROM top_secret
+  WHERE years_active > 10 AND
+  name LIKE "J%";  -- matching names that start with "J"
 ```
 
-### 15. Exit
+
+### 9. Aggregation queries
+- Count number of rows:
 ```sql
-.exit  -- Exit SQLite shell
+  SELECT COUNT(*)
+  FROM top_secret
+  WHERE years_active > 15;  -- also works with >=, < and <=
 ```
 
----
+- Using average and grouping:
+```sql
+  SELECT country, AVG(years_active)
+  FROM top_secret
+  WHERE country = 'USA'
+  GROUP BY country;   -- also works with SUM()
+```
+
+- Find MIN within a group:
+```sql
+  SELECT country, MIN(years_active)
+  FROM top_secret
+  GROUP BY country; -- also works with MAX()
+```
+	
+### 10. Cleanup
+- Delete table:
+```sql
+  DROP TABLE top_secret;
+```
+
+- List tables again:
+```sql
+  \dt  -- Verify that the "top_secret" table was deleted
+```
+
+- Switch back to original database:
+```sql
+  \c db_workbench;
+```
+
+- Delete database:
+```sql
+  DROP DATABASE new_database;
+```
+
+- List all databases again:
+```sql
+  \l  -- Verify that the "new_database" database was deleted
+```
+
+### 11. Exit Environment
+- Exit MySQL CLI:
+```sql
+  \q
+```
 
 **Notes:**
 - Workspace = database file; db_workbench.db is pre-created by default.

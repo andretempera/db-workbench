@@ -26,10 +26,10 @@ try:
         cursor = connection.cursor(buffered=True)
 
         print(f"Connected to MySQL version {connection.server_info}")
-        print("||| MySQL SDK Python CLI |||")
-        print("\nObjects available:")
-        print(" - conn")
-        print(" - cursor")
+        print("\n||| MySQL SDK Python CLI |||")
+        print("Objects available:")
+        print("    - conn")
+        print(f"    - cursor\n")
 
 
         import code

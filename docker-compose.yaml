@@ -84,6 +84,10 @@ services:
     volumes:
       - cassandra_data:/var/lib/cassandra
       - ./data/cassandra/scripts/init.cql:/docker-entrypoint-initdb.d/init.cql:ro
+    environment:
+      MAX_HEAP_SIZE: 1G
+      HEAP_NEWSIZE: 256M
+    mem_limit: 2g
     healthcheck:
       test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES' || exit 1"]
       interval: 15s

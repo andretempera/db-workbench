@@ -26,10 +26,10 @@ try:
         cursor = connection.cursor(buffered=True)
 
         print(f"Connected to MariaDB version {connection.server_info}")
-        print("||| MariaDB SDK Python CLI |||")
-        print("\nObjects available:")
-        print(" - conn")
-        print(" - cursor")
+        print("\n||| MariaDB SDK Python CLI |||")
+        print("Objects available:")
+        print("    - conn")
+        print(f"    - cursor\n")
 
         import code
         conn = connection  # unify naming

@@ -12,103 +12,216 @@
   </tr>
 </table>
 
-Default workspace: `db_workbench.duckdb`
-
 ## Mental Model
-- DuckDB stores data in a **single file** (e.g., `db_workbench.duckdb`).
-- Works in **columnar mode**, optimized for analytical queries.
-- Supports SQL syntax similar to PostgreSQL for DML and DDL.
-- Python API allows programmatic access with `duckdb.connect()`.
-- CLI / Docker mode allows direct SQL execution from terminal or container.
+```txt
+Database (single file or in-memory)
+ └── Schema (logical grouping)
+      └── Table (grouping)
+           └── Data (stored in rows/records)
+```
+- DuckDB is serverless - there is no separate server process.
+- A **database** is a single file on disk (e.g., `db_workbench.duckdb`) or run entirely in-memory.
+- A schema contains tables, views, and other objects.
+- A **table** is the grouping that organizes data
+- **Data** is stored as **rows** (records) and **columns** (fields).
+- DuckDB uses strongly-typed SQL (each column has a defined data type).
+- Commands like `.tables`, `.schema`, and `.exit` are DuckDB CLI client commands, not standard SQL.
 
-## Commands
+**Note:** The default workspace for this project is `db_workbench`. 
 
-### 1. Connect
+## Basic Commands & Workflow
+### 1. Start Environment
+- Open MySQL CLI:
 ```bash
-make cli-duckdb-docker
-# or directly
-duckdb data/duckdb/db_workbench.duckdb
+  make cli-mysql
 ```
 
-### 2. Show Current Workspace
+### 2. Inspect Existing Setup
+- Show all databases:
 ```sql
-PRAGMA database_list; -- Shows attached databases
+  \l
 ```
 
-### 3. List Workspaces (Databases)
-In DuckDB, each database is a file. Default for this project is `db_workbench.duckdb`.  
-There is no concept of multiple databases in the same session, but multiple files can be attached using `ATTACH`.
-
-### 4. Switch Workspace
-Not applicable in DuckDB; connect to a different file instead.
+- Show tables:
 ```sql
-ATTACH 'example.duckdb' AS example; -- attach another database file
-SELECT * FROM example.users; -- Query table from attached database
-``` 
-
-### 5. Create Workspace
-From system shell, use `duckdb data/duckdb/example.duckdb`. It will create the file if needed and enter DuckDB shell automatically.
-
-### 6. List Structures (Tables)
-```sql
-SHOW TABLES; -- Lists tables in current database
+  \dt
 ```
 
-### 7. Create Structure (Table)
+- Show table structure:
 ```sql
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY,
-    name VARCHAR,
-    age INTEGER
-); -- Creates a new table
+  \d test
 ```
 
-### 8. Describe Structure
+- Query all data in the `test` table:
 ```sql
-DESCRIBE users; -- Shows column info
+  SELECT * FROM test;
 ```
 
-### 9. Insert Data
+### 3. Insert a Row
+- Insert a new row into the `test` table:
 ```sql
-INSERT INTO users (id, name, age)
-VALUES (1, 'Alice', 30);
+  INSERT INTO test (id, name, project)
+  VALUES (2, 'Paula', 'new-project');
 ```
 
-### 10.  Query All Data
+- Check the data after insertion:
 ```sql
-SELECT * FROM users;
+  SELECT * FROM test;  -- View the table to see the new row added
 ```
 
-### 11.  Query With Condition
+### 4. Update Data
+- Update data in the `test` table:
 ```sql
-SELECT * FROM users
-WHERE age > 25;
+  UPDATE test
+  SET project = 'updated-project'
+  WHERE id = 2;  -- Updates row based on id number
 ```
 
-### 12.  Update Data
+- Check the data after update:
 ```sql
-UPDATE users
-SET age = 31
-WHERE name = 'Alice';
+  SELECT * FROM test;  -- View the table again to check the updated row
 ```
 
-### 13.  Delete Data
+### 5. Delete Data
+- Delete a row from the `test` table:
 ```sql
-DELETE FROM users
-WHERE name = 'Alice';
+  DELETE FROM test
+  WHERE id = 2;  -- Deletes row based on id number
 ```
 
-### 14.  Drop Structure
+	Check the data after deletion:
 ```sql
-DROP TABLE users;
+  SELECT * FROM test;  -- Table should have just one entry again
 ```
 
-### 15.  Exit
+### 6. Create a New Database
+- Create a new database:
 ```sql
-.quit
+  CREATE DATABASE new_database;
 ```
 
----
+- List all databases again:
+```sql
+  \l  -- Newly created database should be visible
+```
+
+- Switch to the new database:
+```sql
+  \c new_database;
+```
+
+### 7. Add a New Table
+- Create a new table:
+```sql
+  CREATE TABLE IF NOT EXISTS top_secret (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    organization TEXT,
+    country TEXT,
+    years_active INTEGER);
+```
+
+- List tables again:
+```sql
+  \dt  -- Newly created table should be visible
+```
+
+- Insert data into the new table:
+```sql
+  INSERT INTO top_secret (name, organization, country, years_active)
+  VALUES ('James', 'MI6', 'UK', 20),
+    ('Ethan', 'IMF', 'USA', 30),
+    ('Nikita', 'Section One', 'Russia', 8),
+    ('Jason', 'CIA', 'USA', 12),
+    ('Sydney', 'SD-6', 'USA', 10);
+```
+
+- Check the new table's data:
+```sql
+  SELECT * FROM top_secret;
+```
+
+### 8. Conditional queries
+- Match criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE organization = 'CIA';
+```
+
+- Find MAX value in entire table:
+```sql
+  SELECT MAX(years_active)
+  FROM top_secret; -- also works with MIN()
+```
+
+- Threshold criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE years_active < 15;  -- also works with <=, > and >=
+```
+
+- Multiple criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE years_active > 10 AND
+  name LIKE "J%";  -- matching names that start with "J"
+```
+
+
+### 9. Aggregation queries
+- Count number of rows:
+```sql
+  SELECT COUNT(*)
+  FROM top_secret
+  WHERE years_active > 15;  -- also works with >=, < and <=
+```
+
+- Using average and grouping:
+```sql
+  SELECT country, AVG(years_active)
+  FROM top_secret
+  WHERE country = 'USA'
+  GROUP BY country;   -- also works with SUM()
+```
+
+- Find MIN within a group:
+```sql
+  SELECT country, MIN(years_active)
+  FROM top_secret
+  GROUP BY country; -- also works with MAX()
+```
+	
+### 10. Cleanup
+- Delete table:
+```sql
+  DROP TABLE top_secret;
+```
+
+- List tables again:
+```sql
+  \dt  -- Verify that the "top_secret" table was deleted
+```
+
+- Switch back to original database:
+```sql
+  \c db_workbench;
+```
+
+- Delete database:
+```sql
+  DROP DATABASE new_database;
+```
+
+- List all databases again:
+```sql
+  \l  -- Verify that the "new_database" database was deleted
+```
+
+### 11. Exit Environment
+- Exit MySQL CLI:
+```sql
+  \q
+```
 
 **Notes:**
 - Workspace = file; db_workbench.duckdb is pre-created by default.

@@ -18,7 +18,7 @@ cli-duckdb: ## Enter DuckDB native CLI (via Docker)
 	docker run --rm -it --name duckdb-cli -v "$$PWD/data/duckdb/db:/workspace" -w /workspace duckdb/duckdb duckdb db_workbench.duckdb
 
 sdk-duckdb: ## Enter DuckDB via Python SDK CLI
-	python3 -c "import duckdb, pandas as pd; conn = duckdb.connect('${DUCKDB_DB_PATH}'); import code; code.interact(local=globals())"
+	python3 ./data/duckdb/scripts/init_sdk.py
 
 down-duckdb: ## No-op (file-based)
 	@echo "DuckDB is file-based. Nothing to stop."
@@ -36,7 +36,7 @@ cli-sqlite: ## Enter SQLite CLI
 	sqlite3 ${SQLITE_DB_PATH}
 
 sdk-sqlite: ## Enter SQLite via Python SDK CLI
-	python3 -c "import sqlite3; conn = sqlite3.connect('${SQLITE_DB_PATH}'); import code; code.interact(local=globals())"
+	python3 ./data/sqlite/scripts/init_sdk.py
 
 down-sqlite: ## No-op (file-based)
 	@echo "SQLite is file-based. Nothing to stop."

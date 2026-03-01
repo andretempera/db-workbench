@@ -38,12 +38,12 @@ try:
     bucket = cluster.bucket(COUCHBASE_BUCKET)
     collection = bucket.default_collection()
 
-    print(f"||| Couchbase SDK Python CLI |||")
-    print(f"Connected to Couchbase bucket '{bucket.name}'\n")
+    print(f"\n||| Couchbase SDK Python CLI |||")
+    print(f"Connected to Couchbase bucket '{bucket.name}'")
     print("Objects available:")
-    print(" - cluster")
-    print(" - bucket")
-    print(" - collection\n")
+    print("    - cluster")
+    print("    - bucket")
+    print(f"    - collection\n")
 
 except CouchbaseException as e:
     print(f"Error connecting to Couchbase: {e}")

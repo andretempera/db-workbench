@@ -12,97 +12,216 @@
   </tr>
 </table>
 
-Default workspace: `db_workbench`
-
 ## Mental Model
-- Cassandra organizes data into **keyspaces → tables → rows**.
-- Each table has a **primary key** for partitioning and uniqueness.
-- Wide-column model allows flexible columns per row.
-- Queries require knowing **primary keys or indexed columns**.
-- Data is eventually consistent in a cluster.
-- `db_workbench` keyspace is pre-created for experimentation.
+```txt
+Cluster
+ └── Keyspace (logical grouping)
+      └── Table (column family)
+           └── Data (partitioned rows)
+```
+- A Cassandra cluster contains multiple nodes (machines).
+- A **cluster** contains one or more keyspaces.
+- A **keyspace** is the top-level logical grouping (similar to a database in relational systems). It defines replication settings (how data is distributed and copied across nodes).
+- A **table** (formerly called a column family) lives inside a keyspace.
+- Data is stored as rows, but distributed across nodes by partition key.
+- Cassandra uses CQL (Cassandra Query Language), which looks like SQL but is not fully relational.
+- Commands like `DESCRIBE KEYSPACES` and `DESCRIBE TABLE` are CQL shell (cqlsh) commands.
 
-## Commands
-### 1. Connect
+**Note:** The default workspace for this project is `db_workbench`. 
+
+## Basic Commands & Workflow
+### 1. Start Environment
+- Open MySQL CLI:
 ```bash
-make cli-cassandra
+  make cli-mysql
 ```
 
-### 2. Show Current Workspace
-```cql
-DESCRIBE keyspace db_workbench;  -- Shows current keyspace info
+### 2. Inspect Existing Setup
+- Show all databases:
+```sql
+  \l
 ```
 
-### 3. List Workspaces (Keyspaces)
-```cql
-DESCRIBE KEYSPACES;  -- Lists all keyspaces
+- Show tables:
+```sql
+  \dt
 ```
 
-### 4. Switch Workspace (Keyspace)
-```cql
-USE db_workbench;  -- Switch to keyspace
+- Show table structure:
+```sql
+  \d test
 ```
 
-### 5. Create Workspace (Keyspace)
-```cql
-CREATE KEYSPACE example_keyspace
-WITH replication = {'class':'SimpleStrategy', 'replication_factor':1};
+- Query all data in the `test` table:
+```sql
+  SELECT * FROM test;
 ```
 
-### 6. List Structures (Tables)
-```cql
-DESCRIBE TABLES;  -- Lists tables in current keyspace
+### 3. Insert a Row
+- Insert a new row into the `test` table:
+```sql
+  INSERT INTO test (id, name, project)
+  VALUES (2, 'Paula', 'new-project');
 ```
 
-### 7. Create Structure (Table)
-```cql
-CREATE TABLE users (
-    id UUID PRIMARY KEY,
-    name text,
-    age int
-);  -- Creates table in current keyspace
+- Check the data after insertion:
+```sql
+  SELECT * FROM test;  -- View the table to see the new row added
 ```
 
-### 8. Insert Data
-```cql
-INSERT INTO users (id, name, age)
-VALUES (uuid(), 'Alice', 30);
+### 4. Update Data
+- Update data in the `test` table:
+```sql
+  UPDATE test
+  SET project = 'updated-project'
+  WHERE id = 2;  -- Updates row based on id number
 ```
 
-### 9. Query All Data
-```cql
-SELECT * FROM users;
+- Check the data after update:
+```sql
+  SELECT * FROM test;  -- View the table again to check the updated row
 ```
 
-### 10. Query With Condition
-```cql
-SELECT * FROM users WHERE id = some_uuid;  -- Must use PRIMARY KEY or indexed column
+### 5. Delete Data
+- Delete a row from the `test` table:
+```sql
+  DELETE FROM test
+  WHERE id = 2;  -- Deletes row based on id number
 ```
 
-### 11. Update Data
-```cql
-UPDATE users
-SET age = 31
-WHERE id = some_uuid;  -- Must use PRIMARY KEY
+	Check the data after deletion:
+```sql
+  SELECT * FROM test;  -- Table should have just one entry again
 ```
 
-### 12. Delete Data
-```cql
-DELETE FROM users
-WHERE id = some_uuid;  -- Must use PRIMARY KEY
+### 6. Create a New Database
+- Create a new database:
+```sql
+  CREATE DATABASE new_database;
 ```
 
-### 13. Drop Structure (Table)
-```cql
-DROP TABLE users;
+- List all databases again:
+```sql
+  \l  -- Newly created database should be visible
 ```
 
-### 14. Exit
-```bash
-exit
+- Switch to the new database:
+```sql
+  \c new_database;
 ```
 
----
+### 7. Add a New Table
+- Create a new table:
+```sql
+  CREATE TABLE IF NOT EXISTS top_secret (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    organization TEXT,
+    country TEXT,
+    years_active INTEGER);
+```
+
+- List tables again:
+```sql
+  \dt  -- Newly created table should be visible
+```
+
+- Insert data into the new table:
+```sql
+  INSERT INTO top_secret (name, organization, country, years_active)
+  VALUES ('James', 'MI6', 'UK', 20),
+    ('Ethan', 'IMF', 'USA', 30),
+    ('Nikita', 'Section One', 'Russia', 8),
+    ('Jason', 'CIA', 'USA', 12),
+    ('Sydney', 'SD-6', 'USA', 10);
+```
+
+- Check the new table's data:
+```sql
+  SELECT * FROM top_secret;
+```
+
+### 8. Conditional queries
+- Match criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE organization = 'CIA';
+```
+
+- Find MAX value in entire table:
+```sql
+  SELECT MAX(years_active)
+  FROM top_secret; -- also works with MIN()
+```
+
+- Threshold criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE years_active < 15;  -- also works with <=, > and >=
+```
+
+- Multiple criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE years_active > 10 AND
+  name LIKE "J%";  -- matching names that start with "J"
+```
+
+
+### 9. Aggregation queries
+- Count number of rows:
+```sql
+  SELECT COUNT(*)
+  FROM top_secret
+  WHERE years_active > 15;  -- also works with >=, < and <=
+```
+
+- Using average and grouping:
+```sql
+  SELECT country, AVG(years_active)
+  FROM top_secret
+  WHERE country = 'USA'
+  GROUP BY country;   -- also works with SUM()
+```
+
+- Find MIN within a group:
+```sql
+  SELECT country, MIN(years_active)
+  FROM top_secret
+  GROUP BY country; -- also works with MAX()
+```
+	
+### 10. Cleanup
+- Delete table:
+```sql
+  DROP TABLE top_secret;
+```
+
+- List tables again:
+```sql
+  \dt  -- Verify that the "top_secret" table was deleted
+```
+
+- Switch back to original database:
+```sql
+  \c db_workbench;
+```
+
+- Delete database:
+```sql
+  DROP DATABASE new_database;
+```
+
+- List all databases again:
+```sql
+  \l  -- Verify that the "new_database" database was deleted
+```
+
+### 11. Exit Environment
+- Exit MySQL CLI:
+```sql
+  \q
+```
 
 **Notes:**
 - Workspace = keyspace; pre-created db_workbench is your default.

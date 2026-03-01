@@ -12,106 +12,216 @@
   </tr>
 </table>
 
-Default workspace: `db_workbench`
-
 ## Mental Model
-- A MongoDB **server** contains multiple databases.
-- A **database** contains collections.
-- A **collection** contains documents (JSON-like objects).
-- Documents can have flexible structures (no enforced schema by default).
-- Data is queried using JavaScript-style syntax.
-- There are no joins in the traditional SQL sense.
+```txt
+Cluster (optional)
+ └── Database (logical grouping)
+      └── Collection (grouping)
+           └── Document (BSON data)
+```
+- A MongoDB deployment can run as a single server, a replica set, or a sharded cluster.
+- A **database** is the primary logical grouping and contains collections.
+- A **collection** stores documents (similar to a table in relational systems).
+- A **document** is a BSON object (binary JSON) identified by a unique _id.
+- Data is stored in flexible, schema-optional format.
+- Queries use a JSON-like query language.
+- Commands like `show dbs` and `show collections` are MongoDB shell commands.
 
-## Commands
+**Note:** The default database for this project is `db_workbench`. 
 
-### 1. Connect
+## Basic Commands & Workflow
+### 1. Start Environment
+- Open MySQL CLI:
 ```bash
-make cli-mongo
+  make cli-mysql
 ```
 
-### 2. Show Current Workspace
-```javascript
-db  // Shows current database
+### 2. Inspect Existing Setup
+- Show all databases:
+```sql
+  \l
 ```
 
-### 3. List Workspaces (Databases)
-```javascript
-show dbs  // Lists all databases
+- Show tables:
+```sql
+  \dt
 ```
 
-### 4. Switch Workspace
-```javascript
-use db_workbench  // Switch to database
+- Show table structure:
+```sql
+  \d test
 ```
 
-### 5. Create Workspace
-```javascript
-use example_db  // Creates database if it does not exist
+- Query all data in the `test` table:
+```sql
+  SELECT * FROM test;
 ```
 
-### 6. List Structures (Collections)
-```javascript
-show collections  // Lists collections in current database
+### 3. Insert a Row
+- Insert a new row into the `test` table:
+```sql
+  INSERT INTO test (id, name, project)
+  VALUES (2, 'Paula', 'new-project');
 ```
 
-### 7. Create Structure (Collection)
-```javascript
-db.createCollection("users")  // Explicitly creates collection
+- Check the data after insertion:
+```sql
+  SELECT * FROM test;  -- View the table to see the new row added
 ```
 
-(Note: Collections are also created automatically when inserting documents.)
-
-### 8. Describe Structure
-```javascript
-db.users.findOne()  // Shows example document structure
+### 4. Update Data
+- Update data in the `test` table:
+```sql
+  UPDATE test
+  SET project = 'updated-project'
+  WHERE id = 2;  -- Updates row based on id number
 ```
 
-(MongoDB does not enforce a fixed schema.)
-
-### 9. Insert Data
-```javascript
-db.users.insertOne({
-  name: "Alice",
-  age: 30
-});  // Inserts one document
+- Check the data after update:
+```sql
+  SELECT * FROM test;  -- View the table again to check the updated row
 ```
 
-### 10. Query All Data
-```javascript
-db.users.find();  // Returns all documents
+### 5. Delete Data
+- Delete a row from the `test` table:
+```sql
+  DELETE FROM test
+  WHERE id = 2;  -- Deletes row based on id number
 ```
 
-### 11. Query With Condition
-```javascript
-db.users.find({ age: { $gt: 25 } });  // Filters documents
+	Check the data after deletion:
+```sql
+  SELECT * FROM test;  -- Table should have just one entry again
 ```
 
-### 12. Update Data
-```javascript
-db.users.updateOne(
-  { name: "Alice" },
-  { $set: { age: 31 } }
-);  // Updates matching document
+### 6. Create a New Database
+- Create a new database:
+```sql
+  CREATE DATABASE new_database;
 ```
 
-### 13. Delete Data
-```javascript
-db.users.deleteOne(
-  { name: "Alice" }
-);  // Deletes matching document
+- List all databases again:
+```sql
+  \l  -- Newly created database should be visible
 ```
 
-### 14. Drop Structure
-```javascript
-db.users.drop();  // Permanently removes collection
+- Switch to the new database:
+```sql
+  \c new_database;
 ```
 
-### 15. Exit
-```bash
-exit
+### 7. Add a New Table
+- Create a new table:
+```sql
+  CREATE TABLE IF NOT EXISTS top_secret (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    organization TEXT,
+    country TEXT,
+    years_active INTEGER);
 ```
 
----
+- List tables again:
+```sql
+  \dt  -- Newly created table should be visible
+```
+
+- Insert data into the new table:
+```sql
+  INSERT INTO top_secret (name, organization, country, years_active)
+  VALUES ('James', 'MI6', 'UK', 20),
+    ('Ethan', 'IMF', 'USA', 30),
+    ('Nikita', 'Section One', 'Russia', 8),
+    ('Jason', 'CIA', 'USA', 12),
+    ('Sydney', 'SD-6', 'USA', 10);
+```
+
+- Check the new table's data:
+```sql
+  SELECT * FROM top_secret;
+```
+
+### 8. Conditional queries
+- Match criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE organization = 'CIA';
+```
+
+- Find MAX value in entire table:
+```sql
+  SELECT MAX(years_active)
+  FROM top_secret; -- also works with MIN()
+```
+
+- Threshold criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE years_active < 15;  -- also works with <=, > and >=
+```
+
+- Multiple criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE years_active > 10 AND
+  name LIKE "J%";  -- matching names that start with "J"
+```
+
+
+### 9. Aggregation queries
+- Count number of rows:
+```sql
+  SELECT COUNT(*)
+  FROM top_secret
+  WHERE years_active > 15;  -- also works with >=, < and <=
+```
+
+- Using average and grouping:
+```sql
+  SELECT country, AVG(years_active)
+  FROM top_secret
+  WHERE country = 'USA'
+  GROUP BY country;   -- also works with SUM()
+```
+
+- Find MIN within a group:
+```sql
+  SELECT country, MIN(years_active)
+  FROM top_secret
+  GROUP BY country; -- also works with MAX()
+```
+	
+### 10. Cleanup
+- Delete table:
+```sql
+  DROP TABLE top_secret;
+```
+
+- List tables again:
+```sql
+  \dt  -- Verify that the "top_secret" table was deleted
+```
+
+- Switch back to original database:
+```sql
+  \c db_workbench;
+```
+
+- Delete database:
+```sql
+  DROP DATABASE new_database;
+```
+
+- List all databases again:
+```sql
+  \l  -- Verify that the "new_database" database was deleted
+```
+
+### 11. Exit Environment
+- Exit MySQL CLI:
+```sql
+  \q
+```
 
 **Notes:**
 - Workspace = database; pre-created db_workbench is your default.

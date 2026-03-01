@@ -12,115 +12,217 @@
   </tr>
 </table>
 
-Default workspace: `db_workbench` (bucket)
-
 ## Mental Model
 ```txt
 Cluster
  └── Bucket (workspace)
-      └── Scope (optional grouping)
-           └── Collection (optional grouping)
-                └── Document (JSON, flexible schema, like a row in SQL)
+      └── Scope (logical grouping)
+           └── Collection (grouping)
+                └── Document (JSON, flexible schema)
 ```
-- **Cluster** contains one or more buckets.
-- **Bucket** = workspace; `db_workbench` exists by default.
-- **Scopes and Collections** optional grouping documents inside a bucket (`_default` always exists).
-- **Document** = JSON object stored in a bucket (like a row in SQL).
-- Couchbase is optimized for **distributed access, caching, and flexible schema designs**.
+- A Couchbase **cluster** contains one or more nodes.
+- A **bucket** is the primary data container (similar to a database) and contains scopes.
+- A **scope** is a logical grouping of collections (similar to a schema).
+- A **collection** stores documents (similar to a table in relational systems).
+- A **document** is a JSON object identified by a unique key.
+- Data is stored in flexible JSON format (schema optional).
+- N1QL (SQL++ for JSON) provides SQL-like querying over documents.
 
-## Commands
-### 1. Connect
+**Note:** The default bucket (workspace) for this project is `db_workbench`. 
+
+## Basic Commands & Workflow
+### 1. Start Environment
+- Open MySQL CLI:
 ```bash
-make cli-couchbase-native
+  make cli-mysql
 ```
 
-### 2. Set Query Context (like "USE DATABASE" command)
+### 2. Inspect Existing Setup
+- Show all databases:
 ```sql
-\SET -query_context `db_workbench`._default;
+  \l
 ```
 
-### 3. Show Current Workspace (Bucket)
+- Show tables:
 ```sql
-SELECT name FROM system:buckets WHERE name = "db_workbench";
+  \dt
 ```
 
-### 4. List Workspaces (Buckets)
+- Show table structure:
 ```sql
-SELECT name FROM system:buckets;
+  \d test
 ```
 
-### 5. Create Workspace (Bucket)
+- Query all data in the `test` table:
 ```sql
-CREATE BUCKET `example_bucket`;
+  SELECT * FROM test;
 ```
 
-### 6. Create Primary Index (if not exists)
+### 3. Insert a Row
+- Insert a new row into the `test` table:
 ```sql
-CREATE PRIMARY INDEX IF NOT EXISTS ON `db_workbench`;
+  INSERT INTO test (id, name, project)
+  VALUES (2, 'Paula', 'new-project');
 ```
 
-### 7. List Structures (Collections, like tables)
+- Check the data after insertion:
 ```sql
-SELECT name FROM system:collections WHERE `bucket`='db_workbench';
+  SELECT * FROM test;  -- View the table to see the new row added
 ```
 
-### 8. Create Structure (Collection, like creating a table);
+### 4. Update Data
+- Update data in the `test` table:
 ```sql
-CREATE COLLECTION `users` ON `bucket` `db_workbench`;
+  UPDATE test
+  SET project = 'updated-project'
+  WHERE id = 2;  -- Updates row based on id number
 ```
 
-### 9. Insert Data (Equivalent to inserting a new row in a table)
+- Check the data after update:
 ```sql
-INSERT INTO `db_workbench`._default.`users` (KEY, VALUE)
-VALUES ("user::2", {
-  "id": 2,
-  "name": "Alice",
-  "age": 30
-});
+  SELECT * FROM test;  -- View the table again to check the updated row
 ```
 
-### 10. Query All Data
+### 5. Delete Data
+- Delete a row from the `test` table:
 ```sql
-SELECT * FROM `db_workbench`._default.`users`;
+  DELETE FROM test
+  WHERE id = 2;  -- Deletes row based on id number
 ```
 
-### 11. Query With Condition
+	Check the data after deletion:
 ```sql
-SELECT * FROM `db_workbench`._default.`users`
-WHERE id = 2;
+  SELECT * FROM test;  -- Table should have just one entry again
 ```
 
-### 12. Update Data
+### 6. Create a New Database
+- Create a new database:
 ```sql
-UPDATE `db_workbench`._default.`users`
-SET age = 31
-WHERE id = 2;
+  CREATE DATABASE new_database;
 ```
 
-### 13. Delete Data
+- List all databases again:
 ```sql
-DELETE FROM `db_workbench`._default.`users`
-WHERE id = 2;
+  \l  -- Newly created database should be visible
 ```
 
-### 14. Drop Structure (Collection)
+- Switch to the new database:
 ```sql
-DROP COLLECTION `users` ON BUCKET `db_workbench`;
+  \c new_database;
 ```
 
-### 15. Drop Workspace (Bucket)
+### 7. Add a New Table
+- Create a new table:
 ```sql
-DROP BUCKET `example_bucket`;
+  CREATE TABLE IF NOT EXISTS top_secret (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    organization TEXT,
+    country TEXT,
+    years_active INTEGER);
 ```
 
-### 16. Exit CLI
-```bash
-\quit;
-# or
-Ctrl + D
+- List tables again:
+```sql
+  \dt  -- Newly created table should be visible
 ```
 
----
+- Insert data into the new table:
+```sql
+  INSERT INTO top_secret (name, organization, country, years_active)
+  VALUES ('James', 'MI6', 'UK', 20),
+    ('Ethan', 'IMF', 'USA', 30),
+    ('Nikita', 'Section One', 'Russia', 8),
+    ('Jason', 'CIA', 'USA', 12),
+    ('Sydney', 'SD-6', 'USA', 10);
+```
+
+- Check the new table's data:
+```sql
+  SELECT * FROM top_secret;
+```
+
+### 8. Conditional queries
+- Match criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE organization = 'CIA';
+```
+
+- Find MAX value in entire table:
+```sql
+  SELECT MAX(years_active)
+  FROM top_secret; -- also works with MIN()
+```
+
+- Threshold criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE years_active < 15;  -- also works with <=, > and >=
+```
+
+- Multiple criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE years_active > 10 AND
+  name LIKE "J%";  -- matching names that start with "J"
+```
+
+
+### 9. Aggregation queries
+- Count number of rows:
+```sql
+  SELECT COUNT(*)
+  FROM top_secret
+  WHERE years_active > 15;  -- also works with >=, < and <=
+```
+
+- Using average and grouping:
+```sql
+  SELECT country, AVG(years_active)
+  FROM top_secret
+  WHERE country = 'USA'
+  GROUP BY country;   -- also works with SUM()
+```
+
+- Find MIN within a group:
+```sql
+  SELECT country, MIN(years_active)
+  FROM top_secret
+  GROUP BY country; -- also works with MAX()
+```
+	
+### 10. Cleanup
+- Delete table:
+```sql
+  DROP TABLE top_secret;
+```
+
+- List tables again:
+```sql
+  \dt  -- Verify that the "top_secret" table was deleted
+```
+
+- Switch back to original database:
+```sql
+  \c db_workbench;
+```
+
+- Delete database:
+```sql
+  DROP DATABASE new_database;
+```
+
+- List all databases again:
+```sql
+  \l  -- Verify that the "new_database" database was deleted
+```
+
+### 11. Exit Environment
+- Exit MySQL CLI:
+```sql
+  \q
+```
 
 **Notes:**
 - Couchbase **does not enforce schemas**; JSON documents can vary in structure.

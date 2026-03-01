@@ -12,110 +12,214 @@
   </tr>
 </table>
 
-Default workspace: `db_workbench`
-
 ## Mental Model
-- **Index** = workspace (like a database or keyspace).
-- **Document** = individual JSON object (like a row).
-- **Type** (deprecated in modern ES) = logical grouping inside index.
-- Queries are **JSON-based** (DSL) or via HTTP API.
-- `db_workbench` index is pre-created for experimentation.
-- Elasticsearch is eventually consistent; writes may take milliseconds to propagate.
+```txt
+Cluster
+ └── Index (logical grouping)
+      └── Shard (data partition)
+           └── Document (JSON data)
+```
+- An Elasticsearch **cluster** contains one or more nodes, and contains one or more indexes.
+- An **index** is the primary logical grouping of data (similar to a database/table conceptually). It is split into **shards**, which distribute data across nodes.
+- A **document** is a JSON object stored inside an index, and are automatically assigned to shards.
+- Elasticsearch uses a REST-based JSON API (not SQL by default, though SQL support exists).
+- Queries are expressed using Query DSL (JSON-based).
 
-## Commands
+**Note:** The default workspace for this project is `db_workbench`. 
 
-### 1. Connect
+## Basic Commands & Workflow
+### 1. Start Environment
+- Open MySQL CLI:
 ```bash
-make cli-elasticsearch
-# Or use curl:
-curl -X GET "localhost:9200/"
+  make cli-mysql
 ```
 
-### 2. Show Current Workspace (Index)
-```bash
-curl -X GET "localhost:9200/db_workbench/_search?pretty"
+### 2. Inspect Existing Setup
+- Show all databases:
+```sql
+  \l
 ```
 
-### 3. List Workspaces (Indices)
-```bash
-curl -X GET "localhost:9200/_cat/indices?v"
+- Show tables:
+```sql
+  \dt
 ```
 
-### 4. Switch Workspace
-Not applicable — each query specifies index directly.
-
-### 5. Create Workspace (Index)
-```bash
-curl -X PUT "localhost:9200/example_index?pretty"
+- Show table structure:
+```sql
+  \d test
 ```
 
-### 6. List Structures (Mappings / Types)
-```bash
-curl -X GET "localhost:9200/db_workbench/_mapping?pretty"
+- Query all data in the `test` table:
+```sql
+  SELECT * FROM test;
 ```
 
-### 7. Create Structure (Mapping)
-```bash
-curl -X PUT "localhost:9200/db_workbench/_mapping?pretty" -H 'Content-Type: application/json' -d'
-{
-  "properties": {
-    "id": { "type": "integer" },
-    "name": { "type": "text" },
-    "project": { "type": "text" }
-  }
-}'
+### 3. Insert a Row
+- Insert a new row into the `test` table:
+```sql
+  INSERT INTO test (id, name, project)
+  VALUES (2, 'Paula', 'new-project');
 ```
 
-### 8. Insert Data
-```bash
-curl -X POST "localhost:9200/db_workbench/_doc/1?pretty" -H 'Content-Type: application/json' -d'
-{
-  "id": 1,
-  "name": "Andre",
-  "project": "db-workbench"
-}'
+- Check the data after insertion:
+```sql
+  SELECT * FROM test;  -- View the table to see the new row added
 ```
 
-### 9. Query All Data
-```bash
-curl -X GET "localhost:9200/db_workbench/_search?pretty" -H 'Content-Type: application/json' -d'
-{
-  "query": { "match_all": {} }
-}'
+### 4. Update Data
+- Update data in the `test` table:
+```sql
+  UPDATE test
+  SET project = 'updated-project'
+  WHERE id = 2;  -- Updates row based on id number
 ```
 
-### 10. Query With Condition
-```bash
-curl -X GET "localhost:9200/db_workbench/_search?pretty" -H 'Content-Type: application/json' -d'
-{
-  "query": {
-    "match": { "name": "Andre" }
-  }
-}'
+- Check the data after update:
+```sql
+  SELECT * FROM test;  -- View the table again to check the updated row
 ```
 
-### 11. Update Data
-```bash
-curl -X POST "localhost:9200/db_workbench/_update/1?pretty" -H 'Content-Type: application/json' -d'
-{
-  "doc": { "project": "db-workbench-updated" }
-}'
+### 5. Delete Data
+- Delete a row from the `test` table:
+```sql
+  DELETE FROM test
+  WHERE id = 2;  -- Deletes row based on id number
 ```
 
-### 12. Delete Data
-```bash
-curl -X DELETE "localhost:9200/db_workbench/_doc/1?pretty"
+	Check the data after deletion:
+```sql
+  SELECT * FROM test;  -- Table should have just one entry again
 ```
 
-### 13. Drop Structure (Index)
-```bash
-curl -X DELETE "localhost:9200/db_workbench?pretty"
+### 6. Create a New Database
+- Create a new database:
+```sql
+  CREATE DATABASE new_database;
 ```
 
-### 14. Exit
-Not applicable — CLI exits as normal shell.
+- List all databases again:
+```sql
+  \l  -- Newly created database should be visible
+```
 
----
+- Switch to the new database:
+```sql
+  \c new_database;
+```
+
+### 7. Add a New Table
+- Create a new table:
+```sql
+  CREATE TABLE IF NOT EXISTS top_secret (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    organization TEXT,
+    country TEXT,
+    years_active INTEGER);
+```
+
+- List tables again:
+```sql
+  \dt  -- Newly created table should be visible
+```
+
+- Insert data into the new table:
+```sql
+  INSERT INTO top_secret (name, organization, country, years_active)
+  VALUES ('James', 'MI6', 'UK', 20),
+    ('Ethan', 'IMF', 'USA', 30),
+    ('Nikita', 'Section One', 'Russia', 8),
+    ('Jason', 'CIA', 'USA', 12),
+    ('Sydney', 'SD-6', 'USA', 10);
+```
+
+- Check the new table's data:
+```sql
+  SELECT * FROM top_secret;
+```
+
+### 8. Conditional queries
+- Match criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE organization = 'CIA';
+```
+
+- Find MAX value in entire table:
+```sql
+  SELECT MAX(years_active)
+  FROM top_secret; -- also works with MIN()
+```
+
+- Threshold criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE years_active < 15;  -- also works with <=, > and >=
+```
+
+- Multiple criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE years_active > 10 AND
+  name LIKE "J%";  -- matching names that start with "J"
+```
+
+
+### 9. Aggregation queries
+- Count number of rows:
+```sql
+  SELECT COUNT(*)
+  FROM top_secret
+  WHERE years_active > 15;  -- also works with >=, < and <=
+```
+
+- Using average and grouping:
+```sql
+  SELECT country, AVG(years_active)
+  FROM top_secret
+  WHERE country = 'USA'
+  GROUP BY country;   -- also works with SUM()
+```
+
+- Find MIN within a group:
+```sql
+  SELECT country, MIN(years_active)
+  FROM top_secret
+  GROUP BY country; -- also works with MAX()
+```
+	
+### 10. Cleanup
+- Delete table:
+```sql
+  DROP TABLE top_secret;
+```
+
+- List tables again:
+```sql
+  \dt  -- Verify that the "top_secret" table was deleted
+```
+
+- Switch back to original database:
+```sql
+  \c db_workbench;
+```
+
+- Delete database:
+```sql
+  DROP DATABASE new_database;
+```
+
+- List all databases again:
+```sql
+  \l  -- Verify that the "new_database" database was deleted
+```
+
+### 11. Exit Environment
+- Exit MySQL CLI:
+```sql
+  \q
+```
 
 **Notes:**
 - Every operation is index-centric; the default `db_workbench` index is your workspace.

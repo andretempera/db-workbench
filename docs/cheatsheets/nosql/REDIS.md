@@ -17,100 +17,216 @@
   </tr>
 </table>
 
-Default workspace: `db_workbench`
-
 ## Mental Model
-- Redis stores data as **key → value** pairs.
-- Values can be different data types (string, list, set, hash, etc.).
-- There are no tables or schemas.
-- Redis uses numbered logical databases (0–15 by default).
-- In `db-workbench`, the default logical database is **0**.
-- Operations are command-based, not query-based.
-- Data is typically accessed by exact key lookup.
+```txt
+Server (instance)
+ └── Database (numbered namespace)
+      └── Key
+           └── Value (data structure)
+```
+- A Redis server instance contains multiple logical databases (numbered 0–15 by default).
+- A **database** is a simple namespace for keys.
+- A **key** is the primary identifier.
+- A **value** is associated with a key and can be different data types.
+- Data is stored primarily in memory (with optional persistence to disk).
+- Redis is not relational — there are no tables or schemas.
+- Commands like `KEYS`, `FLUSHDB`, and `SELECT` are Redis commands (not SQL).
 
-## Commands
-### 1. Connect
+**Note:** The default key (workspace) for this project is `db_workbench`. 
+
+## Basic Commands & Workflow
+### 1. Start Environment
+- Open MySQL CLI:
 ```bash
-make cli-redis
+  make cli-mysql
 ```
 
-### 2. Show Current Workspace
-```redis
-SELECT 0  # Redis uses logical database 0 by default
+### 2. Inspect Existing Setup
+- Show all databases:
+```sql
+  \l
 ```
 
-### 3. List Workspaces
-```redis
-INFO keyspace  # Shows logical databases and key counts
+- Show tables:
+```sql
+  \dt
 ```
 
-### 4. Switch Workspace
-```redis
-SELECT 0  # Switch to logical database 0
-```
-(Redis uses numeric databases instead of named workspaces.)
-
-### 5. Create Workspace
-Redis logical databases are predefined.  
-No creation command is required.
-
-### 6. Create Structure (Key)
-```redis
-SET user:1:name "Alice"  # Creates a string key
+- Show table structure:
+```sql
+  \d test
 ```
 
-### 7. Insert Data (Hash Example)
-```redis
-HSET user:1 name "Alice" age 30  # Creates a hash structure
+- Query all data in the `test` table:
+```sql
+  SELECT * FROM test;
 ```
 
-### 8. Query All Data (By Key)
-```redis
-GET user:1:name  # Retrieves string value
-```
-For hash:
-```redis
-HGETALL user:1  # Retrieves all fields in hash
+### 3. Insert a Row
+- Insert a new row into the `test` table:
+```sql
+  INSERT INTO test (id, name, project)
+  VALUES (2, 'Paula', 'new-project');
 ```
 
-### 9. Query With Condition
-Redis does not support conditional queries like SQL.
-
-Keys must be known in advance or discovered via pattern matching:
-```redis
-KEYS user:*  # Finds matching keys (avoid in large datasets)
+- Check the data after insertion:
+```sql
+  SELECT * FROM test;  -- View the table to see the new row added
 ```
 
-### 10. Update Data
-```redis
-SET user:1:name "Bob"  # Overwrites existing value
-```
-For hash:
-```redis
-HSET user:1 age 31  # Updates field in hash
-```
-
-### 11. Delete Data
-```redis
-DEL user:1:name  # Deletes key
-```
-For hash:
-```redis
-DEL user:1  # Deletes entire hash
+### 4. Update Data
+- Update data in the `test` table:
+```sql
+  UPDATE test
+  SET project = 'updated-project'
+  WHERE id = 2;  -- Updates row based on id number
 ```
 
-### 12. Drop Structure
-```redis
-FLUSHDB  # Deletes all keys in current logical database
-```
-(Use carefully — this removes everything.)
-
-### 13. Exit
-```bash
-exit
+- Check the data after update:
+```sql
+  SELECT * FROM test;  -- View the table again to check the updated row
 ```
 
----
+### 5. Delete Data
+- Delete a row from the `test` table:
+```sql
+  DELETE FROM test
+  WHERE id = 2;  -- Deletes row based on id number
+```
+
+	Check the data after deletion:
+```sql
+  SELECT * FROM test;  -- Table should have just one entry again
+```
+
+### 6. Create a New Database
+- Create a new database:
+```sql
+  CREATE DATABASE new_database;
+```
+
+- List all databases again:
+```sql
+  \l  -- Newly created database should be visible
+```
+
+- Switch to the new database:
+```sql
+  \c new_database;
+```
+
+### 7. Add a New Table
+- Create a new table:
+```sql
+  CREATE TABLE IF NOT EXISTS top_secret (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    organization TEXT,
+    country TEXT,
+    years_active INTEGER);
+```
+
+- List tables again:
+```sql
+  \dt  -- Newly created table should be visible
+```
+
+- Insert data into the new table:
+```sql
+  INSERT INTO top_secret (name, organization, country, years_active)
+  VALUES ('James', 'MI6', 'UK', 20),
+    ('Ethan', 'IMF', 'USA', 30),
+    ('Nikita', 'Section One', 'Russia', 8),
+    ('Jason', 'CIA', 'USA', 12),
+    ('Sydney', 'SD-6', 'USA', 10);
+```
+
+- Check the new table's data:
+```sql
+  SELECT * FROM top_secret;
+```
+
+### 8. Conditional queries
+- Match criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE organization = 'CIA';
+```
+
+- Find MAX value in entire table:
+```sql
+  SELECT MAX(years_active)
+  FROM top_secret; -- also works with MIN()
+```
+
+- Threshold criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE years_active < 15;  -- also works with <=, > and >=
+```
+
+- Multiple criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE years_active > 10 AND
+  name LIKE "J%";  -- matching names that start with "J"
+```
+
+
+### 9. Aggregation queries
+- Count number of rows:
+```sql
+  SELECT COUNT(*)
+  FROM top_secret
+  WHERE years_active > 15;  -- also works with >=, < and <=
+```
+
+- Using average and grouping:
+```sql
+  SELECT country, AVG(years_active)
+  FROM top_secret
+  WHERE country = 'USA'
+  GROUP BY country;   -- also works with SUM()
+```
+
+- Find MIN within a group:
+```sql
+  SELECT country, MIN(years_active)
+  FROM top_secret
+  GROUP BY country; -- also works with MAX()
+```
+	
+### 10. Cleanup
+- Delete table:
+```sql
+  DROP TABLE top_secret;
+```
+
+- List tables again:
+```sql
+  \dt  -- Verify that the "top_secret" table was deleted
+```
+
+- Switch back to original database:
+```sql
+  \c db_workbench;
+```
+
+- Delete database:
+```sql
+  DROP DATABASE new_database;
+```
+
+- List all databases again:
+```sql
+  \l  -- Verify that the "new_database" database was deleted
+```
+
+### 11. Exit Environment
+- Exit MySQL CLI:
+```sql
+  \q
+```
 
 **Notes:**
 - Workspace = logical DB; db_workbench maps to logical DB 0 by default.

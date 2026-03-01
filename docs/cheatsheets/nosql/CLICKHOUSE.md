@@ -12,104 +12,216 @@
   </tr>
 </table>
 
-Default workspace: `db_workbench`
-
 ## Mental Model
-- **Database** = workspace; `db_workbench` exists by default.
-- **Table** = structure storing columns in a columnar layout.
-- Optimized for **read-heavy analytics** rather than transactional workloads.
-- SQL is mostly standard, but types and some functions differ.
-- Columnar storage enables fast aggregation on large datasets.
-- No strong enforcement of constraints like foreign keys.
+```txt
+Cluster (optional)
+ └── Database (logical grouping)
+      └── Table (columnar storage)
+           └── Data (stored in columns)
+```
+- A ClickHouse deployment can run as a single node or as a cluster of nodes.
+- A **database** is the primary logical grouping and contains tables.
+- A **table** belongs to a database and defines structure and storage engine.
+- Data is stored in a columnar format (optimized for analytics).
+- ClickHouse uses strongly-typed SQL (each column has a defined data type).
+- Table engines (e.g., MergeTree) define how data is stored, indexed, and replicated.
+- Commands like SHOW DATABASES, `SHOW TABLES`, and `DESCRIBE TABLE` are client commands (not standard SQL).
 
-## Commands
+**Note:** The default workspace for this project is `db_workbench`. 
 
-### 1. Connect
+## Basic Commands & Workflow
+### 1. Start Environment
+- Open MySQL CLI:
 ```bash
-make cli-clickhouse
-# Or using clickhouse-client:
-clickhouse-client --host localhost --port 8123 --user default --password
+  make cli-mysql
 ```
 
-### 2. Show Current Workspace (Database)
+### 2. Inspect Existing Setup
+- Show all databases:
 ```sql
-SELECT currentDatabase(); -- Shows active database
+  \l
 ```
 
-### 3. List Workspaces (Databases)
+- Show tables:
 ```sql
-SHOW DATABASES;
+  \dt
 ```
 
-### 4. Switch Workspace (Database)
+- Show table structure:
 ```sql
-USE db_workbench;
+  \d test
 ```
 
-### 5. Create Workspace (Database)
+- Query all data in the `test` table:
 ```sql
-CREATE DATABASE example_db;
+  SELECT * FROM test;
 ```
 
-### 6. List Structures (Tables)
+### 3. Insert a Row
+- Insert a new row into the `test` table:
 ```sql
-SHOW TABLES;
+  INSERT INTO test (id, name, project)
+  VALUES (2, 'Paula', 'new-project');
 ```
 
-### 7. Create Structure (Table)
+- Check the data after insertion:
 ```sql
-CREATE TABLE users (
-    id UInt32,
-    name String,
-    age UInt8
-) ENGINE = MergeTree()
-ORDER BY id; -- MergeTree requires an ORDER BY key
+  SELECT * FROM test;  -- View the table to see the new row added
 ```
 
-### 8. Describe Structure
+### 4. Update Data
+- Update data in the `test` table:
 ```sql
-DESCRIBE TABLE users;
+  UPDATE test
+  SET project = 'updated-project'
+  WHERE id = 2;  -- Updates row based on id number
 ```
 
-### 9. Insert Data
+- Check the data after update:
 ```sql
-INSERT INTO users (id, name, age) VALUES (1, 'Andre', 30);
+  SELECT * FROM test;  -- View the table again to check the updated row
 ```
 
-### 10. Query All Data
+### 5. Delete Data
+- Delete a row from the `test` table:
 ```sql
-SELECT * FROM users;
+  DELETE FROM test
+  WHERE id = 2;  -- Deletes row based on id number
 ```
 
-### 11. Query With Condition
+	Check the data after deletion:
 ```sql
-SELECT * FROM users WHERE age > 25;
+  SELECT * FROM test;  -- Table should have just one entry again
 ```
 
-### 12. Update Data
-ClickHouse does not support row-level UPDATE in MergeTree tables directly.  
-You typically use an `ALTER TABLE ... UPDATE` statement:
+### 6. Create a New Database
+- Create a new database:
 ```sql
-ALTER TABLE users UPDATE age = 31 WHERE name = 'Andre';
+  CREATE DATABASE new_database;
 ```
 
-### 13. Delete Data
-ClickHouse deletes via `ALTER TABLE ... DELETE`
+- List all databases again:
 ```sql
-ALTER TABLE users DELETE WHERE name = 'Andre';
+  \l  -- Newly created database should be visible
 ```
 
-### 14. Drop Structure (Table)
+- Switch to the new database:
 ```sql
-DROP TABLE users;
+  \c new_database;
 ```
 
-### 15. Exit
+### 7. Add a New Table
+- Create a new table:
 ```sql
-EXIT; -- Or Ctrl+D in clickhouse-client
+  CREATE TABLE IF NOT EXISTS top_secret (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    organization TEXT,
+    country TEXT,
+    years_active INTEGER);
 ```
 
----
+- List tables again:
+```sql
+  \dt  -- Newly created table should be visible
+```
+
+- Insert data into the new table:
+```sql
+  INSERT INTO top_secret (name, organization, country, years_active)
+  VALUES ('James', 'MI6', 'UK', 20),
+    ('Ethan', 'IMF', 'USA', 30),
+    ('Nikita', 'Section One', 'Russia', 8),
+    ('Jason', 'CIA', 'USA', 12),
+    ('Sydney', 'SD-6', 'USA', 10);
+```
+
+- Check the new table's data:
+```sql
+  SELECT * FROM top_secret;
+```
+
+### 8. Conditional queries
+- Match criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE organization = 'CIA';
+```
+
+- Find MAX value in entire table:
+```sql
+  SELECT MAX(years_active)
+  FROM top_secret; -- also works with MIN()
+```
+
+- Threshold criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE years_active < 15;  -- also works with <=, > and >=
+```
+
+- Multiple criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE years_active > 10 AND
+  name LIKE "J%";  -- matching names that start with "J"
+```
+
+
+### 9. Aggregation queries
+- Count number of rows:
+```sql
+  SELECT COUNT(*)
+  FROM top_secret
+  WHERE years_active > 15;  -- also works with >=, < and <=
+```
+
+- Using average and grouping:
+```sql
+  SELECT country, AVG(years_active)
+  FROM top_secret
+  WHERE country = 'USA'
+  GROUP BY country;   -- also works with SUM()
+```
+
+- Find MIN within a group:
+```sql
+  SELECT country, MIN(years_active)
+  FROM top_secret
+  GROUP BY country; -- also works with MAX()
+```
+	
+### 10. Cleanup
+- Delete table:
+```sql
+  DROP TABLE top_secret;
+```
+
+- List tables again:
+```sql
+  \dt  -- Verify that the "top_secret" table was deleted
+```
+
+- Switch back to original database:
+```sql
+  \c db_workbench;
+```
+
+- Delete database:
+```sql
+  DROP DATABASE new_database;
+```
+
+- List all databases again:
+```sql
+  \l  -- Verify that the "new_database" database was deleted
+```
+
+### 11. Exit Environment
+- Exit MySQL CLI:
+```sql
+  \q
+```
 
 **Notes:**
 - ClickHouse is **columnar**, so row-level operations are slower; best for bulk inserts and analytical queries.

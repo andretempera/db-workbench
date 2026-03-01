@@ -12,104 +12,219 @@
   </tr>
 </table>
 
-Default workspace: `db_workbench`
-
 ## Mental Model
-- A MySQL **server** can contain multiple databases.
-- A **database** contains tables and optionally views, triggers, and stored procedures.
-- Data is stored in **tables** (rows and columns).  
-- MySQL uses loosely-typed SQL compared to PostgreSQL; `AUTO_INCREMENT` is common for primary keys.  
-- Commands like `SHOW DATABASES` or `SHOW TABLES` are MySQL-specific client commands.  
+```txt
+Server (instance)
+ └── Database (workspace / schema)
+      └── Table (grouping)
+           └── Data (stored in rows/records)
+```
+- A MySQL server instance can contain multiple databases.
+- A **database** is the primary logical grouping (acts as a schema) and contains tables.
+- A **table** is the grouping that organizes data
+- **Data** is stored as **rows** (records) and **columns** (fields).
+- MySQL uses strongly-typed SQL (each column has a type).
+- Commands like `SHOW TABLES` and `DESCRIBE` are MySQL client commands, not standard SQL.
 
-## Commands
-### 1. Connect
+**Note:** The default workspace for this project is `db_workbench`. 
+
+## Basic Commands & Workflow
+### 1. Start Environment
+- Open MySQL CLI:
 ```bash
-make cli-mysql
+  make cli-mysql
 ```
 
-### 2. Show Current Workspace
+### 2. Inspect Existing Setup
+- Show all databases:
 ```sql
-SELECT DATABASE(); -- Shows active database
+  \l
 ```
 
-### 3. List Workspaces (Databases)
+- Show tables:
 ```sql
-SHOW DATABASES; -- Lists all databases
+  \dt
 ```
 
-### 4. Switch Workspace
+- Show table structure:
 ```sql
-USE db_workbench; -- Switch to specific database
+  \d test
 ```
 
-### 5. Create Workspace
+- Query all data in the `test` table:
 ```sql
-CREATE DATABASE example_db; -- Creates new database
+  SELECT * FROM test;
 ```
 
-### 6. List Structures (Tables)
+### 3. Insert a Row
+- Insert a new row into the `test` table:
 ```sql
-SHOW TABLES; -- Lists tables in current database
+  INSERT INTO test (id, name, project)
+  VALUES (2, 'Paula', 'new-project');
 ```
 
-### 7. Create Structure (Table)
+- Check the data after insertion:
 ```sql
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    age INT
-); -- Creates a new table
+  SELECT * FROM test;  -- View the table to see the new row added
 ```
 
-### 8. Describe Structure
+### 4. Update Data
+- Update data in the `test` table:
 ```sql
-DESCRIBE users; -- Shows table structure
+  UPDATE test
+  SET project = 'updated-project'
+  WHERE id = 2;  -- Updates row based on id number
 ```
 
-### 9. Insert Data
+- Check the data after update:
 ```sql
-INSERT INTO users (name, age)
-VALUES ('Alice', 30); -- Inserts one row
+  SELECT * FROM test;  -- View the table again to check the updated row
 ```
 
-### 10. Query All Data
+### 5. Delete Data
+- Delete a row from the `test` table:
 ```sql
-SELECT * FROM users; -- Returns all rows
+  DELETE FROM test
+  WHERE id = 2;  -- Deletes row based on id number
 ```
 
-### 11. Query With Condition
+	Check the data after deletion:
 ```sql
-SELECT * FROM users
-WHERE age > 25; -- Filters rows
+  SELECT * FROM test;  -- Table should have just one entry again
 ```
 
-### 12. Update Data
+### 6. Create a New Database
+- Create a new database:
 ```sql
-UPDATE users
-SET age = 31
-WHERE name = 'Alice'; -- Updates matching rows
+  CREATE DATABASE new_database;
 ```
 
-### 13. Delete Data
+- List all databases again:
 ```sql
-DELETE FROM users
-WHERE name = 'Alice'; -- Deletes matching rows
+  \l  -- Newly created database should be visible
 ```
 
-### 14. Drop Structure
+- Switch to the new database:
 ```sql
-DROP TABLE users; -- Permanently removes table
+  \c new_database;
 ```
 
-### 15. Exit
+### 7. Add a New Table
+- Create a new table:
 ```sql
-EXIT; -- Exit MySQL shell
+  CREATE TABLE IF NOT EXISTS top_secret (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    organization TEXT,
+    country TEXT,
+    years_active INTEGER);
 ```
 
----
+- List tables again:
+```sql
+  \dt  -- Newly created table should be visible
+```
+
+- Insert data into the new table:
+```sql
+  INSERT INTO top_secret (name, organization, country, years_active)
+  VALUES ('James', 'MI6', 'UK', 20),
+    ('Ethan', 'IMF', 'USA', 30),
+    ('Nikita', 'Section One', 'Russia', 8),
+    ('Jason', 'CIA', 'USA', 12),
+    ('Sydney', 'SD-6', 'USA', 10);
+```
+
+- Check the new table's data:
+```sql
+  SELECT * FROM top_secret;
+```
+
+### 8. Conditional queries
+- Match criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE organization = 'CIA';
+```
+
+- Find MAX value in entire table:
+```sql
+  SELECT MAX(years_active)
+  FROM top_secret; -- also works with MIN()
+```
+
+- Threshold criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE years_active < 15;  -- also works with <=, > and >=
+```
+
+- Multiple criteria:
+```sql
+  SELECT * FROM top_secret
+  WHERE years_active > 10 AND
+  name LIKE "J%";  -- matching names that start with "J"
+```
+
+
+### 9. Aggregation queries
+- Count number of rows:
+```sql
+  SELECT COUNT(*)
+  FROM top_secret
+  WHERE years_active > 15;  -- also works with >=, < and <=
+```
+
+- Using average and grouping:
+```sql
+  SELECT country, AVG(years_active)
+  FROM top_secret
+  WHERE country = 'USA'
+  GROUP BY country;   -- also works with SUM()
+```
+
+- Find MIN within a group:
+```sql
+  SELECT country, MIN(years_active)
+  FROM top_secret
+  GROUP BY country; -- also works with MAX()
+```
+	
+### 10. Cleanup
+- Delete table:
+```sql
+  DROP TABLE top_secret;
+```
+
+- List tables again:
+```sql
+  \dt  -- Verify that the "top_secret" table was deleted
+```
+
+- Switch back to original database:
+```sql
+  \c db_workbench;
+```
+
+- Delete database:
+```sql
+  DROP DATABASE new_database;
+```
+
+- List all databases again:
+```sql
+  \l  -- Verify that the "new_database" database was deleted
+```
+
+### 11. Exit Environment
+- Exit MySQL CLI:
+```sql
+  \q
+```
 
 **Notes:**
 - Workspace = database; `db_workbench` is pre-created by default.
-- Follows standard relational model with tables, rows, columns.
-- Supports transactions, constraints, indexes, and basic stored procedures.
-- MySQL commands like SHOW TABLES, DESCRIBE, USE are client-side; SQL syntax is mostly standard with some MySQL-specific extensions.
+- Relational model with strong typing.
+- Supports transactions, constraints, indexes, and advanced SQL features.
+- Commands are executed within transactions; changes can be committed or rolled back.
+- MySQL client commands (e.g., `SHOW TABLES`, `DESCRIBE`) are client-only commands.

@@ -26,10 +26,10 @@ try:
     cursor = connection.cursor()
 
     print(f"Connected to PostgreSQL version: {connection.server_version}")
-    print("||| PostgreSQL SDK Python CLI |||")
-    print("\nObjects available:")
-    print(" - conn")
-    print(" - cursor")
+    print("\n||| PostgreSQL SDK Python CLI |||")
+    print("Objects available:")
+    print("    - conn")
+    print(f"    - cursor\n")
 
     # Launch interactive console
     import code
