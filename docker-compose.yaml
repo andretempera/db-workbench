@@ -140,18 +140,19 @@ services:
       - "ELASTIC_USER=${ELASTIC_USER}"
       - "ELASTIC_PASSWORD=${ELASTIC_PASSWORD}"
       - "discovery.type=single-node"
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g" 
+    mem_limit: 2g                        
     ports:
       - "${ELASTIC_PORT}:9200"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
-      - ./data/elasticsearch/scripts/init.py:/data/elasticsearch/scripts/init.py
-      - ./data/elasticsearch/scripts/wait-for-es.sh:/data/elasticsearch/scripts/init.sh
-    command: ["sh", "/data/elasticsearch/scripts/init.sh"]
+      - ./data/elasticsearch/scripts/init.py:/data/elasticsearch/scripts/init.py:ro
+      - ./data/elasticsearch/scripts/init_sdk.py:/data/elasticsearch/scripts/init_sdk.py:ro
     healthcheck:
-      test: ["CMD-SHELL", "curl -s -u ${ELASTIC_USER}:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health | grep '\"status\":\"green\"' || exit 1"]
+      test: ["CMD-SHELL", "curl -fs -u ${ELASTIC_USER}:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=10s || exit 1"]
       interval: 10s
-      timeout: 5s
-      retries: 10
+      timeout: 10s
+      retries: 6
       start_period: 30s
  
   mongo:
@@ -206,7 +207,8 @@ services:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MARIADB_DATABASE: ${MARIADB_DB}
     volumes:
-      - ./data/mariadb/scripts:/scripts
+      - ./data/mariadb/scripts:/scripts:ro
+      - mariadb_data:/var/lib/mysql
     working_dir: /scripts
     command: tail -f /dev/null
     
@@ -223,7 +225,8 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DB}
     volumes:
-      - ./data/mysql/scripts:/scripts
+      - ./data/mysql/scripts:/scripts:ro
+      - mysql_data:/var/lib/mysql
     working_dir: /scripts
     command: tail -f /dev/null
 
@@ -241,10 +244,49 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: db_workbench
     volumes:
-      - ./data/postgres/scripts:/scripts
+      - ./data/postgres/scripts:/scripts:ro
+      - postgres_data:/var/lib/postgresql
     working_dir: /scripts
     command: tail -f /dev/null
 
+  cassandra-sdk:
+    build:
+      context: .
+      dockerfile: ./SDK/Dockerfile.Cassandra
+    container_name: cassandra-sdk
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    environment:
+      CASSANDRA_HOST: cassandra
+      CASSANDRA_PORT: 9042
+      CASSANDRA_USER: ${CASSANDRA_USER}
+      CASSANDRA_PASSWORD: ${CASSANDRA_PASSWORD}
+      CASSANDRA_CLUSTER: ${CASSANDRA_CLUSTER}
+    volumes:
+      - ./data/cassandra/scripts:/scripts:ro
+      - cassandra_data:/var/lib/cassandra
+    tty: true
+
+  clickhouse-sdk:
+    build:
+      context: .
+      dockerfile: ./SDK/Dockerfile.ClickHouse
+    container_name: clickhouse-sdk
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    environment:
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_PORT: 8123
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_DATABASE: db_workbench
+    volumes:
+      - ./data/clickhouse/scripts:/scripts:ro
+      - clickhouse_data:/var/lib/clickhouse
+    tty: true
+ 
   couchbase-sdk:
     build:
       context: .
@@ -259,10 +301,26 @@ services:
       COUCHBASE_PASSWORD: ${COUCHBASE_PASSWORD}
       COUCHBASE_BUCKET: db_workbench
     volumes:
-      - ./data/couchbase/scripts:/scripts
+      - ./data/couchbase/scripts:/scripts:ro
       - couchbase_data:/opt/couchbase/var
     working_dir: /scripts
     command: tail -f /dev/null
+
+  elasticsearch-sdk:
+    image: python:3.11-slim
+    container_name: elasticsearch-sdk
+    working_dir: /scripts
+    volumes:
+      - ./data/elasticsearch/scripts:/scripts:ro
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    environment:
+      - ELASTIC_HOST=${ELASTIC_HOST}      
+      - ELASTIC_PORT=${ELASTIC_PORT}         
+      - ELASTIC_USER=${ELASTIC_USER}         
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD} 
+    command: ["sleep", "infinity"]          
+    depends_on:
+      - elasticsearch
 
   mongodb-sdk:
     build:
@@ -282,7 +340,6 @@ services:
     command: tail -f /dev/null
 
   
-
   # -------------------------
   # Web GUIs
   # -------------------------
@@ -323,6 +380,26 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.3.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=${KIBANA_ELASTICSEARCH_URL}
+      - ELASTICSEARCH_USERNAME=${KIBANA_ELASTICSEARCH_USER}
+      - ELASTICSEARCH_PASSWORD=${KIBANA_ELASTICSEARCH_PASSWORD}
+      - ELASTICSEARCH_SSL_VERIFICATIONMODE=none
+    ports:
+      - "${KIBANA_PORT}:5601"
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://elasticsearch:9200/_cluster/health"]
+      interval: 30s
+      retries: 3
+      start_period: 30s
+      timeout: 10s
 
   mongo-express:
     image: mongo-express:1.0.2-20-alpine3.19

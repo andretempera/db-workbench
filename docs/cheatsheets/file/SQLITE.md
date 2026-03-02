@@ -25,7 +25,7 @@ Database (single file)
 - SQLite uses dynamic typing (type affinity system rather than strict column enforcement by default).
 - Commands like `.tables`, `.schema`, and `.exit` are SQLite CLI client commands, not standard SQL.
 
-**Note:** The default workspace for this project is `db_workbench`. 
+**Note:** In SQLite, the first database file you open (e.g., `db_workbench`) is always assigned the logical name main in the session. 
 
 ## Basic Commands & Workflow
 ### 1. Start Environment
@@ -37,17 +37,17 @@ Database (single file)
 ### 2. Inspect Existing Setup
 - Show all databases:
 ```sql
-  \l
+  .databases
 ```
 
 - Show tables:
 ```sql
-  \dt
+  .tables
 ```
 
 - Show table structure:
 ```sql
-  \d test
+  .schema test
 ```
 
 - Query all data in the `test` table:
@@ -95,24 +95,19 @@ Database (single file)
 ### 6. Create a New Database
 - Create a new database:
 ```sql
-  CREATE DATABASE new_database;
+  ATTACH DATABASE 'data/sqlite/db/new_database.db' AS new_database;  -- new databases are attached to main, not independent
 ```
 
 - List all databases again:
 ```sql
-  \l  -- Newly created database should be visible
-```
-
-- Switch to the new database:
-```sql
-  \c new_database;
+  .databases  -- Newly created database should be visible
 ```
 
 ### 7. Add a New Table
 - Create a new table:
 ```sql
-  CREATE TABLE IF NOT EXISTS top_secret (
-    id SERIAL PRIMARY KEY,
+  CREATE TABLE IF NOT EXISTS new_database.top_secret (
+    id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
     organization TEXT,
     country TEXT,
@@ -121,12 +116,23 @@ Database (single file)
 
 - List tables again:
 ```sql
-  \dt  -- Newly created table should be visible
+  .tables  -- Newly created table should be visible
+```
+
+- List tables per database:
+```sql
+SELECT 'main' AS db_name, name AS table_name
+FROM main.sqlite_schema
+WHERE type = 'table'
+UNION ALL
+SELECT 'new_database', name
+FROM new_database.sqlite_schema
+WHERE type = 'table';  -- find which tables belong to which database
 ```
 
 - Insert data into the new table:
 ```sql
-  INSERT INTO top_secret (name, organization, country, years_active)
+  INSERT INTO new_database.top_secret (name, organization, country, years_active)
   VALUES ('James', 'MI6', 'UK', 20),
     ('Ethan', 'IMF', 'USA', 30),
     ('Nikita', 'Section One', 'Russia', 8),
@@ -136,33 +142,33 @@ Database (single file)
 
 - Check the new table's data:
 ```sql
-  SELECT * FROM top_secret;
+  SELECT * FROM new_database.top_secret;
 ```
 
 ### 8. Conditional queries
 - Match criteria:
 ```sql
-  SELECT * FROM top_secret
+  SELECT * FROM new_database.top_secret
   WHERE organization = 'CIA';
 ```
 
 - Find MAX value in entire table:
 ```sql
   SELECT MAX(years_active)
-  FROM top_secret; -- also works with MIN()
+  FROM new_database.top_secret; -- also works with MIN()
 ```
 
 - Threshold criteria:
 ```sql
-  SELECT * FROM top_secret
+  SELECT * FROM new_database.top_secret
   WHERE years_active < 15;  -- also works with <=, > and >=
 ```
 
 - Multiple criteria:
 ```sql
-  SELECT * FROM top_secret
+  SELECT * FROM new_database.top_secret
   WHERE years_active > 10 AND
-  name LIKE "J%";  -- matching names that start with "J"
+  name LIKE 'J%';  -- matching names that start with "J"
 ```
 
 
@@ -170,14 +176,14 @@ Database (single file)
 - Count number of rows:
 ```sql
   SELECT COUNT(*)
-  FROM top_secret
+  FROM new_database.top_secret
   WHERE years_active > 15;  -- also works with >=, < and <=
 ```
 
 - Using average and grouping:
 ```sql
   SELECT country, AVG(years_active)
-  FROM top_secret
+  FROM new_database.top_secret
   WHERE country = 'USA'
   GROUP BY country;   -- also works with SUM()
 ```
@@ -185,40 +191,35 @@ Database (single file)
 - Find MIN within a group:
 ```sql
   SELECT country, MIN(years_active)
-  FROM top_secret
+  FROM new_database.top_secret
   GROUP BY country; -- also works with MAX()
 ```
 	
 ### 10. Cleanup
 - Delete table:
 ```sql
-  DROP TABLE top_secret;
+  DROP TABLE new_database.top_secret;
 ```
 
 - List tables again:
 ```sql
-  \dt  -- Verify that the "top_secret" table was deleted
-```
-
-- Switch back to original database:
-```sql
-  \c db_workbench;
+  .tables  -- Verify that the "top_secret" table was deleted
 ```
 
 - Delete database:
 ```sql
-  DROP DATABASE new_database;
+  DETACH DATABASE new_database;  -- only detaches from main database, file must be deleted outside SQLite CLI environment
 ```
 
 - List all databases again:
 ```sql
-  \l  -- Verify that the "new_database" database was deleted
+  .databases -- Verify that the "new_database" database was removed from the list
 ```
 
 ### 11. Exit Environment
 - Exit MySQL CLI:
 ```sql
-  \q
+  .exit
 ```
 
 **Notes:**

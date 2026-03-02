@@ -1,10 +1,18 @@
+# Base image: lightweight Python
 FROM python:3.11-slim
 
-# Install Elasticsearch SDK (elasticsearch-py)
-RUN pip install --no-cache-dir elasticsearch
+# Prevent Python from writing .pyc files and force stdout/stderr to be unbuffered
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# Set the working directory to /scripts
+# Set working directory
 WORKDIR /scripts
 
-# Default command to keep the container running
-CMD ["tail", "-f", "/dev/null"]
+# Install required Python packages
+RUN pip install --no-cache-dir elasticsearch
+
+# Copy your SDK init script (optional, but convenient)
+COPY ./data/elasticsearch/scripts/init_sdk.py /scripts/init_sdk.py
+
+# Default command does nothing; container runs Elasticsearch itself
+CMD ["sleep", "infinity"]

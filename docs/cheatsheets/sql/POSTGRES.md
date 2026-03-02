@@ -165,7 +165,7 @@ Cluster
 ```sql
   SELECT * FROM top_secret
   WHERE years_active > 10 AND
-  name LIKE "J%";  -- matching names that start with "J"
+  name LIKE 'J%';  -- matching names that start with "J"
 ```
 
 ### 9. Aggregation queries

@@ -69,7 +69,7 @@ Each database runs independently and is treated as its own controlled environmen
 | NoSQL          | Cassandra        | —                 | db_workbench        |
 | NoSQL          | ClickHouse       | ClickHouse Web UI | db_workbench        |
 | NoSQL          | Couchbase        | Couchbase Console | db_workbench        |  
-| NoSQL          | Elasticsearch    | —                 | db_workbench        |
+| NoSQL          | Elasticsearch    | Kibana            | db_workbench        |
 | NoSQL          | MongoDB          | Mongo Express     | db_workbench:       |
 | NoSQL          | Redis            | RedisInsight      | db_workbench        |
 

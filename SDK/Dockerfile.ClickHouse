@@ -1,10 +1,14 @@
 FROM python:3.11-slim
 
-# Install ClickHouse SDK (clickhouse-driver)
-RUN pip install --no-cache-dir clickhouse-driver
+# Prevent Python from writing .pyc files & enable unbuffered logs
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# Set the working directory to /scripts
+# Install ClickHouse Python SDK
+RUN pip install --no-cache-dir clickhouse-connect
+
+# Set working directory
 WORKDIR /scripts
 
-# Default command to keep the container running
+# Keep container running (Makefile runs init_sdk.py explicitly)
 CMD ["tail", "-f", "/dev/null"]

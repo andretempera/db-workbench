@@ -50,16 +50,17 @@ reset-sqlite: ## Delete SQLite database file
 # SQL Databases
 ########################################
 
-up-mariadb: ## Start MariaDB + phpMyAdmin
-	docker compose up -d mariadb phpmyadmin-mariadb
+up-mariadb: ## Start MariaDB
+	docker compose up -d mariadb
 
 cli-mariadb: ## Enter MariaDB CLI
 	docker compose exec -it mariadb mariadb -h ${MARIADB_HOST} -P 3306 -u root -p${MARIADB_ROOT_PASSWORD} -D ${MARIADB_DB}
 
 gui-mariadb: ## Launch phpMyAdmin for MariaDB
+	docker compose up -d phpmyadmin-mariadb
 	@echo "Click link to open GUI: http://localhost:${PHPMYADMIN_MARIADB_PORT}"
 
-sdk-mariadb: ## Connect to MariaDB via Python SDK (+ init script)
+sdk-mariadb: ## Connect to MariaDB via Python SDK
 	docker compose up -d mariadb-sdk
 	docker compose exec mariadb-sdk python /scripts/init_sdk.py
 
@@ -70,16 +71,17 @@ reset-mariadb: ## Remove MariaDB + phpMyAdmin containers and volumes
 	docker compose down -v --remove-orphans mariadb phpmyadmin-mariadb mariadb-sdk
 
 
-up-mysql: ## Start MySQL + phpMyAdmin
-	docker compose up -d mysql phpmyadmin-mysql
+up-mysql: ## Start MySQL
+	docker compose up -d mysql
 
 cli-mysql: ## Enter MySQL CLI
 	docker compose exec -it mysql mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT} -u root -p${MYSQL_ROOT_PASSWORD} -D ${MYSQL_DB}
 
 gui-mysql: ## Launch phpMyAdmin for MySQL
+	docker compose up -d phpmyadmin-mysql
 	@echo "Click link to open GUI: http://localhost:${PHPMYADMIN_MYSQL_PORT}"
 
-sdk-mysql: ## Connect to MySQL via Python SDK (+ init script)
+sdk-mysql: ## Connect to MySQL via Python SDK
 	docker compose up -d mysql-sdk
 	docker compose exec mysql-sdk python /scripts/init_sdk.py
 
@@ -87,16 +89,17 @@ down-mysql: ## Stop MySQL + phpMyAdmin
 	docker compose stop mysql phpmyadmin-mysql mysql-sdk
 
 reset-mysql: ## Remove MySQL + phpMyAdmin containers and volumes
-	docker compose down -v --remove-orphans mysql phpmyadmin-mysql
+	docker compose down -v --remove-orphans mysql phpmyadmin-mysql mysql-sdk
 
 
-up-postgres: ## Start PostgreSQL + pgAdmin
-	docker compose up -d postgres pgadmin
+up-postgres: ## Start PostgreSQL
+	docker compose up -d postgres
 
 cli-postgres: ## Enter PostgreSQL CLI
 	docker compose exec -it postgres psql -h ${POSTGRES_HOST} -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -d ${POSTGRES_DB}
 
 gui-postgres: ## Launch pgAdmin for PostgreSQL
+	docker compose up -d pgadmin
 	@echo "Click link to open GUI: http://localhost:${PGADMIN_PORT}"
 
 sdk-postgres: ## Connect to PostgreSQL via Python SDK (+ init script)
@@ -122,11 +125,15 @@ cli-cassandra: ## Enter Cassandra CQL shell (+ init script)
 	cqlsh $$CASSANDRA_HOST $$CASSANDRA_PORT -u $$CASSANDRA_USER -p $$CASSANDRA_PASSWORD -f /docker-entrypoint-initdb.d/init.cql; \
 	exec cqlsh $$CASSANDRA_HOST $$CASSANDRA_PORT -u $$CASSANDRA_USER -p $$CASSANDRA_PASSWORD -k db_workbench"
 
+sdk-cassandra: ## Connect to Cassandra via Python SDK
+	docker compose up -d cassandra-sdk
+	docker compose exec cassandra-sdk python /scripts/init_sdk.py
+
 down-cassandra: ## Stop Cassandra
-	docker compose stop cassandra
+	docker compose stop cassandra cassandra-sdk
 
 reset-cassandra: ## Remove Cassandra containers and volumes
-	docker compose down -v --remove-orphans cassandra
+	docker compose down -v --remove-orphans cassandra cassandra-sdk
 
 
 up-clickhouse: ## Start ClickHouse
@@ -138,11 +145,15 @@ cli-clickhouse: ## Enter ClickHouse client
 gui-clickhouse: ## Launch ClickHouse Web UI
 	@echo "Click link to open GUI: http://localhost:${CLICKHOUSE_PORT}"
 
+sdk-clickhouse: ## Connect to ClickHouse via Python SDK
+	docker compose up -d clickhouse-sdk
+	docker compose exec clickhouse-sdk python /scripts/init_sdk.py
+
 down-clickhouse: ## Stop ClickHouse
-	docker compose stop clickhouse
+	docker compose stop clickhouse clickhouse-sdk
 
 reset-clickhouse: ## Remove ClickHouse containers and volumes
-	docker compose down -v --remove-orphans clickhouse
+	docker compose down -v --remove-orphans clickhouse clickhouse-sdk
 
 
 up-couchbase: ## Start Couchbase
@@ -169,15 +180,21 @@ reset-couchbase: ## Remove Couchbase containers and volumes
 
 up-elasticsearch: ## Start Elasticsearch
 	docker compose up -d elasticsearch
+	python3 ./data/elasticsearch/scripts/init.py
 	
-cli-elasticsearch: ## Connect to Elasticsearch console
-	curl -u $$ELASTIC_USER:$$ELASTIC_PASSWORD http://$$ELASTIC_HOST:$$ELASTIC_PORT
+gui-elasticsearch: ## Launch Kibana for Elasticsearch
+	docker compose up -d kibana
+	@echo "Click link to open GUI: http://localhost:${KIBANA_PORT}"
+
+sdk-elasticsearch: ## Connect to Elasticsearch via Python SDK
+	docker compose up -d elasticsearch-sdk
+	docker compose exec elasticsearch-sdk python /scripts/init_sdk.py
 
 down-elasticsearch: ## Stop Elasticsearch
-	docker compose stop elasticsearch
+	docker compose stop elasticsearch kibana elasticsearch-sdk
 
 reset-elasticsearch: ## Remove Elasticsearch containers and volumes
-	docker compose down -v --remove-orphans elasticsearch
+	docker compose down -v --remove-orphans elasticsearch kibana elasticsearch-sdk
 
 
 up-mongo: ## Start MongoDB + Mongo Express

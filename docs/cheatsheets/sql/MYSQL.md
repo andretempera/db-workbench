@@ -38,17 +38,17 @@ Server (instance)
 ### 2. Inspect Existing Setup
 - Show all databases:
 ```sql
-  \l
+  SHOW DATABASES;
 ```
 
 - Show tables:
 ```sql
-  \dt
+  SHOW TABLES;
 ```
 
 - Show table structure:
 ```sql
-  \d test
+  DESCRIBE test;
 ```
 
 - Query all data in the `test` table:
@@ -101,12 +101,12 @@ Server (instance)
 
 - List all databases again:
 ```sql
-  \l  -- Newly created database should be visible
+  SHOW DATABASES;  -- Newly created database should be visible
 ```
 
 - Switch to the new database:
 ```sql
-  \c new_database;
+  USE new_database;
 ```
 
 ### 7. Add a New Table
@@ -122,7 +122,7 @@ Server (instance)
 
 - List tables again:
 ```sql
-  \dt  -- Newly created table should be visible
+  SHOW TABLES;  -- Newly created table should be visible
 ```
 
 - Insert data into the new table:
@@ -163,7 +163,7 @@ Server (instance)
 ```sql
   SELECT * FROM top_secret
   WHERE years_active > 10 AND
-  name LIKE "J%";  -- matching names that start with "J"
+  name LIKE 'J%';  -- matching names that start with "J"
 ```
 
 
@@ -198,12 +198,12 @@ Server (instance)
 
 - List tables again:
 ```sql
-  \dt  -- Verify that the "top_secret" table was deleted
+  SHOW TABLES;  -- Verify that the "top_secret" table was deleted
 ```
 
 - Switch back to original database:
 ```sql
-  \c db_workbench;
+  USE db_workbench;
 ```
 
 - Delete database:
@@ -213,13 +213,13 @@ Server (instance)
 
 - List all databases again:
 ```sql
-  \l  -- Verify that the "new_database" database was deleted
+  SHOW DATABASES;  -- Verify that the "new_database" database was deleted
 ```
 
 ### 11. Exit Environment
 - Exit MySQL CLI:
 ```sql
-  \q
+  QUIT
 ```
 
 **Notes:**
