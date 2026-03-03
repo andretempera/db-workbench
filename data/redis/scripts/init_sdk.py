@@ -3,34 +3,51 @@ import sys
 import time
 import code
 import redis
-from redis.exceptions import ConnectionError
 
+# Environment variables
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
-REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "rootpass")
 
-if not all([REDIS_HOST, REDIS_PORT]):
-    print("Error: Missing required Redis environment variables.")
-    sys.exit(1)
-
-print(f"Connecting to Redis at {REDIS_HOST}:{REDIS_PORT}...")
-
-r = None
-
-# Retry logic
+# Retry logic to wait for Redis
+client = None
 for attempt in range(10):
     try:
-        r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
-        r.ping()
+        client = redis.Redis(
+            host=REDIS_HOST,
+            port=REDIS_PORT,
+            password=REDIS_PASSWORD,
+            decode_responses=True
+        )
+        client.ping()
         break
-    except ConnectionError:
-        print(f"Attempt {attempt + 1}/10: Redis not ready, retrying in 3 seconds...")
+    except redis.exceptions.ConnectionError:
+        print(f"Attempt {attempt+1}/10: Redis not ready, retrying in 3 seconds...")
         time.sleep(3)
 else:
-    print("Error: Unable to connect to Redis after multiple attempts.")
+    print("Error: Unable to connect to Redis.")
     sys.exit(1)
+
+print("Successfully connected to Redis")
+print("Existing keys:", client.keys())
+
+# Optional: Run init script idempotently
+init_script_path = "/scripts/init.redis"
+if os.path.exists(init_script_path):
+    print(f"Initializing keys from {init_script_path} (idempotent)...")
+    with open(init_script_path, "r") as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#"):
+                parts = line.split(" ", 2)
+                if len(parts) == 3 and parts[0].upper() == "SET":
+                    key = parts[1]
+                    value = parts[2]
+                    client.set(key, value)
 
 print("\n||| Redis SDK Python CLI |||")
 print("Objects available:")
-print("    - r (Redis client)\n")
+print("    - client\n")
 
+# Launch interactive shell
 code.interact(local=globals())

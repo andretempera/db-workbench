@@ -210,7 +210,14 @@ Ensure:
 - Docker is running
 - The relevant database container is started
 
-### PostgreSQL / pgAdmin
+### MariaDB / MySQL - phpMyAdmin
+`http://localhost:<PHPMYADMIN_MYSQL_PORT>`
+or
+`http://localhost:<PHPMYADMIN_MARIADB_PORT>`
+
+Login: `root / rootpass`
+
+### PostgreSQL - pgAdmin
 `http://localhost:<PGADMIN_PORT>`
 
 Login: `admin@admin.com / rootpass`
@@ -221,23 +228,6 @@ Create → Server → Connection:
 - Port: `5432`
 - Username: `postgres`
 - Password: `rootpass`
-
-### MySQL / MariaDB / phpMyAdmin
-`http://localhost:<PHPMYADMIN_MYSQL_PORT>`
-or
-`http://localhost:<PHPMYADMIN_MARIADB_PORT>`
-
-Login: `root / rootpass`
-
-### MongoDB / Mongo Express
-`http://localhost:<MONGOEXPRESS_PORT>`
-
-Login: `root / rootpass`
-
-### Redis / RedisInsight
-`http://localhost:<REDISINSIGHT_PORT>`
-
-Use password defined in `.env`.
 
 ### ClickHouse / ClickHouse Web UI
 `http://localhost:<CLICKHOUSE_PORT>`
@@ -252,6 +242,17 @@ Login: `Administrator / rootpass`
 
 Default bucket: `db_workbench`
 
+### MongoDB / Mongo Express
+`http://localhost:<MONGOEXPRESS_PORT>`
+
+Login using: `root / rootpass` 
+
+### Redis / RedisInsight
+`http://localhost:<REDISINSIGHT_PORT>`
+
+Does not require login, but needs to connect to existing database using: 
+`redis://<username>:<password>@<host>:<port>)` formula - which corresponds to `redis://default:rootpass@redis:6379` with default `.env` values 
+
 ## DBeaver Connection
 This is a quick-reference table to make establishing connections on DBeaver easier. This table uses `.env` defaults.
 
@@ -259,15 +260,15 @@ This is a quick-reference table to make establishing connections on DBeaver easi
 |------------------|-----------------|---------|----------------------|----------------|-----------|
 | SQLite           | Local file path | N/A     | db_workbench.db      | N/A            | N/A       |
 | DuckDB           | Local file path | N/A     | db_workbench.duckdb  | N/A            | N/A       |
-| PostgreSQL       | localhost       | 5432    | db_workbench         | postgres       | rootpass  |
-| MySQL            | localhost       | 3306    | db_workbench         | root           | rootpass  |
 | MariaDB          | localhost       | 3307    | db_workbench         | root           | rootpass  |
+| MySQL            | localhost       | 3306    | db_workbench         | root           | rootpass  |
+| PostgreSQL       | localhost       | 5432    | db_workbench         | postgres       | rootpass  |
+| Cassandra *      | localhost       | 9042    | db_workbench         | N/A            | N/A       |
+| ClickHouse       | localhost       | 8123    | db_workbench         | root           | rootpass  |
+| Couchbase *      | localhost       | 8091    | db_workbench         | N/A            | N/A       |
+| Elasticsearch    | localhost       | 9200    | db_workbench         | N/A            | N/A       |
 | MongoDB *        | localhost       | 27017   | db_workbench         | N/A            | N/A       |
 | Redis *          | localhost       | 6379    | db_workbench         | N/A            | N/A       |
-| Cassandra *      | localhost       | 9042    | db_workbench         | N/A            | N/A       |
-| Elasticsearch    | localhost       | 9200    | db_workbench         | N/A            | N/A       |
-| ClickHouse       | localhost       | 8123    | db_workbench         | root           | rootpass  |
-| Couchbase *      | localhost       | 8091    | db_workbench         | Administrator  | password  |
 
 **Notes:**
 - `Database Engine` is the database you are connecting to, chosen from "New Database Connection" list. If marked with `*`, requires PRO version to connect.

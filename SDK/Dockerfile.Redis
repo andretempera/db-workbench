@@ -3,9 +3,10 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Redis Python SDK
+# Install Redis Python SDK
 RUN pip install --no-cache-dir redis
 
 WORKDIR /scripts
 
+# Keep container running; Makefile will run init_sdk.py explicitly
 CMD ["tail", "-f", "/dev/null"]

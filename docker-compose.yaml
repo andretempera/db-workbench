@@ -175,21 +175,113 @@ services:
       start_period: 10s
 
   redis:
-    image: redis:8.0.6
+    image: redis:8.6.1
     container_name: redis
     ports:
       - "${REDIS_PORT}:6379"
     volumes:
       - redis_data:/data
-      - ./data/redis/scripts/init.redis:/data/init.redis
-      - ./data/redis/scripts/init.sh:/docker-entrypoint-initdb.d/init.sh
-    command: ["sh", "/docker-entrypoint-initdb.d/init.sh"]
+      - ./data/redis/scripts/init.redis:/scripts/init.redis:ro
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 5s
+
+
+
+
+  # -------------------------
+  # Web GUIs
+  # -------------------------
+  
+  pgadmin:
+    image: dpage/pgadmin4:9.12.0
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    ports:
+      - "${PGADMIN_PORT}:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  phpmyadmin-mysql:
+    image: phpmyadmin/phpmyadmin:5.2.3
+    container_name: phpmyadmin-mysql
+    environment:
+      PMA_HOST: mysql
+      PMA_DEFAULT_DB: ${MYSQL_DB}
+    ports:
+      - "${PHPMYADMIN_MYSQL_PORT}:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+
+  phpmyadmin-mariadb:
+    image: phpmyadmin/phpmyadmin:5.2.3
+    container_name: phpmyadmin-mariadb
+    environment:
+      PMA_HOST: mariadb
+      PMA_DEFAULT_DB: ${MARIADB_DB}
+    ports:
+      - "${PHPMYADMIN_MARIADB_PORT}:80"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.3.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=${KIBANA_ELASTICSEARCH_URL}
+      - ELASTICSEARCH_USERNAME=${KIBANA_ELASTICSEARCH_USER}
+      - ELASTICSEARCH_PASSWORD=${KIBANA_ELASTICSEARCH_PASSWORD}
+      - ELASTICSEARCH_SSL_VERIFICATIONMODE=none
+    ports:
+      - "${KIBANA_PORT}:5601"
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://elasticsearch:9200/_cluster/health"]
+      interval: 30s
+      retries: 3
+      start_period: 30s
+      timeout: 10s
+
+  mongo-express:
+    image: mongo-express:1.0.2-20-alpine3.19
+    container_name: mongo-express
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
+      ME_CONFIG_MONGODB_SERVER: ${MONGO_HOST}
+      ME_CONFIG_MONGODB_PORT: ${MONGO_PORT}
+      ME_CONFIG_MONGODB_AUTH_DATABASE: ${MONGO_AUTH_DB}
+      ME_CONFIG_SITE_BASEURL: "/"
+      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_USER}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_PASSWORD}
+    ports:
+      - "${MONGOEXPRESS_PORT}:8081"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  redis-insight:
+    image: redislabs/redisinsight:3.2.0
+    container_name: redis-insight
+    ports:
+      - "${REDISINSIGHT_PORT}:5540"
+    environment:
+      RI_HOST: 0.0.0.0
+      RI_NO_ANALYTICS: "true"
+    depends_on:
+      redis:
+        condition: service_healthy
 
   # -------------------------
   # SDK Containers
@@ -358,100 +450,18 @@ services:
     environment:
       REDIS_HOST: redis
       REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - ./data/redis/scripts:/scripts:ro
+      - redis_data:/data
     working_dir: /scripts
-    tty: true
     command: tail -f /dev/null
+    tty: true
 
 
   # -------------------------
-  # Web GUIs
+  # Volumes
   # -------------------------
-  
-  pgadmin:
-    image: dpage/pgadmin4:9.12.0
-    container_name: pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
-    ports:
-      - "${PGADMIN_PORT}:80"
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  phpmyadmin-mysql:
-    image: phpmyadmin/phpmyadmin:5.2.3
-    container_name: phpmyadmin-mysql
-    environment:
-      PMA_HOST: mysql
-      PMA_DEFAULT_DB: ${MYSQL_DB}
-    ports:
-      - "${PHPMYADMIN_MYSQL_PORT}:80"
-    depends_on:
-      mysql:
-        condition: service_healthy
-
-
-  phpmyadmin-mariadb:
-    image: phpmyadmin/phpmyadmin:5.2.3
-    container_name: phpmyadmin-mariadb
-    environment:
-      PMA_HOST: mariadb
-      PMA_DEFAULT_DB: ${MARIADB_DB}
-    ports:
-      - "${PHPMYADMIN_MARIADB_PORT}:80"
-    depends_on:
-      mariadb:
-        condition: service_healthy
-
-  kibana:
-    image: docker.elastic.co/kibana/kibana:9.3.0
-    container_name: kibana
-    environment:
-      - ELASTICSEARCH_HOSTS=${KIBANA_ELASTICSEARCH_URL}
-      - ELASTICSEARCH_USERNAME=${KIBANA_ELASTICSEARCH_USER}
-      - ELASTICSEARCH_PASSWORD=${KIBANA_ELASTICSEARCH_PASSWORD}
-      - ELASTICSEARCH_SSL_VERIFICATIONMODE=none
-    ports:
-      - "${KIBANA_PORT}:5601"
-    depends_on:
-      - elasticsearch
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://elasticsearch:9200/_cluster/health"]
-      interval: 30s
-      retries: 3
-      start_period: 30s
-      timeout: 10s
-
-  mongo-express:
-    image: mongo-express:1.0.2-20-alpine3.19
-    container_name: mongo-express
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER}
-      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
-      ME_CONFIG_MONGODB_SERVER: ${MONGO_HOST}
-      ME_CONFIG_MONGODB_PORT: ${MONGO_PORT}
-      ME_CONFIG_MONGODB_AUTH_DATABASE: ${MONGO_AUTH_DB}
-      ME_CONFIG_SITE_BASEURL: "/"
-      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_USER}
-      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_PASSWORD}
-    ports:
-      - "${MONGOEXPRESS_PORT}:8081"
-    depends_on:
-      mongo:
-        condition: service_healthy
-
-  redis-insight:
-    image: redislabs/redisinsight:3.0.3
-    container_name: redis-insight
-    ports:
-      - "${REDISINSIGHT_PORT}:8001"
-    depends_on:
-      redis:
-        condition: service_healthy
 
 volumes:
   postgres_data:

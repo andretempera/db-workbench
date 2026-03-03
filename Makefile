@@ -221,19 +221,26 @@ reset-mongo: ## Remove Mongo + Mongo Express containers and volumes
 
 
 up-redis: ## Start Redis + RedisInsight
-	docker compose up -d redis redis-insight
+	docker compose up -d redis
 
-cli-redis: ## Enter Redis CLI
-	docker compose exec -it redis redis-cli -h $$REDIS_HOST -p $$REDIS_PORT -a $$REDIS_PASSWORD
+cli-redis: ## Enter Redis CLI (+ init script)
+	docker compose exec -T redis sh -c "cat /scripts/init.redis | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -a ${REDIS_PASSWORD}"
+	docker compose exec -it redis redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -a ${REDIS_PASSWORD}
 
-gui-redis: ## Launch RedisInsight for Redis
+gui-redis: ## Launch RedisInsight for Redis (+ init script)
+	docker compose up -d redis-insight
+	docker compose exec -T redis sh -c "cat /scripts/init.redis | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -a ${REDIS_PASSWORD}"
 	@echo "Click link to open GUI: http://localhost:${REDISINSIGHT_PORT}"
 
+sdk-redis: ## Connect to Redis via Python SDK (+ init script)
+	docker compose up -d redis-sdk
+	docker compose exec redis-sdk python /scripts/init_sdk.py
+
 down-redis: ## Stop Redis + RedisInsight
-	docker compose stop redis redis-insight
+	docker compose stop redis redis-insight redis-sdk
 
 reset-redis: ## Remove Redis + RedisInsight containers and volumes
-	docker compose down -v --remove-orphans redis redis-insight
+	docker compose down -v --remove-orphans redis redis-insight redis-sdk
 
 
 ########################################
