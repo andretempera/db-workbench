@@ -166,8 +166,9 @@ services:
       - "${MONGO_PORT}:27017"
     volumes:
       - mongo_data:/data/db
+      - ./data/mongo/scripts/init.js:/docker-entrypoint-initdb.d/init.js:ro
     healthcheck:
-      test: ["CMD-SHELL", "mongo --username ${MONGO_USER} --password ${MONGO_PASSWORD} --eval 'db.adminCommand(\"ping\")' --quiet"]
+      test: ["CMD-SHELL", "mongosh --username ${MONGO_USER} --password ${MONGO_PASSWORD} --eval 'db.adminCommand(\"ping\")' --quiet"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -307,39 +308,63 @@ services:
     command: tail -f /dev/null
 
   elasticsearch-sdk:
-    image: python:3.11-slim
+    build:
+      context: .
+      dockerfile: ./SDK/Dockerfile.Elasticsearch
     container_name: elasticsearch-sdk
-    working_dir: /scripts
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PORT: ${ELASTIC_PORT}
     volumes:
       - ./data/elasticsearch/scripts:/scripts:ro
       - elasticsearch_data:/usr/share/elasticsearch/data
-    environment:
-      - ELASTIC_HOST=${ELASTIC_HOST}      
-      - ELASTIC_PORT=${ELASTIC_PORT}         
-      - ELASTIC_USER=${ELASTIC_USER}         
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD} 
-    command: ["sleep", "infinity"]          
-    depends_on:
-      - elasticsearch
+    working_dir: /scripts
+    tty: true
+    command: tail -f /dev/null
 
-  mongodb-sdk:
+  mongo-sdk:
     build:
       context: .
-      dockerfile: SDK/Dockerfile.MongoDB
-    container_name: mongodb-sdk
+      dockerfile: ./SDK/Dockerfile.MongoDB
+    container_name: mongo-sdk
     depends_on:
       mongo:
         condition: service_healthy
     environment:
       MONGO_HOST: ${MONGO_HOST}
+      MONGO_PORT: ${MONGO_PORT}
       MONGO_USER: ${MONGO_USER}
       MONGO_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_AUTH_DB: ${MONGO_AUTH_DB}
+      MONGO_DB: ${MONGO_DB}
     volumes:
-      - ./data/mongo/scripts:/scripts
+      - ./data/mongo/scripts:/scripts:ro
+      - mongo_data:/data/db
     working_dir: /scripts
+    tty: true
     command: tail -f /dev/null
 
-  
+  redis-sdk:
+    build:
+      context: .
+      dockerfile: ./SDK/Dockerfile.Redis
+    container_name: redis-sdk
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT}
+    volumes:
+      - ./data/redis/scripts:/scripts:ro
+    working_dir: /scripts
+    tty: true
+    command: tail -f /dev/null
+
+
   # -------------------------
   # Web GUIs
   # -------------------------
@@ -407,8 +432,12 @@ services:
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER}
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
-      ME_CONFIG_MONGODB_SERVER: mongo
-      ME_CONFIG_MONGODB_DEFAULT_DB: db_workbench
+      ME_CONFIG_MONGODB_SERVER: ${MONGO_HOST}
+      ME_CONFIG_MONGODB_PORT: ${MONGO_PORT}
+      ME_CONFIG_MONGODB_AUTH_DATABASE: ${MONGO_AUTH_DB}
+      ME_CONFIG_SITE_BASEURL: "/"
+      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_USER}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_PASSWORD}
     ports:
       - "${MONGOEXPRESS_PORT}:8081"
     depends_on:

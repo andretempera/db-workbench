@@ -1,10 +1,14 @@
 FROM python:3.11-slim
 
-# Install MongoDB SDK (pymongo)
+# Prevent Python from writing .pyc files & enable unbuffered logs
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Install pymongo (MongoDB Python SDK)
 RUN pip install --no-cache-dir pymongo
 
-# Set the working directory to /scripts
+# Set working directory to /scripts, where init_sdk.py will be mounted
 WORKDIR /scripts
 
-# Default command to keep the container running
+# Keep the container alive (Makefile will run init_sdk.py manually)
 CMD ["tail", "-f", "/dev/null"]

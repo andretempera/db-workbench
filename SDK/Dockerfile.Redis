@@ -1,10 +1,11 @@
 FROM python:3.11-slim
 
-# Install Redis SDK (redis-py)
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Redis Python SDK
 RUN pip install --no-cache-dir redis
 
-# Set the working directory to /scripts
 WORKDIR /scripts
 
-# Default command to keep the container running
 CMD ["tail", "-f", "/dev/null"]

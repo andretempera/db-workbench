@@ -198,19 +198,26 @@ reset-elasticsearch: ## Remove Elasticsearch containers and volumes
 
 
 up-mongo: ## Start MongoDB + Mongo Express
-	docker compose up -d mongo mongo-express
+	docker compose up -d mongo
 
-cli-mongo: ## Enter Mongo shell
-	docker compose exec -it mongo mongosh "mongodb://$$MONGO_USER:$$MONGO_PASSWORD@$$MONGO_HOST:$$MONGO_PORT/db_workbench?authSource=admin"
+cli-mongo: ## Enter Mongo shell (+ init script)
+	docker-compose exec -T mongo mongosh "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/db_workbench?authSource=admin" --eval "load('/docker-entrypoint-initdb.d/init.js');"
+	docker-compose exec -T mongo mongosh "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/db_workbench?authSource=admin"
 
-gui-mongo: ## Launch Mongo Express for MongoDB
+gui-mongo: ## Launch Mongo Express for MongoDB (+ init script)
+	docker compose up -d mongo-express
+	docker-compose exec -T mongo mongosh "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/db_workbench?authSource=admin" --eval "load('/docker-entrypoint-initdb.d/init.js');"
 	@echo "Click link to open GUI: http://localhost:${MONGOEXPRESS_PORT}"
 
+sdk-mongo: ## Connect to MongoDB via Python SDK (+ init script)
+	docker compose up -d mongo-sdk
+	docker-compose exec mongo-sdk python /scripts/init_sdk.py
+
 down-mongo: ## Stop MongoDB + Mongo Express
-	docker compose stop mongo mongo-express
+	docker compose stop mongo mongo-express mongo-sdk
 
 reset-mongo: ## Remove Mongo + Mongo Express containers and volumes
-	docker compose down -v --remove-orphans mongo mongo-express
+	docker compose down -v --remove-orphans mongo mongo-express mongo-sdk
 
 
 up-redis: ## Start Redis + RedisInsight
