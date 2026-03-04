@@ -92,11 +92,10 @@ Then install dependencies:
 pip install -r requirements.txt
 ```
 
-## Starting Databases
+## Working with Databases
 Start an individual database:
 ```bash
 make up-duckdb
-make up-sqlite
 make up-postgres
 make up-mongo
 ```
@@ -192,13 +191,12 @@ If this data exists, the database is working properly.
 ## CLI Access
 Access database shells directly:
 ```bash
+make cli-duckdb
 make cli-postgres       # defaults to db_workbench database
 make cli-mysql          # defaults to db_workbench database
 make cli-mongo          # defaults to db_workbench database/bucket
 make cli-redis          # defaults to db_workbench key prefix
 make cli-sqlite
-make cli-duckdb-python
-make cli-duckdb-docker
 ```
 
 
@@ -210,47 +208,88 @@ Ensure:
 - Docker is running
 - The relevant database container is started
 
-### MariaDB / MySQL - phpMyAdmin
-`http://localhost:<PHPMYADMIN_MYSQL_PORT>`
-or
-`http://localhost:<PHPMYADMIN_MARIADB_PORT>`
+### MariaDB - phpMyAdmin
+URL: `http://localhost:<PHPMYADMIN_MARIADB_PORT>`
 
-Login: `root / rootpass`
+**Login:**
+- Username: `root`
+- Password: `rootpass`
+
+### MariaDB / MySQL - phpMyAdmin
+URL: `http://localhost:<PHPMYADMIN_MYSQL_PORT>`
+
+**Login:**
+- Username: `root`
+- Password: `rootpass`
 
 ### PostgreSQL - pgAdmin
-`http://localhost:<PGADMIN_PORT>`
+URL: `http://localhost:<PGADMIN_PORT>`
 
-Login: `admin@admin.com / rootpass`
+**Login:**
+- Username: `admin@admin.com`
+- Password: `rootpass`
 
-Inside pgAdmin:
-Create → Server → Connection:
+Connect to the database:
+1. Create → Server → Connection:
 - Host: `postgres`
 - Port: `5432`
 - Username: `postgres`
 - Password: `rootpass`
 
-### ClickHouse / ClickHouse Web UI
-`http://localhost:<CLICKHOUSE_PORT>`
+2. Query the data:
+- 
 
-Login not required.  
+### ClickHouse / ClickHouse Web UI
+URL: `http://localhost:<CLICKHOUSE_PORT>`
+
+**Login** not required.
+
 The default workspace `db_workbench` is pre-created with a test row.
 
 ### Couchbase / Couchbase Console
-`http://localhost:<COUCHBASE_PORT>/ui/index.html`
+URL: `http://localhost:<COUCHBASE_PORT>/ui/index.html`
 
-Login: `Administrator / rootpass`
+**Login:**
+- Username: `Administrator`
+- Password: `rootpass`
 
 Default bucket: `db_workbench`
 
-### MongoDB / Mongo Express
-`http://localhost:<MONGOEXPRESS_PORT>`
+### Elasticsearch / Kibana
+URL: `http://localhost:<KIBANA_PORT>`
 
-Login using: `root / rootpass` 
+**Login:**
+- Username: `elastic`
+- Password: `rootpass`
+
+To access and visualize test data:
+1. Create a Data View in Kibana:
+  - Navigate to Management → Kibana → Data Views → Create Data View.
+  - Name: `DB Workbench`
+  - Index Pattern: `db_workbench`. (**Note:** You should see "Your index pattern matches 1 source.")
+  - Click Save to create the data view.
+
+2. Access the Data in Discover:
+- Go to Discover → Elasticsearch → Click on All logs.
+- Choose `DB Workbench` from the dropdown to view the test data.
+
+3. Run Queries in Dev Tools:
+- Go to Management → Dev Tools.
+- You can now query the `db_workbench` index directly from here.
+
+### MongoDB / Mongo Express
+URL: `http://localhost:<MONGOEXPRESS_PORT>`
+
+**Login:**
+- Username: `root`
+- Password: `rootpass`
 
 ### Redis / RedisInsight
-`http://localhost:<REDISINSIGHT_PORT>`
+URL: `http://localhost:<REDISINSIGHT_PORT>`
 
-Does not require login, but needs to connect to existing database using: 
+**Login** not required.
+
+connect to existing database using: 
 `redis://<username>:<password>@<host>:<port>)` formula - which corresponds to `redis://default:rootpass@redis:6379` with default `.env` values 
 
 ## DBeaver Connection

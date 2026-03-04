@@ -3,34 +3,47 @@ import sys
 import time
 import code
 from elasticsearch import Elasticsearch
-from elasticsearch.exceptions import ConnectionError
+from elasticsearch.exceptions import ConnectionError, NotFoundError
 
-ELASTICSEARCH_HOST = os.getenv("ELASTICSEARCH_HOST", "elasticsearch")
-ELASTICSEARCH_PORT = int(os.getenv("ELASTICSEARCH_PORT", "9200"))
+# Environment variables with defaults
+ELASTIC_HOST = os.getenv("ELASTIC_HOST", "elasticsearch")  # Set to 'elasticsearch' (service name)
+ELASTIC_PORT = int(os.getenv("ELASTIC_PORT", "9200"))
+ELASTIC_USER = os.getenv("ELASTIC_USER", "elastic")
+ELASTIC_PASSWORD = os.getenv("ELASTIC_PASSWORD", "rootpass")
 
-if not all([ELASTICSEARCH_HOST, ELASTICSEARCH_PORT]):
-    print("Error: Missing required Elasticsearch environment variables.")
+print(f"ELASTIC_HOST: {ELASTIC_HOST}")
+print(f"ELASTIC_PORT: {ELASTIC_PORT}")
+print(f"ELASTIC_USER: {ELASTIC_USER}")
+print(f"ELASTIC_PASSWORD: {ELASTIC_PASSWORD}")
+
+# Basic validation
+if not all([ELASTIC_HOST, ELASTIC_PORT, ELASTIC_USER, ELASTIC_PASSWORD]):
+    print("Error: Missing one or more required Elasticsearch environment variables.")
     sys.exit(1)
 
-print(f"Connecting to Elasticsearch at {ELASTICSEARCH_HOST}:{ELASTICSEARCH_PORT}...")
+print(f"Connecting to Elasticsearch at https://{ELASTIC_HOST}:{ELASTIC_PORT}...")  
 
-es = None
+# Initialize Elasticsearch client with authentication and bypass certificate verification
+try:
+    es = Elasticsearch(
+        [f"https://{ELASTIC_HOST}:{ELASTIC_PORT}"],
+        basic_auth=(ELASTIC_USER, ELASTIC_PASSWORD),
+        verify_certs=False,  # Disable SSL certificate verification
+    )
 
-# Retry logic
-for attempt in range(10):
-    try:
-        es = Elasticsearch([{"host": ELASTICSEARCH_HOST, "port": ELASTICSEARCH_PORT}])
-        if es.ping():
-            break
-    except ConnectionError:
-        print(f"Attempt {attempt + 1}/10: Elasticsearch not ready, retrying in 3 seconds...")
-        time.sleep(3)
-else:
-    print("Error: Unable to connect to Elasticsearch after multiple attempts.")
+    # Test the connection
+    if not es.ping():
+        print(f"Error: Unable to ping Elasticsearch at https://{ELASTIC_HOST}:{ELASTIC_PORT}.")
+        sys.exit(1)
+
+    print("\n||| Elasticsearch SDK Python CLI |||")
+    print(f"Connected to Elasticsearch at {ELASTIC_HOST}:{ELASTIC_PORT}")
+    print("Objects available:")
+    print("    - es (Elasticsearch client)\n")
+
+except (ConnectionError, NotFoundError) as e:
+    print(f"Error: Unable to connect to Elasticsearch ({e}). Please check if Elasticsearch is running.")
     sys.exit(1)
 
-print("\n||| Elasticsearch SDK Python CLI |||")
-print("Objects available:")
-print("    - es (Elasticsearch client)\n")
-
+# Launch interactive shell
 code.interact(local=globals())

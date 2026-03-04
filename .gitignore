@@ -6,6 +6,7 @@
 !/data/**/.gitkeep
 !/data/**/scripts/init.*
 !/data/**/scripts/init_sdk.py
+!/data/**/scripts/init_kibana.sh
 *.db
 *.duckdb
 *.sqlite

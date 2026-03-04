@@ -181,7 +181,8 @@ reset-couchbase: ## Remove Couchbase containers and volumes
 up-elasticsearch: ## Start Elasticsearch
 	docker compose up -d elasticsearch
 	python3 ./data/elasticsearch/scripts/init.py
-	
+	bash ./data/elasticsearch/scripts/init_kibana.sh
+
 gui-elasticsearch: ## Launch Kibana for Elasticsearch
 	docker compose up -d kibana
 	@echo "Click link to open GUI: http://localhost:${KIBANA_PORT}"
