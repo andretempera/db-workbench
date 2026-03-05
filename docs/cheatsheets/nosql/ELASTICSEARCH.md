@@ -23,16 +23,14 @@ Cluster
 - An **index** is the primary logical grouping of data (similar to a database/table conceptually). It is split into **shards**, which distribute data across nodes.
 - A **document** is a JSON object stored inside an index, and are automatically assigned to shards.
 - Elasticsearch uses a REST-based JSON API (not SQL by default, though SQL support exists).
-- Queries are expressed using Query DSL (JSON-based).
 
-**Note:** The default workspace for this project is `db_workbench`. 
+
 
 ## Basic Commands & Workflow
 ### 1. Start Environment
-- Open MySQL CLI:
-```bash
-  make cli-mysql
-```
+- Elasticsearch does not provide a dedicated interactive CLI like SQL databases.
+- Once the container or service is running, you can interact with it via HTTP requests using tools such as `curl`, `http`, `Postman`, or language-specific SDKs.
+- The REST API allows you to query, insert, update, and delete documents immediately after the service is available.
 
 ### 2. Inspect Existing Setup
 - Show all databases:
@@ -87,7 +85,7 @@ Cluster
   WHERE id = 2;  -- Deletes row based on id number
 ```
 
-	Check the data after deletion:
+- Check the data after deletion:
 ```sql
   SELECT * FROM test;  -- Table should have just one entry again
 ```
@@ -216,13 +214,16 @@ Cluster
 ```
 
 ### 11. Exit Environment
-- Exit MySQL CLI:
-```sql
-  \q
-```
+- Elasticsearch does not have a CLI environment to exit.
 
-**Notes:**
-- Every operation is index-centric; the default `db_workbench` index is your workspace.
-- Documents are JSON objects, not rows with fixed schema (though mappings define types).
-- Queries use DSL JSON, not SQL (though Elasticsearch has SQL endpoint for convenience).
-- There is no `USE` command; you specify index in every request.
+
+### Notes:
+- Workspace = index; `db_workbench` index is pre-created by default.
+- Elasticsearch is a document-oriented NoSQL database; documents are stored as JSON.
+- Schema-flexible: each document can have different fields, but mappings define data types and analyzers.
+- Clusters can contain multiple nodes and indexes for high availability and scalability.
+- Indexes are partitioned into shards; shards distribute data across nodes automatically.
+- Documents are accessed via REST API or SDKs; SQL endpoint exists for convenience.
+- Operations are index-centric; you specify the index for each query.
+- Supports full-text search, filtering, aggregations, and analytics on JSON data.
+- Commands like `GET`, `POST`, `PUT`, and `_search` are Elasticsearch API operations, not standard SQL.

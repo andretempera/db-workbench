@@ -24,16 +24,13 @@ Cluster (optional)
 - A **collection** stores documents (similar to a table in relational systems).
 - A **document** is a BSON object (binary JSON) identified by a unique _id.
 - Data is stored in flexible, schema-optional format.
-- Queries use a JSON-like query language.
-- Commands like `show dbs` and `show collections` are MongoDB shell commands.
 
-**Note:** The default database for this project is `db_workbench`. 
 
 ## Basic Commands & Workflow
 ### 1. Start Environment
-- Open MySQL CLI:
+- Open MongoDB CLI:
 ```bash
-  make cli-mysql
+  make cli-mongo
 ```
 
 ### 2. Inspect Existing Setup
@@ -89,7 +86,7 @@ Cluster (optional)
   WHERE id = 2;  -- Deletes row based on id number
 ```
 
-	Check the data after deletion:
+- Check the data after deletion:
 ```sql
   SELECT * FROM test;  -- Table should have just one entry again
 ```
@@ -218,13 +215,16 @@ Cluster (optional)
 ```
 
 ### 11. Exit Environment
-- Exit MySQL CLI:
+- Exit MongoDB CLI:
 ```sql
   \q
 ```
 
-**Notes:**
-- Workspace = database; pre-created db_workbench is your default.
-- Collections hold documents (flexible JSON/BSON); no enforced schema.
-- Queries use MongoDB query operators ($eq, $gt, $in, etc.) instead of standard SQL.
-- Indexes improve performance; _id is always the primary key.
+### Notes:
+- Workspace = database; the db_workbench database is pre-created by default.
+- Collections store documents (JSON/BSON); schemas are optional and can vary between documents.
+- Every document has a unique _id field, which acts as the primary key.
+- Queries use MongoDB’s JSON-like operators ($eq, $gt, $in, etc.) rather than standard SQL.
+- Indexes can be added to collections to improve query performance; _id is indexed by default.
+- MongoDB can run as a standalone server, replica set, or sharded cluster; behavior may differ in distributed setups.
+- Commands like show dbs, show collections, and db.collection.find() are MongoDB shell commands, not standard SQL.

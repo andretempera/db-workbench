@@ -26,15 +26,13 @@ Cluster
 - A **collection** stores documents (similar to a table in relational systems).
 - A **document** is a JSON object identified by a unique key.
 - Data is stored in flexible JSON format (schema optional).
-- N1QL (SQL++ for JSON) provides SQL-like querying over documents.
 
-**Note:** The default bucket (workspace) for this project is `db_workbench`. 
 
 ## Basic Commands & Workflow
 ### 1. Start Environment
-- Open MySQL CLI:
+- Open Couchbase CLI:
 ```bash
-  make cli-mysql
+  make cli-couchbase
 ```
 
 ### 2. Inspect Existing Setup
@@ -90,7 +88,7 @@ Cluster
   WHERE id = 2;  -- Deletes row based on id number
 ```
 
-	Check the data after deletion:
+- Check the data after deletion:
 ```sql
   SELECT * FROM test;  -- Table should have just one entry again
 ```
@@ -219,13 +217,19 @@ Cluster
 ```
 
 ### 11. Exit Environment
-- Exit MySQL CLI:
+- Exit Couchbase CLI:
 ```sql
   \q
 ```
 
-**Notes:**
-- Couchbase **does not enforce schemas**; JSON documents can vary in structure.
-- Collections are optional; `_default` collection always exists in a bucket.
-- Use `db_workbench` bucket for local experimentation.
-- N1QL is SQL-like, but you query JSON fields (e.g., `user.name` instead of a column name).
+### Notes:
+- Workspace = bucket; `db_workbench` is pre-created by default.
+- Couchbase is a document-oriented NoSQL database; documents are stored as JSON.
+- Schema-less: documents within a collection can have different structures.
+- Buckets are top-level containers; scopes group collections within a bucket.
+- Collections are optional; `_default` collection always exists.
+- Each document has a unique key and is accessed via key-value operations or N1QL queries.
+- N1QL (SQL++ for JSON) allows SQL-like querying over JSON documents.
+- Supports clusters with multiple nodes for high availability and scalability.
+- Commands like `SELECT`, `CREATE COLLECTION`, or `DESCRIBE BUCKET` are Couchbase client commands, not standard SQL.
+- Changes persist across CLI, SDK, and Web UI sessions.

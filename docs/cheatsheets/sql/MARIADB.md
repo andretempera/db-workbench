@@ -24,15 +24,13 @@ Server (instance)
 - A **table** is the grouping that organizes data
 - **Data** is stored as **rows** (records) and **columns** (fields).
 - MySQL uses strongly-typed SQL (each column has a type).
-- Commands like `SHOW TABLES` and `DESCRIBE` are MariaDB client commands, not standard SQL.
 
-**Note:** The default workspace for this project is `db_workbench`. 
 
 ## Basic Commands & Workflow
 ### 1. Start Environment
-- Open MySQL CLI:
+- Open MariaDB CLI:
 ```bash
-  make cli-mysql
+  make cli-mariadb
 ```
 
 ### 2. Inspect Existing Setup
@@ -88,7 +86,7 @@ Server (instance)
   WHERE id = 2;  -- Deletes row based on id number
 ```
 
-	Check the data after deletion:
+- Check the data after deletion:
 ```sql
   SELECT * FROM test;  -- Table should have just one entry again
 ```
@@ -217,15 +215,17 @@ Server (instance)
 ```
 
 ### 11. Exit Environment
-- Exit MySQL CLI:
+- Exit MariaDB CLI:
 ```sql
   QUIT
 ```
 
-**Notes:**
+### Notes:
 - MariaDB is a fork of MySQL and maintains very high compatibility with MySQL syntax, tools, and behavior.
 - Workspace = database; `db_workbench` is pre-created by default.
-- Relational model with strong typing.
-- Supports transactions, constraints, indexes, and advanced SQL features.
+- Supports transactions, constraints, indexes, and other advanced SQL features.
 - Commands are executed within transactions; changes can be committed or rolled back.
-- MariaDB client commands (e.g., SHOW TABLES, DESCRIBE) are client-only commands.
+- Default user: `root`, default port: `3307`, default password: `rootpass`.
+- Server runs inside Docker; stopping the container pauses the database but preserves data in the volume.
+- Commands like `SHOW TABLES`, `DESCRIBE <table>`, and `SHOW DATABASES` are MariaDB client commands, not standard SQL.
+- Connection is persistent across CLI, SDK, and GUI sessions.

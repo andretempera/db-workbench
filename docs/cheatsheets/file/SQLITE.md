@@ -12,26 +12,25 @@
   </tr>
 </table>
 
+
 ## Mental Model
 ```txt
 Database (single file)
  └── Table (grouping)
       └── Data (stored in rows/records)
 ```
-- SQLite is serverless - there is no separate server process.
+- SQLite is serverless, there is no separate server, schema or cluster processes.
 - A **database** is a single file on disk (e.g., `db_workbench.db`). It contains tables, indexes, views, and other objects.
 - A **table** is the grouping that organizes data
 - **Data** is stored as **rows** (records) and **columns** (fields).
-- SQLite uses dynamic typing (type affinity system rather than strict column enforcement by default).
-- Commands like `.tables`, `.schema`, and `.exit` are SQLite CLI client commands, not standard SQL.
-
-**Note:** In SQLite, the first database file you open (e.g., `db_workbench`) is always assigned the logical name main in the session. 
+- SQLite does not enforce strict column types by default; it uses a **type affinity system**, meaning most values can be stored in most columns.
+  
 
 ## Basic Commands & Workflow
 ### 1. Start Environment
-- Open MySQL CLI:
+- Open SQLite CLI:
 ```bash
-  make cli-mysql
+  make cli-sqlite
 ```
 
 ### 2. Inspect Existing Setup
@@ -87,7 +86,7 @@ Database (single file)
   WHERE id = 2;  -- Deletes row based on id number
 ```
 
-	Check the data after deletion:
+- Check the data after deletion:
 ```sql
   SELECT * FROM test;  -- Table should have just one entry again
 ```
@@ -217,13 +216,15 @@ WHERE type = 'table';  -- find which tables belong to which database
 ```
 
 ### 11. Exit Environment
-- Exit MySQL CLI:
+- Exit SQLite CLI:
 ```sql
   .exit
 ```
 
-**Notes:**
-- Workspace = database file; db_workbench.db is pre-created by default.
-- Single-file database; no server, no schemas, no clusters.
+### Notes:
+- Workspace = database file; `db_workbench.db` is pre-created by default.
 - Fully ACID-compliant with standard SQL support; some advanced SQL features may differ from PostgreSQL.
-- SQLite commands like .tables, .databases, .schema, and .exit are shell meta-commands, not standard SQL.
+- Commands like `.tables`, `.schema`, and `.exit` are SQLite CLI client commands, not standard SQL.
+- In SQLite, the first database file you open (e.g., `db_workbench`) is always assigned the logical name `main` in the session. 
+- Because SQLite is serverless (the database exists entirely as a file on disk), copying the `.db` file copies the whole database.
+- Foreign key constraints are supported but may need to be enabled in some environments using: `PRAGMA foreign_keys = ON;`

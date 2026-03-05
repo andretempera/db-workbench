@@ -25,15 +25,13 @@ Cluster (optional)
 - Data is stored in a columnar format (optimized for analytics).
 - ClickHouse uses strongly-typed SQL (each column has a defined data type).
 - Table engines (e.g., MergeTree) define how data is stored, indexed, and replicated.
-- Commands like SHOW DATABASES, `SHOW TABLES`, and `DESCRIBE TABLE` are client commands (not standard SQL).
 
-**Note:** The default workspace for this project is `db_workbench`. 
 
 ## Basic Commands & Workflow
 ### 1. Start Environment
-- Open MySQL CLI:
+- Open ClickHouse CLI:
 ```bash
-  make cli-mysql
+  make cli-clickhouse
 ```
 
 ### 2. Inspect Existing Setup
@@ -89,7 +87,7 @@ Cluster (optional)
   WHERE id = 2;  -- Deletes row based on id number
 ```
 
-	Check the data after deletion:
+- Check the data after deletion:
 ```sql
   SELECT * FROM test;  -- Table should have just one entry again
 ```
@@ -218,12 +216,21 @@ Cluster (optional)
 ```
 
 ### 11. Exit Environment
-- Exit MySQL CLI:
+- Exit ClickHouse CLI:
 ```sql
   \q
 ```
 
-**Notes:**
-- ClickHouse is **columnar**, so row-level operations are slower; best for bulk inserts and analytical queries.
-- Updates and deletes are **not like typical OLTP databases**—they trigger merges internally.
-- Use `MergeTree` engine or derivatives for persistent tables; simpler engines like `Memory` are temporary.
+### Notes:
+- Workspace = database; `db_workbench` is pre-created by default.
+- ClickHouse is a columnar, analytical database optimized for OLAP queries.
+- Data is stored in columns; row-level operations (updates/deletes) are slower.
+- Table engines (e.g., MergeTree) define storage, indexing, and replication behavior.
+  - Use MergeTree or its derivatives for persistent tables.
+  - Engines like Memory are temporary and do not persist after shutdown.
+- Supports strongly-typed SQL; each column has a defined type.
+- Updates and deletes are handled internally via merges, not like typical OLTP.
+- Commands like `SHOW DATABASES`, `SHOW TABLES`, and `DESCRIBE TABLE` are ClickHouse client commands, not standard SQL.
+- Multiple nodes can form a cluster; replication and distribution are managed per table engine.
+- Tables and data persist across CLI, SDK, and GUI sessions.
+

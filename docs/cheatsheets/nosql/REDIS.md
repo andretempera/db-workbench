@@ -30,15 +30,13 @@ Server (instance)
 - A **value** is associated with a key and can be different data types.
 - Data is stored primarily in memory (with optional persistence to disk).
 - Redis is not relational — there are no tables or schemas.
-- Commands like `KEYS`, `FLUSHDB`, and `SELECT` are Redis commands (not SQL).
 
-**Note:** The default key (workspace) for this project is `db_workbench`. 
 
 ## Basic Commands & Workflow
 ### 1. Start Environment
-- Open MySQL CLI:
+- Open Redis CLI:
 ```bash
-  make cli-mysql
+  make cli-redis
 ```
 
 ### 2. Inspect Existing Setup
@@ -94,7 +92,7 @@ Server (instance)
   WHERE id = 2;  -- Deletes row based on id number
 ```
 
-	Check the data after deletion:
+- Check the data after deletion:
 ```sql
   SELECT * FROM test;  -- Table should have just one entry again
 ```
@@ -223,13 +221,17 @@ Server (instance)
 ```
 
 ### 11. Exit Environment
-- Exit MySQL CLI:
+- Exit Redis CLI:
 ```sql
   \q
 ```
 
-**Notes:**
-- Workspace = logical DB; db_workbench maps to logical DB 0 by default.
-- Key-value storage only; values can be strings, hashes, lists, sets, sorted sets, or streams.
-- No tables or rows—think in terms of keys and data types.
-- Commands are atomic; many operations are in-memory and extremely fast.
+### Notes:
+- Workspace = logical database; the db_workbench workspace maps to Redis database 0 by default.
+- Redis is a key-value store; there are no tables, schemas, or relational structures.
+- Values can be different data types: strings, hashes, lists, sets, sorted sets, streams, etc.
+- All commands are atomic, and most operations are in-memory, making Redis extremely fast.
+- Data can optionally persist to disk (RDB snapshots or AOF), but primary storage is in memory.
+- Commands like KEYS, FLUSHDB, and SELECT are Redis client commands, not standard SQL.
+- Keys are unique within a database namespace; separate logical databases (0–15 by default) isolate keys.
+

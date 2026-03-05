@@ -24,16 +24,13 @@ Cluster
 - A **keyspace** is the top-level logical grouping (similar to a database in relational systems). It defines replication settings (how data is distributed and copied across nodes).
 - A **table** (formerly called a column family) lives inside a keyspace.
 - Data is stored as rows, but distributed across nodes by partition key.
-- Cassandra uses CQL (Cassandra Query Language), which looks like SQL but is not fully relational.
-- Commands like `DESCRIBE KEYSPACES` and `DESCRIBE TABLE` are CQL shell (cqlsh) commands.
 
-**Note:** The default workspace for this project is `db_workbench`. 
 
 ## Basic Commands & Workflow
 ### 1. Start Environment
-- Open MySQL CLI:
+- Open Cassandra CLI:
 ```bash
-  make cli-mysql
+  make cli-cassandra
 ```
 
 ### 2. Inspect Existing Setup
@@ -89,7 +86,7 @@ Cluster
   WHERE id = 2;  -- Deletes row based on id number
 ```
 
-	Check the data after deletion:
+- Check the data after deletion:
 ```sql
   SELECT * FROM test;  -- Table should have just one entry again
 ```
@@ -218,13 +215,18 @@ Cluster
 ```
 
 ### 11. Exit Environment
-- Exit MySQL CLI:
+- Exit Cassandra CLI:
 ```sql
   \q
 ```
 
-**Notes:**
-- Workspace = keyspace; pre-created db_workbench is your default.
-- Queries must use primary keys or indexed columns; no full table scans.
-- Syntax is close to SQL but more restricted.
-- Tables are more flexible (wide-column), but design is query-driven.
+### Notes:
+- Workspace = keyspace; `db_workbench` is pre-created by default.
+- Cassandra is a distributed, query-driven, wide-column NoSQL database; design tables around access patterns.
+- Queries must include primary keys or indexed columns; full table scans are not supported.
+- Uses CQL (Cassandra Query Language), which resembles SQL but lacks joins and some relational features.
+- Supports tunable replication and consistency per keyspace.
+- Commands like `DESCRIBE KEYSPACES`, `DESCRIBE TABLE <table>`, and `SELECT` are executed in cqlsh.
+- Default connection: keyspace `db_workbench`, default port: `9042`, default user: `cassandra`/`cassandra`.
+- Cluster can span multiple nodes; data is automatically partitioned and replicated.
+- Tables and data persist across CLI, SDK, and GUI sessions.

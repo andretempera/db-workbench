@@ -26,9 +26,7 @@ Cluster
 - A **table** is the grouping that organizes data
 - **Data** is stored as **rows** (records) and **columns** (fields).
 - PostgreSQL uses strongly-typed SQL (each column has a type).
-- Commands like `\dt`, `\l` and `\c` are **psql** client commands, not standard SQL.
 
-**Note:** The default workspace for this project is `db_workbench`.
 
 ## Basic Commands & Workflow
 ### 1. Start Environment
@@ -90,7 +88,7 @@ Cluster
   WHERE id = 2;  -- Deletes row based on id number
 ```
 
-	Check the data after deletion:
+- Check the data after deletion:
 ```sql
   SELECT * FROM test;  -- Table should have just one entry again
 ```
@@ -223,10 +221,13 @@ Cluster
   \q
 ```
 
-## Notes:
+
+### Notes:
 - Workspace = database; `db_workbench` is pre-created by default.
-- Relational model with strong typing.
 - By default, tables are created in the `public` schema.
-- Supports transactions, constraints, indexes, and advanced SQL features.
+- Supports transactions, constraints, indexes, and other advanced SQL features.
 - Commands are executed within transactions; changes can be committed or rolled back.
-- `\` commands (e.g., `\dt`, `\d`, `\c`) are psql client-only.
+- Default superuser: `postgres`, default port: `5432`, default password: `rootpass`.
+- Cluster runs inside Docker; stopping the container pauses the database but preserves data in the volume.
+- Commands like `\dt`, `\d <table>`, `\l`, and `\c <db>` are **psql** client commands, not standard SQL.
+- Connection is persistent across CLI, SDK, and GUI sessions.
