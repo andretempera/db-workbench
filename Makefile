@@ -17,7 +17,7 @@ up-duckdb: ## Start DuckDB database file
 cli-duckdb: ## Enter DuckDB native CLI (via Docker)
 	docker run --rm -it --name duckdb-cli -v "$$PWD/data/duckdb/db:/workspace" -w /workspace duckdb/duckdb duckdb db_workbench.duckdb
 
-sdk-duckdb: ## Enter DuckDB via Python SDK CLI
+sdk-duckdb: ## Enter DuckDB via Python SDK
 	python3 ./data/duckdb/scripts/init_sdk.py
 
 down-duckdb: ## No-op (file-based)
@@ -35,7 +35,7 @@ up-sqlite: ## Initialize SQLite database file
 cli-sqlite: ## Enter SQLite CLI
 	sqlite3 ${SQLITE_DB_PATH}
 
-sdk-sqlite: ## Enter SQLite via Python SDK CLI
+sdk-sqlite: ## Enter SQLite via Python SDK
 	python3 ./data/sqlite/scripts/init_sdk.py
 
 down-sqlite: ## No-op (file-based)
@@ -64,10 +64,10 @@ sdk-mariadb: ## Connect to MariaDB via Python SDK
 	docker compose up -d mariadb-sdk
 	docker compose exec mariadb-sdk python /scripts/init_sdk.py
 
-down-mariadb: ## Stop MariaDB + phpMyAdmin
+down-mariadb: ## Stop MariaDB, phpMyAdmin and SDK container
 	docker compose stop mariadb phpmyadmin-mariadb mariadb-sdk
 
-reset-mariadb: ## Remove MariaDB + phpMyAdmin containers and volumes
+reset-mariadb: ## Remove MariaDB, phpMyAdmin, SDK containers and volumes
 	docker compose down -v --remove-orphans mariadb phpmyadmin-mariadb mariadb-sdk
 
 
@@ -85,10 +85,10 @@ sdk-mysql: ## Connect to MySQL via Python SDK
 	docker compose up -d mysql-sdk
 	docker compose exec mysql-sdk python /scripts/init_sdk.py
 
-down-mysql: ## Stop MySQL + phpMyAdmin
+down-mysql: ## Stop MySQL, phpMyAdmin and SDK container
 	docker compose stop mysql phpmyadmin-mysql mysql-sdk
 
-reset-mysql: ## Remove MySQL + phpMyAdmin containers and volumes
+reset-mysql: ## Remove MySQL, phpMyAdmin, SDK containers and volumes
 	docker compose down -v --remove-orphans mysql phpmyadmin-mysql mysql-sdk
 
 
@@ -102,14 +102,14 @@ gui-postgres: ## Launch pgAdmin for PostgreSQL
 	docker compose up -d pgadmin
 	@echo "Click link to open GUI: http://localhost:${PGADMIN_PORT}"
 
-sdk-postgres: ## Connect to PostgreSQL via Python SDK (+ init script)
+sdk-postgres: ## Connect to PostgreSQL via Python SDK
 	docker compose up -d postgres-sdk
 	docker compose exec postgres-sdk python /scripts/init_sdk.py
 
-down-postgres: ## Stop PostgreSQL + pgAdmin
+down-postgres: ## Stop PostgreSQL, pgAdmin and SDK container
 	docker compose stop postgres pgadmin postgres-sdk
 
-reset-postgres: ## Remove PostgreSQL + pgAdmin containers and volumes
+reset-postgres: ## Remove PostgreSQL, pgAdmin, SDK containers and volumes
 	docker compose down -v --remove-orphans postgres pgadmin postgres-sdk
 
 
@@ -125,14 +125,14 @@ cli-cassandra: ## Enter Cassandra CQL shell (+ init script)
 	cqlsh $$CASSANDRA_HOST $$CASSANDRA_PORT -u $$CASSANDRA_USER -p $$CASSANDRA_PASSWORD -f /docker-entrypoint-initdb.d/init.cql; \
 	exec cqlsh $$CASSANDRA_HOST $$CASSANDRA_PORT -u $$CASSANDRA_USER -p $$CASSANDRA_PASSWORD -k db_workbench"
 
-sdk-cassandra: ## Connect to Cassandra via Python SDK
+sdk-cassandra: ## Connect to Cassandra via Python SDK (+ init script)
 	docker compose up -d cassandra-sdk
 	docker compose exec cassandra-sdk python /scripts/init_sdk.py
 
-down-cassandra: ## Stop Cassandra
+down-cassandra: ## Stop Cassandra and SDK container
 	docker compose stop cassandra cassandra-sdk
 
-reset-cassandra: ## Remove Cassandra containers and volumes
+reset-cassandra: ## Remove Cassandra, SDK container and volumes
 	docker compose down -v --remove-orphans cassandra cassandra-sdk
 
 
@@ -149,16 +149,15 @@ sdk-clickhouse: ## Connect to ClickHouse via Python SDK
 	docker compose up -d clickhouse-sdk
 	docker compose exec clickhouse-sdk python /scripts/init_sdk.py
 
-down-clickhouse: ## Stop ClickHouse
+down-clickhouse: ## Stop ClickHouse and SDK container
 	docker compose stop clickhouse clickhouse-sdk
 
-reset-clickhouse: ## Remove ClickHouse containers and volumes
+reset-clickhouse: ## Remove ClickHouse, SDK containers and volumes
 	docker compose down -v --remove-orphans clickhouse clickhouse-sdk
 
 
 up-couchbase: ## Start Couchbase
 	docker compose up -d couchbase
-	docker compose build couchbase-sdk
 
 cli-couchbase: ## Connect to Couchbase CLI  (+ init script)
 	docker compose exec -it couchbase bash -c "/data/couchbase/scripts/init.sh cli; exec /bin/bash"
@@ -171,14 +170,14 @@ sdk-couchbase: ## Connect to Couchbase via Python SDK (+ init script)
 	docker compose up -d couchbase-sdk
 	docker compose exec couchbase-sdk python /scripts/init_sdk.py
 
-down-couchbase: ## Stop Couchbase
+down-couchbase: ## Stop Couchbase and SDK container
 	docker compose stop couchbase couchbase-sdk
 
-reset-couchbase: ## Remove Couchbase containers and volumes
+reset-couchbase: ## Remove Couchbase, SDK containers and volumes
 	docker compose down -v --remove-orphans couchbase couchbase-sdk
 
 
-up-elasticsearch: ## Start Elasticsearch
+up-elasticsearch: ## Start Elasticsearch (+ init script)
 	docker compose up -d elasticsearch
 	python3 ./data/elasticsearch/scripts/init.py
 	bash ./data/elasticsearch/scripts/init_kibana.sh
@@ -191,10 +190,10 @@ sdk-elasticsearch: ## Connect to Elasticsearch via Python SDK
 	docker compose up -d elasticsearch-sdk
 	docker compose exec elasticsearch-sdk python /scripts/init_sdk.py
 
-down-elasticsearch: ## Stop Elasticsearch
+down-elasticsearch: ## Stop Elasticsearch, Kibana and SDK container
 	docker compose stop elasticsearch kibana elasticsearch-sdk
 
-reset-elasticsearch: ## Remove Elasticsearch containers and volumes
+reset-elasticsearch: ## Remove Elasticsearch, Kibana, SDK containers and volumes
 	docker compose down -v --remove-orphans elasticsearch kibana elasticsearch-sdk
 
 
@@ -433,7 +432,7 @@ help-elasticsearch: ## Show Elasticsearch commands
 	@echo ""
 	@echo "  Elasticsearch Commands"
 	@echo "  ------------------------"
-	@awk 'BEGIN {FS = ":.*##"} /^up-elasticsearch:|^cli-elasticsearch:|^sdk-elasticsearch:|^down-elasticsearch:|^reset-elasticsearch:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"} /^up-elasticsearch:|^gui-elasticsearch:|^sdk-elasticsearch:|^down-elasticsearch:|^reset-elasticsearch:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 
 help-mongo: ## Show MongoDB commands
@@ -478,11 +477,11 @@ help-nosql: ## Show NoSQL database commands
 	@echo "  --------------------------"
 	@awk 'BEGIN {FS=":.*##"} /^up-cassandra:|^cli-cassandra:|^sdk-cassandra:|^down-cassandra:|^reset-cassandra:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
-	@awk 'BEGIN {FS=":.*##"} /^up-clickhouse:|^cli-clickhouse:|^gui-clickhouse:|^down-clickhouse:|^reset-clickhouse:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS=":.*##"} /^up-clickhouse:|^cli-clickhouse:|^gui-clickhouse:|^sdk-clickhouse:|^down-clickhouse:|^reset-clickhouse:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 	@awk 'BEGIN {FS=":.*##"} /^up-couchbase:|^cli-couchbase:|^sdk-couchbase:|^gui-couchbase:|^down-couchbase:|^reset-couchbase:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
-	@awk 'BEGIN {FS=":.*##"} /^up-elasticsearch:|^cli-elasticsearch:|^sdk-elasticsearch:|^down-elasticsearch:|^reset-elasticsearch:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS=":.*##"} /^up-elasticsearch:|^gui-elasticsearch:|^sdk-elasticsearch:|^down-elasticsearch:|^reset-elasticsearch:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 	@awk 'BEGIN {FS=":.*##"} /^up-mongo:|^cli-mongo:|^sdk-mongo:|^gui-mongo:|^down-mongo:|^reset-mongo:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
