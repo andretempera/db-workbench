@@ -221,7 +221,7 @@ Cluster (optional)
 ```
 
 ### Notes:
-- Workspace = database; the db_workbench database is pre-created by default.
+- Workspace = database; the `db_workbench` database is pre-created by default.
 - Collections store documents (JSON/BSON); schemas are optional and can vary between documents.
 - Every document has a unique _id field, which acts as the primary key.
 - Queries use MongoDB’s JSON-like operators ($eq, $gt, $in, etc.) rather than standard SQL.

@@ -3,12 +3,7 @@
 <table>
   <tr>
     <td width="90" style="vertical-align: middle; padding-right: 10px;">
-      <svg width="75" height="75" viewBox="0 0 75 75" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="37.5" cy="37.5" r="36" fill="#DC382D"/>
-        <g transform="translate(37.5 37.5) scale(0.09) translate(-256 -256)">
-          <path d="M479.14 279.864c-34.584 43.578-71.94 93.385-146.645 93.385-66.73 0-91.59-58.858-93.337-106.672 14.62 30.915 43.203 55.949 87.804 54.792C412.737 318.6 471.53 241.127 471.53 170.57c0-84.388-62.947-145.262-172.24-145.262-78.165 0-175.004 29.743-238.646 76.782-.689 48.42 26.286 111.369 35.972 104.452 55.17-39.67 98.918-65.203 141.35-78.01C175.153 198.58 24.451 361.219 6 389.85c2.076 26.286 34.588 96.842 50.496 96.842 4.841 0 8.993-2.768 13.835-7.61 45.433-51.046 82.472-96.816 115.412-140.933 4.627 64.658 36.42 143.702 125.307 143.702 79.55 0 158.408-57.414 194.377-186.767 4.149-15.911-15.22-28.362-26.286-15.22zm-90.616-104.449c0 40.81-40.118 60.87-76.782 60.87-19.596 0-34.648-5.145-46.554-11.832 21.906-33.168 43.59-67.182 66.887-103.593 41.08 6.953 56.449 29.788 56.449 54.555z" fill="white"/>
-        </g>
-      </svg>
+      <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/redis/redis-original.svg" width="75" />
     </td>
     <td style="vertical-align: middle;">
       Redis is an in-memory key-value data store used for caching, fast lookups, messaging, and lightweight data structures. It stores data as <b>keys</b> mapped to <b>values</b> and supports multiple native data types. <br>
@@ -29,7 +24,7 @@ Server (instance)
 - A **key** is the primary identifier.
 - A **value** is associated with a key and can be different data types.
 - Data is stored primarily in memory (with optional persistence to disk).
-- Redis is not relational — there are no tables or schemas.
+- Redis is not relational - there are no tables or schemas.
 
 
 ## Basic Commands & Workflow
@@ -227,7 +222,7 @@ Server (instance)
 ```
 
 ### Notes:
-- Workspace = logical database; the db_workbench workspace maps to Redis database 0 by default.
+- Workspace = logical database; the `db_workbench` workspace maps to Redis database 0 by default.
 - Redis is a key-value store; there are no tables, schemas, or relational structures.
 - Values can be different data types: strings, hashes, lists, sets, sorted sets, streams, etc.
 - All commands are atomic, and most operations are in-memory, making Redis extremely fast.

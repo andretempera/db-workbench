@@ -15,7 +15,7 @@ up-duckdb: ## Start DuckDB database file
 	python3 data/duckdb/scripts/init.py
 
 cli-duckdb: ## Enter DuckDB native CLI (via Docker)
-	docker run --rm -it --name duckdb-cli -v "$$PWD/data/duckdb/db:/workspace" -w /workspace duckdb/duckdb duckdb db_workbench.duckdb
+	docker run --rm -it --name duckdb-cli -v "${PWD}/data/duckdb/db:/workspace" -w /workspace duckdb/duckdb duckdb db_workbench.duckdb
 
 sdk-duckdb: ## Enter DuckDB via Python SDK
 	python3 ./data/duckdb/scripts/init_sdk.py

@@ -85,7 +85,6 @@ Each database runs independently and is treated as its own controlled environmen
 
 
 ## Non-Goals
-
 This project intentionally does **not** aim to be:
 
 - A production infrastructure platform
@@ -97,21 +96,20 @@ Each database runs independently so you can explore and experiment with every en
 
 
 ## Databases
-
 ### Currently Supported:
 | Type  | Database        | Web GUI           | Default Workspace   |
 |-------|-----------------|-------------------|---------------------|
-| File  | `DuckDB`        | —                 | `db_workbench.duckdb` |
-| File  | `SQLite`        | —                 | `db_workbench.db`     |
-| SQL   | `MariaDB`       | phpMyAdmin        | `db_workbench`        |
-| SQL   | `MySQL`         | phpMyAdmin        | `db_workbench`        |
-| SQL   | `PostgreSQL`    | pgAdmin           | `db_workbench`        |
-| NoSQL | `Cassandra`     | —                 | `db_workbench`        |
-| NoSQL | `ClickHouse`    | ClickHouse Web UI | `db_workbench`        |
-| NoSQL | `Couchbase`     | Couchbase Console | `db_workbench`        |  
-| NoSQL | `Elasticsearch` | Kibana            | `db_workbench`        |
-| NoSQL | `MongoDB`       | Mongo Express     | `db_workbench`        |
-| NoSQL | `Redis`         | RedisInsight      | `db_workbench`        |
+| File  | `DuckDB`        | —                 | db_workbench.duckdb |
+| File  | `SQLite`        | —                 | db_workbench.db     |
+| SQL   | `MariaDB`       | phpMyAdmin        | db_workbench        |
+| SQL   | `MySQL`         | phpMyAdmin        | db_workbench        |
+| SQL   | `PostgreSQL`    | pgAdmin           | db_workbench        |
+| NoSQL | `Cassandra`     | —                 | db_workbench        |
+| NoSQL | `ClickHouse`    | ClickHouse Web UI | db_workbench        |
+| NoSQL | `Couchbase`     | Couchbase Console | db_workbench        |  
+| NoSQL | `Elasticsearch` | Kibana            | db_workbench        |
+| NoSQL | `MongoDB`       | Mongo Express     | db_workbench        |
+| NoSQL | `Redis`         | RedisInsight      | db_workbench        |
 
 ### Technical Overview:
 | Database        | Model       | Storage      | Typical Use Case       |
@@ -130,7 +128,6 @@ Each database runs independently so you can explore and experiment with every en
 
 
 ## Project Structure
-
 - `Makefile` → centralized commands to start/connect/reset databases  
 - `docker-compose.yaml` → container definitions  
 - `SDK/` → Python CLI Dockerfiles for all databases  
@@ -350,14 +347,16 @@ make sdk-cassandra
 make sdk-mongo
 ```
 Each SDK runs in a dedicated container with the database workspace pre-configured.
+ 
+**Note:** You may need to use `sudo chown <USER> <file_path>` to manually change file permissions for file-based databases when switching between CLI and SDK.
 
 **4. Using DBeaver (or similar DB clients)**
 - Host: `localhost`
 - Ports, usernames & passwords: defined in `.env`
 
 Notes:
-- DuckDB: point DBeaver directly to the db_workbench.duckdb file
-- SQLite: cannot simultaneously access the same file from Windows and WSL — choose one environment
+- DuckDB: point DBeaver directly to the `db_workbench.duckdb` file
+- SQLite: cannot simultaneously access the same file from Windows and WSL - choose one environment
 - Community Edition works well for SQL databases; NoSQL databases may require Pro version
 
 
@@ -394,4 +393,4 @@ It is designed for **hands-on experimentation**, learning, and testing, providin
 - **Pre-populated test data** for immediate verification
 - **Support for multiple SQL and NoSQL engines** in one unified workspace
 
-`db-workbench` is **disposable, practical, and extensible** — start it, experiment, break things, reset, and repeat. It is a **workbench, not a platform**, focused on enabling exploration, not production orchestration.
+`db-workbench` is **disposable, practical, and extensible** - start it, experiment, break things, reset, and repeat. It is a **workbench, not a platform**, focused on enabling exploration, not production orchestration.

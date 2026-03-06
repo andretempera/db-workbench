@@ -96,7 +96,7 @@ Database (single file or in-memory)
 ### 6. Create a New Database
 - Create a new database:
 ```sql
-  ATTACH DATABASE 'data/duckdb/db/new_database.duckdb' AS new_database;  -- new databases are attached to main, not independent
+  ATTACH 'new_database.duckdb' AS new_database; -- new database file is created and attached to main, not independent
 ```
 
 - List all databases again:
@@ -127,12 +127,12 @@ SHOW ALL TABLES;  -- shows database, schema, and table names
 
 - Insert data into the new table:
 ```sql
-  INSERT INTO new_database.top_secret (name, organization, country, years_active)
-  VALUES ('James', 'MI6', 'UK', 20),
-    ('Ethan', 'IMF', 'USA', 30),
-    ('Nikita', 'Section One', 'Russia', 8),
-    ('Jason', 'CIA', 'USA', 12),
-    ('Sydney', 'SD-6', 'USA', 10);
+  INSERT INTO new_database.top_secret
+  VALUES(1,'James','MI6','UK',20),
+    (2,'Ethan','IMF','USA',30),
+    (3,'Nikita','Section One','Russia',8),
+    (4,'Jason','CIA','USA',12),
+    (5,'Sydney','SD-6','USA',10);
 ```
 
 - Check the new table's data:

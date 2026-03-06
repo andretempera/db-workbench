@@ -9,7 +9,7 @@ This guide walks you through getting db-workbench up and running locally. By the
 
 **Note:** All default usernames, passwords, and ports come from `.env.example`. If you customize your own `.env` file, adjust accordingly when connecting.
 
-`db-workbench` is designed to make database experimentation frictionless and predictable. You don’t need deep knowledge of Docker, SQL, or NoSQL — the Makefile commands handle container startup, initialization scripts, and workspace creation automatically.
+`db-workbench` is designed to make database experimentation frictionless and predictable. You don’t need deep knowledge of Docker, SQL, or NoSQL - the Makefile commands handle container startup, initialization scripts, and workspace creation automatically.
 
 
 ## Requirements
@@ -20,7 +20,7 @@ Before starting db-workbench, make sure the following tools are installed and wo
 Required for all containerized databases (PostgreSQL, MongoDB, Redis, etc.).
 
 Install:
-- Windows/macOS: Docker Desktop
+- Windows/macOS: [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - Linux: Docker Engine + Compose plugin via your package manager (apt, dnf, etc.)
 
 Verify installation:
@@ -268,6 +268,8 @@ make sdk-mongo
 - Connects to the `db_workbench` workspace automatically
 - Useful for running scripts or testing SDK features
 
+**Note:** You may need to use `sudo chown <USER> <file_path>` to manually change file permissions for file-based databases when switching between CLI and SDK.
+
 ### 5. Stop a Database
 ```bash
 make down-<database_name>
@@ -332,7 +334,7 @@ Ensure:
 - Docker is running
 - The relevant database container is started
 
-You can access the GUI by entering the URL in a browser or clicking the service port in Docker Desktop. Using `make gui-<database_name>` is recommended, as some databases run initialization scripts when launched via make.
+You can access the GUI by entering the URL in a browser or clicking the service port in Docker Desktop. Using `make gui-<database_name>` is recommended, as some databases run initialization scripts when launched via `make`.
 
 ### MariaDB - phpMyAdmin
 URL: `http://localhost:<PHPMYADMIN_MARIADB_PORT>`
