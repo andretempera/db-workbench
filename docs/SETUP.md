@@ -407,15 +407,20 @@ id | name  | project
 ### ClickHouse / ClickHouse Web UI
 URL: `http://localhost:<CLICKHOUSE_PORT>`
 
-**Login** not required.
+**Login** not required initially.
 
-1. Verify and query data:
-- Select the `db_workbench` database.
-- Open the test table.
-- Query the table (via web UI query editor):
+1. Verify test data:
+- Click on `Web SQL UI`
+- On the top right fill in user: `root` | password: `rootpass`
+- Click on the icon on the left side to open the panel, then `db_workbench` → and `test` twice and you should see:
 ```txt
- 1 | Andre | db-workbench
+№	| id | name  | project      |
+--|----|-------|--------------|
+1	| 1	 | Andre | db-workbench |
  ```
+2. Run queries:
+- After the previous step you should automatically see `SELECT * FROM "db_workbench"."test" LIMIT 100` in the query editor
+- Write your own queries in the editor and click `Run`
 
 ### Couchbase / Couchbase Console
 URL: `http://localhost:<COUCHBASE_PORT>/ui/index.html`

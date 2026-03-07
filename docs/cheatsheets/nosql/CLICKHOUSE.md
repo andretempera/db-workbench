@@ -37,17 +37,17 @@ Cluster (optional)
 ### 2. Inspect Existing Setup
 - Show all databases:
 ```sql
-  \l
+  SHOW DATABASES;
 ```
 
 - Show tables:
 ```sql
-  \dt
+  SHOW TABLES;
 ```
 
 - Show table structure:
 ```sql
-  \d test
+  DESCRIBE test;
 ```
 
 - Query all data in the `test` table:
@@ -70,8 +70,8 @@ Cluster (optional)
 ### 4. Update Data
 - Update data in the `test` table:
 ```sql
-  UPDATE test
-  SET project = 'updated-project'
+  ALTER TABLE test
+  UPDATE project = 'updated-project'
   WHERE id = 2;  -- Updates row based on id number
 ```
 
@@ -100,38 +100,47 @@ Cluster (optional)
 
 - List all databases again:
 ```sql
-  \l  -- Newly created database should be visible
+  SHOW DATABASES;  -- Newly created database should be visible
 ```
 
 - Switch to the new database:
 ```sql
-  \c new_database;
+  USE new_database;
 ```
 
 ### 7. Add a New Table
 - Create a new table:
 ```sql
-  CREATE TABLE IF NOT EXISTS top_secret (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    organization TEXT,
-    country TEXT,
-    years_active INTEGER);
+  CREATE TABLE IF NOT EXISTS top_secret(
+    id UInt32,
+    name String,
+    organization String,
+    country String,
+    years_active Int32)
+  ENGINE = MergeTree
+  ORDER BY id;  -- ClickHouse requires storage engine to be defined for tables
 ```
 
 - List tables again:
 ```sql
-  \dt  -- Newly created table should be visible
+  SHOW TABLES;  -- Newly created table should be visible
 ```
+
+- List tables per database:
+  ```sql
+  SELECT database, name AS table_name 
+  FROM system.tables 
+  WHERE database NOT IN ('system', 'information_schema', 'INFORMATION_SCHEMA');  -- find which tables belong to which database
+  ```
 
 - Insert data into the new table:
 ```sql
-  INSERT INTO top_secret (name, organization, country, years_active)
-  VALUES ('James', 'MI6', 'UK', 20),
-    ('Ethan', 'IMF', 'USA', 30),
-    ('Nikita', 'Section One', 'Russia', 8),
-    ('Jason', 'CIA', 'USA', 12),
-    ('Sydney', 'SD-6', 'USA', 10);
+  INSERT INTO top_secret (id, name, organization, country, years_active)
+  VALUES (1, 'James', 'MI6', 'UK', 20),
+    (2, 'Ethan', 'IMF', 'USA', 30),
+    (3, 'Nikita', 'Section One', 'Russia', 8),
+    (4, 'Jason', 'CIA', 'USA', 12),
+    (5, 'Sydney', 'SD-6', 'USA', 10);
 ```
 
 - Check the new table's data:
@@ -162,7 +171,7 @@ Cluster (optional)
 ```sql
   SELECT * FROM top_secret
   WHERE years_active > 10 AND
-  name LIKE "J%";  -- matching names that start with "J"
+  name LIKE 'J%';  -- matching names that start with "J"
 ```
 
 
@@ -197,12 +206,12 @@ Cluster (optional)
 
 - List tables again:
 ```sql
-  \dt  -- Verify that the "top_secret" table was deleted
+  SHOW TABLES;  -- Verify that the "top_secret" table was deleted
 ```
 
 - Switch back to original database:
 ```sql
-  \c db_workbench;
+  USE db_workbench;
 ```
 
 - Delete database:
@@ -212,13 +221,13 @@ Cluster (optional)
 
 - List all databases again:
 ```sql
-  \l  -- Verify that the "new_database" database was deleted
+  SHOW DATABASES;  -- Verify that the "new_database" database was deleted
 ```
 
 ### 11. Exit Environment
 - Exit ClickHouse CLI:
 ```sql
-  \q
+  quit
 ```
 
 ### Notes:
