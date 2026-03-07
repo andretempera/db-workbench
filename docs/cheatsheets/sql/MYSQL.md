@@ -123,6 +123,14 @@ Server (instance)
   SHOW TABLES;  -- Newly created table should be visible
 ```
 
+- List tables per database:
+```sql
+SELECT table_schema, table_name
+FROM information_schema.tables
+WHERE table_type='BASE TABLE'
+AND table_schema NOT IN ('mysql','performance_schema','information_schema','sys');  -- find which tables belong to which database
+```
+
 - Insert data into the new table:
 ```sql
   INSERT INTO top_secret (name, organization, country, years_active)

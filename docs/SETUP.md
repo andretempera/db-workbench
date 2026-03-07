@@ -345,7 +345,7 @@ URL: `http://localhost:<PHPMYADMIN_MARIADB_PORT>`
 
 1. Verify test data:
 - Select the `db_workbench` database from the left panel.
-- Click on the test table → browse data.
+- Click on the `test` table and it should open the `Browse` tab.
 - You should see the default test row:
 ```txt
 id | name  | project
@@ -353,7 +353,7 @@ id | name  | project
  1 | Andre | db-workbench
  ```
 2. Run queries:
-- 
+- Go to the `SQL` tab, write your query and press Ctrl + Enter to run it
 
 ### MySQL - phpMyAdmin
 URL: `http://localhost:<PHPMYADMIN_MYSQL_PORT>`
@@ -364,7 +364,7 @@ URL: `http://localhost:<PHPMYADMIN_MYSQL_PORT>`
 
 1. Verify test data:
 - Select the `db_workbench` database from the left panel.
-- Click on the test table → browse data.
+- Click on the `test` table and it should open the `Browse` tab.
 - You should see the default test row:
 ```txt
 id | name  | project
@@ -372,7 +372,7 @@ id | name  | project
  1 | Andre | db-workbench
  ```
 2. Run queries:
-- 
+- Go to the `SQL` tab, write your query and press Ctrl + Enter to run it.
 
 ### PostgreSQL - pgAdmin
 URL: `http://localhost:<PGADMIN_PORT>`
@@ -381,20 +381,28 @@ URL: `http://localhost:<PGADMIN_PORT>`
 - Username: `admin@admin.com`
 - Password: `rootpass`
 
-1. Connect to the database:
-- Create → Server → Connection:
-- Host: `postgres`
-- Port: `5432`
-- Username: `postgres`
-- Password: `rootpass`
+1. If it is a new connection, you need to click on `Add new server`, then:
+- In `General` tab, `Name:` postgres
+- In `Connection` tab:
+  - Host name/address: `postgres`
+  - Port: `5432`
+  - Username: `postgres`
+  - Password: `rootpass`
+  - Toggle `Save password` on
 
 2. Verify test data:
-- Expand Servers → Postgres Workbench → Databases → `db_workbench` .
-- Open the test table → click View/Edit Data → All Rows.
-- Confirm the default test row exists.
+- On the left panel, expand Servers → postgres → Databases, and you should see `db_workbench` database.
+- Keep expanding Schemas → Public → Tables, and you should see `test` table.
+- Right click on `test` → View/Edit Data → All rows, and you should see the default test row:
+```txt
+id | name  | project
+---+-------+---------------
+ 1 | Andre | db-workbench
+ ```
 
 3. Run queries:
--
+- On the left panel, select `db_workbench` and open `Query Tool` above (or Alt + Shift + Q)
+- Write query and click on `Execute script` (or F5)
 
 ### ClickHouse / ClickHouse Web UI
 URL: `http://localhost:<CLICKHOUSE_PORT>`

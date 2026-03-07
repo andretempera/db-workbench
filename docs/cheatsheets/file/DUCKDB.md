@@ -122,7 +122,7 @@ Database (single file or in-memory)
 
 - List tables per database:
 ```sql
-SHOW ALL TABLES;  -- shows database, schema, and table names
+SHOW ALL TABLES;  -- find which tables belong to which database
 ```
 
 - Insert data into the new table:

@@ -54,7 +54,7 @@ up-mariadb: ## Start MariaDB
 	docker compose up -d mariadb
 
 cli-mariadb: ## Enter MariaDB CLI
-	docker compose exec -it mariadb mariadb -h ${MARIADB_HOST} -P 3306 -u root -p${MARIADB_ROOT_PASSWORD} -D ${MARIADB_DB}
+	docker compose exec -it mariadb mariadb -h ${MARIADB_HOST} -P 3306 -u ${MARIADB_USER} -p${MARIADB_ROOT_PASSWORD} -D ${MARIADB_DB}
 
 gui-mariadb: ## Launch phpMyAdmin for MariaDB
 	docker compose up -d phpmyadmin-mariadb
@@ -75,7 +75,7 @@ up-mysql: ## Start MySQL
 	docker compose up -d mysql
 
 cli-mysql: ## Enter MySQL CLI
-	docker compose exec -it mysql mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT} -u root -p${MYSQL_ROOT_PASSWORD} -D ${MYSQL_DB}
+	docker compose exec -it mysql mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT} -u ${MYSQL_USER} -p${MYSQL_ROOT_PASSWORD} -D ${MYSQL_DB}
 
 gui-mysql: ## Launch phpMyAdmin for MySQL
 	docker compose up -d phpmyadmin-mysql

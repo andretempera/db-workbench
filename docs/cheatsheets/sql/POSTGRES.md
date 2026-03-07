@@ -125,6 +125,22 @@ Cluster
   \dt  -- Newly created table should be visible
 ```
 
+- List tables per database:
+```sql
+CREATE EXTENSION IF NOT EXISTS dblink;
+SELECT 'new_database' AS db_name, table_name
+FROM information_schema.tables
+WHERE table_schema='public' AND table_type='BASE TABLE'
+UNION ALL
+SELECT 'db_workbench', table_name
+FROM dblink('dbname=db_workbench host=localhost user=postgres password=rootpass',
+  $$SELECT table_name
+    FROM information_schema.tables
+    WHERE table_schema='public'
+      AND table_type='BASE TABLE'$$
+) AS t(table_name text);  -- find which tables belong to which database
+```
+
 - Insert data into the new table:
 ```sql
   INSERT INTO top_secret (name, organization, country, years_active)
