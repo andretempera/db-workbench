@@ -189,7 +189,6 @@ services:
       - "${CASSANDRA_PORT}:9042"
     volumes:
       - cassandra_data:/var/lib/cassandra
-      - ./data/cassandra/scripts/init.cql:/docker-entrypoint-initdb.d/init.cql:ro
     environment:
       MAX_HEAP_SIZE: 1G
       HEAP_NEWSIZE: 256M
@@ -201,6 +200,22 @@ services:
       retries: 10
       start_period: 40s
 
+  # --- Cassandra Bootstrap Init ---
+  cassandra-init:
+    image: cassandra:5.0.6
+    container_name: cassandra-init
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    volumes:
+      - ./data/cassandra/scripts/init.cql:/init.cql:ro
+    entrypoint: >
+      bash -c "
+        echo 'Running Cassandra initialization...';
+        cqlsh cassandra 9042 -f /init.cql;
+        echo 'Cassandra initialization complete';
+      "
+
   # --- Cassandra SDK ---
   cassandra-sdk:
     build:
@@ -208,8 +223,8 @@ services:
       dockerfile: ./SDK/Dockerfile.Cassandra
     container_name: cassandra-sdk
     depends_on:
-      cassandra:
-        condition: service_healthy
+      cassandra-init:
+        condition: service_completed_successfully
     environment:
       CASSANDRA_HOST: cassandra
       CASSANDRA_PORT: 9042

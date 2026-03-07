@@ -357,7 +357,7 @@ Each SDK runs in a dedicated container with the database workspace pre-configure
 Notes:
 - DuckDB: point DBeaver directly to the `db_workbench.duckdb` file
 - SQLite: cannot simultaneously access the same file from Windows and WSL - choose one environment
-- Community Edition works well for SQL databases; NoSQL databases may require Pro version
+- Community Edition works well for SQL databases; NoSQL databases may require PRO version
 
 
 ## Troubleshooting

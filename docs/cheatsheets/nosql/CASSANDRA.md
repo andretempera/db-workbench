@@ -34,19 +34,19 @@ Cluster
 ```
 
 ### 2. Inspect Existing Setup
-- Show all databases:
+- Show all keyspaces:
 ```sql
-  \l
+  DESCRIBE KEYSPACES;
 ```
 
 - Show tables:
 ```sql
-  \dt
+  DESCRIBE TABLES;
 ```
 
 - Show table structure:
 ```sql
-  \d test
+  DESCRIBE test;
 ```
 
 - Query all data in the `test` table:
@@ -91,46 +91,61 @@ Cluster
   SELECT * FROM test;  -- Table should have just one entry again
 ```
 
-### 6. Create a New Database
-- Create a new database:
+### 6. Create a New Keyspace
+- Create a new keyspace:
 ```sql
-  CREATE DATABASE new_database;
+  CREATE KEYSPACE new_keyspace
+  WITH replication = {
+    'class': 'SimpleStrategy',
+    'replication_factor': 1};
 ```
 
-- List all databases again:
+- List all keyspaces again:
 ```sql
-  \l  -- Newly created database should be visible
+  DESCRIBE KEYSPACES;  -- Newly created keyspace should be visible
 ```
 
-- Switch to the new database:
+- Switch to the new keyspace:
 ```sql
-  \c new_database;
+  USE new_keyspace;
 ```
 
 ### 7. Add a New Table
 - Create a new table:
 ```sql
-  CREATE TABLE IF NOT EXISTS top_secret (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
+CREATE TABLE top_secret (
+    id INT,
+    name TEXT,
     organization TEXT,
     country TEXT,
-    years_active INTEGER);
+    years_active INT,
+    PRIMARY KEY (country, id));  -- PRIMARY KEY on 'country' to enable aggregation
 ```
 
 - List tables again:
 ```sql
-  \dt  -- Newly created table should be visible
+  DESCRIBE TABLES;  -- Newly created table should be visible
+```
+
+- List tables per keyspace:
+```sql
+  SELECT keyspace_name, table_name
+  FROM system_schema.tables
+  WHERE keyspace_name IN ('db_workbench', 'new_keyspace');  -- find which tables belong to which keyspace
 ```
 
 - Insert data into the new table:
 ```sql
-  INSERT INTO top_secret (name, organization, country, years_active)
-  VALUES ('James', 'MI6', 'UK', 20),
-    ('Ethan', 'IMF', 'USA', 30),
-    ('Nikita', 'Section One', 'Russia', 8),
-    ('Jason', 'CIA', 'USA', 12),
-    ('Sydney', 'SD-6', 'USA', 10);
+INSERT INTO top_secret (id, name, organization, country, years_active)
+VALUES (1, 'James', 'MI6', 'UK', 20);
+INSERT INTO top_secret (id, name, organization, country, years_active)
+VALUES (2, 'Ethan', 'IMF', 'USA', 30);
+INSERT INTO top_secret (id, name, organization, country, years_active)
+VALUES (3, 'Nikita', 'Section One', 'Russia', 8);
+INSERT INTO top_secret (id, name, organization, country, years_active)
+VALUES (4, 'Jason', 'CIA', 'USA', 12);
+INSERT INTO top_secret (id, name, organization, country, years_active)
+VALUES (5, 'Sydney', 'SD-6', 'USA', 10);  -- no multi-row insert, requires individual inserts
 ```
 
 - Check the new table's data:
@@ -141,36 +156,40 @@ Cluster
 ### 8. Conditional queries
 - Match criteria:
 ```sql
-  SELECT * FROM top_secret
-  WHERE organization = 'CIA';
+  SELECT * FROM top_secret 
+  WHERE organization='CIA' 
+  ALLOW FILTERING;  -- quick option for small tables
 ```
 
 - Find MAX value in entire table:
 ```sql
   SELECT MAX(years_active)
-  FROM top_secret; -- also works with MIN()
+  FROM top_secret
+  ALLOW FILTERING;  -- also works with MIN() 
 ```
 
 - Threshold criteria:
 ```sql
   SELECT * FROM top_secret
-  WHERE years_active < 15;  -- also works with <=, > and >=
+  WHERE years_active < 15
+  ALLOW FILTERING;  -- also works with <=, > and >=
 ```
 
 - Multiple criteria:
 ```sql
-  SELECT * FROM top_secret
-  WHERE years_active > 10 AND
-  name LIKE "J%";  -- matching names that start with "J"
+  SELECT * FROM top_secret   
+  WHERE years_active > 10 AND 
+  name >= 'J'
+  ALLOW FILTERING;  -- matching names that start with "J"
 ```
-
 
 ### 9. Aggregation queries
 - Count number of rows:
 ```sql
   SELECT COUNT(*)
   FROM top_secret
-  WHERE years_active > 15;  -- also works with >=, < and <=
+  WHERE years_active > 15
+  ALLOW FILTERING;  -- also works with >=, < and <=
 ```
 
 - Using average and grouping:
@@ -178,7 +197,8 @@ Cluster
   SELECT country, AVG(years_active)
   FROM top_secret
   WHERE country = 'USA'
-  GROUP BY country;   -- also works with SUM()
+  GROUP BY country
+  ALLOW FILTERING;  -- also works with SUM()
 ```
 
 - Find MIN within a group:
@@ -196,28 +216,28 @@ Cluster
 
 - List tables again:
 ```sql
-  \dt  -- Verify that the "top_secret" table was deleted
+  DESCRIBE TABLES;  -- Verify that the "top_secret" table was deleted
 ```
 
-- Switch back to original database:
+- Switch back to original keyspace:
 ```sql
-  \c db_workbench;
+  USE db_workbench;
 ```
 
 - Delete database:
 ```sql
-  DROP DATABASE new_database;
+  DROP KEYSPACE new_keyspace;
 ```
 
 - List all databases again:
 ```sql
-  \l  -- Verify that the "new_database" database was deleted
+  DESCRIBE KEYSPACES;  -- Verify that the "new_database" keyspace was deleted
 ```
 
 ### 11. Exit Environment
 - Exit Cassandra CLI:
 ```sql
-  \q
+  QUIT
 ```
 
 ### Notes:

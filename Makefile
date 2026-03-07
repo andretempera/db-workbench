@@ -118,22 +118,20 @@ reset-postgres: ## Remove PostgreSQL, pgAdmin, SDK containers and volumes
 ########################################
 
 up-cassandra: ## Start Cassandra
-	docker compose up -d cassandra
+	docker compose up -d cassandra cassandra-init
 
 cli-cassandra: ## Enter Cassandra CQL shell (+ init script)
-	docker compose exec -it cassandra bash -c "\
-	cqlsh $$CASSANDRA_HOST $$CASSANDRA_PORT -u $$CASSANDRA_USER -p $$CASSANDRA_PASSWORD -f /docker-entrypoint-initdb.d/init.cql; \
-	exec cqlsh $$CASSANDRA_HOST $$CASSANDRA_PORT -u $$CASSANDRA_USER -p $$CASSANDRA_PASSWORD -k db_workbench"
+	docker compose exec -it cassandra cqlsh ${CASSANDRA_HOST} ${CASSANDRA_PORT} -u ${CASSANDRA_USER} -p ${CASSANDRA_PASSWORD} -k db_workbench
 
 sdk-cassandra: ## Connect to Cassandra via Python SDK (+ init script)
 	docker compose up -d cassandra-sdk
 	docker compose exec cassandra-sdk python /scripts/init_sdk.py
 
 down-cassandra: ## Stop Cassandra and SDK container
-	docker compose stop cassandra cassandra-sdk
+	docker compose stop cassandra cassandra-init cassandra-sdk
 
 reset-cassandra: ## Remove Cassandra, SDK container and volumes
-	docker compose down -v --remove-orphans cassandra cassandra-sdk
+	docker compose down -v --remove-orphans cassandra cassandra-init cassandra-sdk
 
 
 up-clickhouse: ## Start ClickHouse

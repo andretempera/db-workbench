@@ -71,7 +71,7 @@ git --version
 Universal database GUI client. Helps inspect databases without the CLI.  
 Install: https://dbeaver.io/download/
 - Community Edition: Works for SQL databases
-- Pro version: Needed for most NoSQL databases
+- PRO version: Needed for most NoSQL databases
 
 ### Requirements Checklist
 ✅ Docker installed and running  
@@ -524,7 +524,7 @@ This is a quick-reference table to make establishing connections on DBeaver easi
 | Redis *          | localhost       | 6379    | db_workbench         | N/A            | N/A       |
 
 **Notes:**
-- `Database Engine` is the database you are connecting to, chosen from "New Database Connection" list. If marked with `*`, requires Pro version to connect.
+- `Database Engine` is the database you are connecting to, chosen from "New Database Connection" list. If marked with `*`, requires PRO version to connect.
 - `Server Host` should always be `localhost` (or `127.0.0.1`) when connecting from DBeaver through Docker. SQLite/DuckDB should point to the database file in your project root.
 - `Database` sets the default database to use, `db_workbench` is the default for this project. Check "Show all databases" box if needed.
 - Some databases may require going to Driver Properties and setting `allowPublicKeyRetrieval=TRUE`.
