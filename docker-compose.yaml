@@ -469,13 +469,14 @@ services:
       - "${REDIS_PORT}:6379"
     volumes:
       - redis_data:/data
-      - ./data/redis/scripts/init.redis:/scripts/init.redis:ro
+      - ./data/redis/scripts/init.sh:/scripts/init.sh:ro
     command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 5s
 
   # --- RedisInsight ---
   redis-insight:

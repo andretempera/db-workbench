@@ -200,14 +200,14 @@ reset-elasticsearch: ## Remove Elasticsearch, Kibana, SDK containers and volumes
 up-mongo: ## Start MongoDB
 	docker compose up -d mongo
 
-cli-mongo: ## Enter Mongo shell (+ init script)
+cli-mongo: ## Enter Mongo shell
 	docker compose exec -T mongo mongosh "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/db_workbench?authSource=admin"
 
-gui-mongo: ## Launch Mongo Express for MongoDB (+ init script)
+gui-mongo: ## Launch Mongo Express for MongoDB
 	docker compose up -d mongo-express
 	@echo "Click link to open GUI: http://localhost:${MONGOEXPRESS_PORT}"
 
-sdk-mongo: ## Connect to MongoDB via Python SDK (+ init script)
+sdk-mongo: ## Connect to MongoDB via Python SDK
 	docker compose up -d mongo-sdk
 	docker compose exec mongo-sdk python /scripts/init_sdk.py
 
@@ -218,19 +218,18 @@ reset-mongo: ## Remove Mongo + Mongo Express containers and volumes
 	docker compose down -v --remove-orphans mongo mongo-init mongo-express mongo-sdk
 
 
-up-redis: ## Start Redis + RedisInsight
+up-redis: ## Start Redis
 	docker compose up -d redis
+	docker compose exec -T redis sh -c "/scripts/init.sh"
 
-cli-redis: ## Enter Redis CLI (+ init script)
-	docker compose exec -T redis sh -c "cat /scripts/init.redis | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -a ${REDIS_PASSWORD}"
+cli-redis: ## Enter Redis CLI
 	docker compose exec -it redis redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -a ${REDIS_PASSWORD}
 
-gui-redis: ## Launch RedisInsight for Redis (+ init script)
+gui-redis: ## Launch RedisInsight for Redis
 	docker compose up -d redis-insight
-	docker compose exec -T redis sh -c "cat /scripts/init.redis | redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} -a ${REDIS_PASSWORD}"
 	@echo "Click link to open GUI: http://localhost:${REDISINSIGHT_PORT}"
 
-sdk-redis: ## Connect to Redis via Python SDK (+ init script)
+sdk-redis: ## Connect to Redis via Python SDK
 	docker compose up -d redis-sdk
 	docker compose exec redis-sdk python /scripts/init_sdk.py
 

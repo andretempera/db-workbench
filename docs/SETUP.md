@@ -306,7 +306,7 @@ db.test.find();
 ```
 - Redis example:
 ```bash
-GET db_workbench:test:1
+JSON.GET db_workbench:test:1
 ```
 If you see the test row containing (id = 1, name = Andre, project = db-workbench), the database is ready.
 
@@ -485,17 +485,17 @@ URL: `http://localhost:<REDISINSIGHT_PORT>`
 
 **Login** not required.
 
-1. Connect to test data:
-- Use connection string (with .env defaults): `redis://default:rootpass@redis:6379`
-- Navigate to `db_workbench:test:1` key → confirm value:
+1. Verify test data:
+- Click on `+ Connect existing database`.
+- Use connection string: `redis://default:rootpass@redis:6379` (correct using `.env` defaults), click on `Add database`.
+- Click on `redis:6379`, you should see a Tree View with `db_workbench` → `test`
+- Click on last row with `STRING      1`. On the right panel you should now see:
 ```txt
-id: 1
-name: Andre
-project: db-workbench
+{"id":1,"name":"Andre","project":"db-workbench"}
 ```
-
 2. Run queries
-- 
+- Click on `Workbench` tab.
+- Write your queries in the editor and click `Run`.
 
 ## Connecting via DBeaver
 This is a quick-reference table to make establishing connections on DBeaver easier. This table uses `.env` defaults.

@@ -1,1 +1,0 @@
-SET db_workbench:test:1 '{"id":1,"name":"Andre","project":"db-workbench"}'

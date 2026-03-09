@@ -15,7 +15,7 @@
 ## Mental Model
 ```txt
 Server (instance)
- └── Database (numbered namespace)
+ └── Database (numbered namespace from 0 to 15)
       └── Key
            └── Value (data structure)
 ```
@@ -37,188 +37,210 @@ Server (instance)
 ### 2. Inspect Existing Setup
 - Show all databases:
 ```sql
-  \l
+  INFO keyspace
 ```
 
-- Show tables:
+- Show keys:
 ```sql
-  \dt
+  KEYS *
 ```
 
-- Show table structure:
+- Show value structure of corresponding key:
 ```sql
-  \d test
+  JSON.OBJKEYS db_workbench:test:1
 ```
 
-- Query all data in the `test` table:
+- Query all data in the `db_workbench:test:1` key:
 ```sql
-  SELECT * FROM test;
+  JSON.GET db_workbench:test:1
 ```
 
 ### 3. Insert a Row
-- Insert a new row into the `test` table:
+- Insert a new key-value pair into the database:
 ```sql
-  INSERT INTO test (id, name, project)
-  VALUES (2, 'Paula', 'new-project');
+  JSON.SET db_workbench:test:2 $ '{"id":2,"name":"Paula","project":"new-project"}'
 ```
 
 - Check the data after insertion:
 ```sql
-  SELECT * FROM test;  -- View the table to see the new row added
+  JSON.MGET db_workbench:test:1 db_workbench:test:2 $  -- View the keyspace values to see the new data added
 ```
 
 ### 4. Update Data
-- Update data in the `test` table:
+- Update data in the `db_workbench:test:2` key:
 ```sql
-  UPDATE test
-  SET project = 'updated-project'
-  WHERE id = 2;  -- Updates row based on id number
+  JSON.SET db_workbench:test:2 $.project '"updated-project"'  -- Updates the values of a key based on a field
 ```
 
 - Check the data after update:
 ```sql
-  SELECT * FROM test;  -- View the table again to check the updated row
+  JSON.MGET db_workbench:test:1 db_workbench:test:2 $  -- View the keyspace values again to check the updated data
 ```
 
 ### 5. Delete Data
-- Delete a row from the `test` table:
+- Delete a keyspace from the database:
 ```sql
-  DELETE FROM test
-  WHERE id = 2;  -- Deletes row based on id number
+  DEL db_workbench:test:2  -- Deletes entire key-value pair
 ```
 
 - Check the data after deletion:
 ```sql
-  SELECT * FROM test;  -- Table should have just one entry again
+  JSON.MGET db_workbench:test:1 db_workbench:test:2 $  -- Database should have just one entry again, even if querying both
 ```
 
-### 6. Create a New Database
+### 6. Working With a New Database
 - Create a new database:
 ```sql
-  CREATE DATABASE new_database;
+  -- No concept of creating a database. Databases are numbered from 0 to 15 by default.
+```
+
+- Switch to a new database:
+```sql
+  SELECT 1
 ```
 
 - List all databases again:
 ```sql
-  \l  -- Newly created database should be visible
+  INFO keyspace  -- Newly created database is empty and not yet visible
 ```
 
-- Switch to the new database:
+### 7. Add Data
+- Insert data into the new database:
 ```sql
-  \c new_database;
+  JSON.MSET new_database:top_secret:1 . '{"id":1,"name":"James","organization":"MI6","country":"UK","years_active":20}' new_database:top_secret:2 . '{"id":2,"name":"Ethan","organization":"IMF","country":"USA","years_active":30}' new_database:top_secret:3 . '{"id":3,"name":"Nikita","organization":"Section One","country":"Russia","years_active":8}' new_database:top_secret:4 . '{"id":4,"name":"Jason","organization":"CIA","country":"USA","years_active":12}' new_database:top_secret:5 . '{"id":5,"name":"Sydney","organization":"SD-6","country":"USA","years_active":10}'
 ```
 
-### 7. Add a New Table
-- Create a new table:
+- List all databases again:
 ```sql
-  CREATE TABLE IF NOT EXISTS top_secret (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    organization TEXT,
-    country TEXT,
-    years_active INTEGER);
+  INFO keyspace  -- By adding a keyspace, the created database is now visible
 ```
 
-- List tables again:
+- Show keys again:
 ```sql
-  \dt  -- Newly created table should be visible
+  KEYS * -- Newly created keys should be visible
+``` 
+
+- Check the new data:
+```sql
+  JSON.MGET new_database:top_secret:1 new_database:top_secret:2 new_database:top_secret:3 new_database:top_secret:4 new_database:top_secret:5 $
 ```
 
-- Insert data into the new table:
+- Create indexes on fields:
 ```sql
-  INSERT INTO top_secret (name, organization, country, years_active)
-  VALUES ('James', 'MI6', 'UK', 20),
-    ('Ethan', 'IMF', 'USA', 30),
-    ('Nikita', 'Section One', 'Russia', 8),
-    ('Jason', 'CIA', 'USA', 12),
-    ('Sydney', 'SD-6', 'USA', 10);
-```
-
-- Check the new table's data:
-```sql
-  SELECT * FROM top_secret;
-```
-
-### 8. Conditional queries
-- Match criteria:
-```sql
-  SELECT * FROM top_secret
-  WHERE organization = 'CIA';
-```
-
-- Find MAX value in entire table:
-```sql
-  SELECT MAX(years_active)
-  FROM top_secret; -- also works with MIN()
-```
-
-- Threshold criteria:
-```sql
-  SELECT * FROM top_secret
-  WHERE years_active < 15;  -- also works with <=, > and >=
-```
-
-- Multiple criteria:
-```sql
-  SELECT * FROM top_secret
-  WHERE years_active > 10 AND
-  name LIKE "J%";  -- matching names that start with "J"
-```
-
-
-### 9. Aggregation queries
-- Count number of rows:
-```sql
-  SELECT COUNT(*)
-  FROM top_secret
-  WHERE years_active > 15;  -- also works with >=, < and <=
-```
-
-- Using average and grouping:
-```sql
-  SELECT country, AVG(years_active)
-  FROM top_secret
-  WHERE country = 'USA'
-  GROUP BY country;   -- also works with SUM()
-```
-
-- Find MIN within a group:
-```sql
-  SELECT country, MIN(years_active)
-  FROM top_secret
-  GROUP BY country; -- also works with MAX()
-```
-	
-### 10. Cleanup
-- Delete table:
-```sql
-  DROP TABLE top_secret;
-```
-
-- List tables again:
-```sql
-  \dt  -- Verify that the "top_secret" table was deleted
+  FT.CREATE idx:top_secret ON JSON PREFIX 1 "new_database:top_secret:"  -- Not possible to create indexes on this database
 ```
 
 - Switch back to original database:
 ```sql
-  \c db_workbench;
+  SELECT 0
 ```
 
-- Delete database:
+- Recreating data on db0:
 ```sql
-  DROP DATABASE new_database;
+  JSON.MSET new_database:top_secret:1 . '{"id":1,"name":"James","organization":"MI6","country":"UK","years_active":20}' new_database:top_secret:2 . '{"id":2,"name":"Ethan","organization":"IMF","country":"USA","years_active":30}' new_database:top_secret:3 . '{"id":3,"name":"Nikita","organization":"Section One","country":"Russia","years_active":8}' new_database:top_secret:4 . '{"id":4,"name":"Jason","organization":"CIA","country":"USA","years_active":12}' new_database:top_secret:5 . '{"id":5,"name":"Sydney","organization":"SD-6","country":"USA","years_active":10}'
+```
+
+### 8. Conditional queries
+- Create indexes on fields:
+```sql
+  FT.CREATE idx:top_secret ON JSON PREFIX 1 "new_database:top_secret:" SCHEMA $.id AS id NUMERIC $.name AS name TEXT $.organization AS organization TEXT $.country AS country TEXT $.years_active AS years_active NUMERIC  -- Indexes are what enables filtering and aggregations
+  ```
+- List indexes:
+``sql
+  FT._LIST
+```
+
+- Match criteria:
+```sql
+  FT.SEARCH idx:top_secret "@organization:CIA"
+```
+
+- Find MAX value within keys:
+```sql
+  FT.AGGREGATE idx:top_secret * GROUPBY 0 REDUCE MAX 1 @years_active AS max_years  -- also works with MIN
+```
+
+- Threshold criteria:
+```sql
+  FT.SEARCH idx:top_secret "@years_active:[-inf 14]"  -- Equivalent to < 15
+```
+
+- Multiple criteria:
+```sql
+  FT.SEARCH idx:top_secret "@years_active:[11 +inf] @name: Ja*"  -- matching names that start with "Ja" (requires at least 2 characters)
+```
+
+### 9. Aggregation queries
+- Count number of rows:
+```sql
+  FT.AGGREGATE idx:top_secret "@years_active:[16 +inf]" GROUPBY 0 REDUCE COUNT 0 AS count  -- Equivalent to > 15
+```
+
+- Using average and grouping:
+```sql
+  FT.AGGREGATE idx:top_secret "@country:USA" GROUPBY 1 @country REDUCE AVG 1 @years_active AS avg_years   -- also works with SUM
+```
+
+- Find MIN within a group:
+```sql
+  FT.AGGREGATE idx:top_secret "*" GROUPBY 1 @country REDUCE MIN 1 @years_active AS min_years -- also works with MAX()
+```
+	
+### 10. Cleanup
+- Switch back to db1:
+```sql
+  SELECT 1
+```
+
+- Delete all data in db1:
+```sql
+  DEL new_database:top_secret:1 new_database:top_secret:2 new_database:top_secret:3 new_database:top_secret:4 new_database:top_secret:5
+```
+
+- List keys in db1:
+```sql
+  KEYS * -- Verify that all data was deleted
 ```
 
 - List all databases again:
 ```sql
-  \l  -- Verify that the "new_database" database was deleted
+  INFO keyspace  -- Verify that only db0 has data
+```
+
+- Switch back to original database:
+```sql
+  SELECT 0
+```
+
+- Delete index:
+```sql
+  FT.DROPINDEX idx:top_secret
+```
+
+- List indexes again:
+```sql
+  FT._LIST  -- Verify that the index was deleted
+```
+
+- Delete `new_database:top_secret` keys in db0:
+```sql
+  DEL new_database:top_secret:1 new_database:top_secret:2 new_database:top_secret:3 new_database:top_secret:4 new_database:top_secret:5
+```
+
+- List all databases again:
+```sql
+  KEYS *  -- Verify that only original key is left
+```
+
+- List all databases again:
+```sql
+  INFO keyspace  -- Verify that the db1 was deleted
 ```
 
 ### 11. Exit Environment
 - Exit Redis CLI:
 ```sql
-  \q
+  quit
 ```
 
 ### Notes:
@@ -229,4 +251,3 @@ Server (instance)
 - Data can optionally persist to disk (RDB snapshots or AOF), but primary storage is in memory.
 - Commands like KEYS, FLUSHDB, and SELECT are Redis client commands, not standard SQL.
 - Keys are unique within a database namespace; separate logical databases (0–15 by default) isolate keys.
-

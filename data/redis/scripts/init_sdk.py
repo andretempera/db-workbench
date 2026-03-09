@@ -3,6 +3,7 @@ import sys
 import time
 import code
 import redis
+import json
 
 # Environment variables
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
@@ -30,20 +31,6 @@ else:
 
 print("Successfully connected to Redis")
 print("Existing keys:", client.keys())
-
-# Optional: Run init script idempotently
-init_script_path = "/scripts/init.redis"
-if os.path.exists(init_script_path):
-    print(f"Initializing keys from {init_script_path} (idempotent)...")
-    with open(init_script_path, "r") as f:
-        for line in f:
-            line = line.strip()
-            if line and not line.startswith("#"):
-                parts = line.split(" ", 2)
-                if len(parts) == 3 and parts[0].upper() == "SET":
-                    key = parts[1]
-                    value = parts[2]
-                    client.set(key, value)
 
 print("\n||| Redis SDK Python CLI |||")
 print("Objects available:")
