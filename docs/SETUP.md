@@ -268,7 +268,7 @@ make sdk-mongo
 - Connects to the `db_workbench` workspace automatically
 - Useful for running scripts or testing SDK features
 
-**Note:** You may need to use `sudo chown <USER> <file_path>` to manually change file permissions for file-based databases when switching between CLI and SDK.
+**Note:** You may need to use `sudo chown <USER> <file_path>` to manually change file permissions for DuckDB when switching between CLI and SDK.
 
 ### 5. Stop a Database
 ```bash
@@ -320,7 +320,7 @@ make help-sql                # Shows commands for SQL DBs
 make help-nosql              # Shows commands for NoSQL DBs
 make help-<database_name>    # Shows commands for a specific database
 ```
-**Tip:** Always run make help if you are unsure of a command or workflow.
+**Tip:** Always run `make help` if you are unsure of a command or workflow.
 
 ### 9. Cheatsheets
 Additional information with common commands or workflows, cheatsheets are available for all databases in `docs/cheatsheets/`
@@ -427,21 +427,17 @@ URL: `http://localhost:<COUCHBASE_PORT>/ui/index.html`
 
 **Login:**
 - Username: `Administrator`
-- Password: `rootpass`
+- Password: `password`
 
 1. Verify test data:
-- Default bucket: db_workbench. Click to open.
-- Access documents → look for key test:1.
-- You should see JSON:
-```json
-{
-  "id": 1,
-  "name": "Andre",
-  "project": "db-workbench"
-}
+- On the left tab click on `Buckets` → `db_workbench` → then `Documents` on the right side. 
+- Below `Keyspaces` click on the third dropdown box and select `test`. You should now see:
+```txt
+id:1          {"name":"Andre","project":"db-workbench"}
 ```
 2. Run queries:
--
+- On the left tab click on `Query`.
+- Write your queries in the Query Editor and click execute
 
 ### Elasticsearch / Kibana
 URL: `http://localhost:<KIBANA_PORT>`
@@ -558,7 +554,7 @@ Always ensure the database file is not open in another program while running com
 **4. Initialization Scripts**
 - All databases include pre-populated test data in a workspace called db_workbench.
 - Running `make up-<database_name>` automatically executes these scripts - no separate initialization command is needed.
-- Test your connection by querying the test table/collection/bucket. Example: SELECT * FROM test; for SQL engines.
+- Test your connection by querying the test table/collection/bucket. Example: `SELECT * FROM test`; for SQL engines.
 
 **5. General Advice**
 - Reset commands (`make reset-<database_name`>) are destructive. Use them only when you intend to delete data.

@@ -24,7 +24,7 @@ Cluster
 - A **bucket** is the primary data container (similar to a database) and contains scopes.
 - A **scope** is a logical grouping of collections (similar to a schema).
 - A **collection** stores documents (similar to a table in relational systems).
-- A **document** is a JSON object identified by a unique key.
+- A **document** is a JSON object identified by a unique key (similar to a row).
 - Data is stored in flexible JSON format (schema optional).
 
 
@@ -36,190 +36,195 @@ Cluster
 ```
 
 ### 2. Inspect Existing Setup
-- Show all databases:
+- Show all buckets:
 ```sql
-  \l
+  SELECT name FROM system:buckets;
 ```
 
-- Show tables:
+- Show all collections:
 ```sql
-  \dt
+  SELECT name FROM system:keyspaces WHERE name != `bucket`;
 ```
 
-- Show table structure:
+- Show document structure:
 ```sql
-  \d test
+  SELECT META().id AS document_key,
+  OBJECT_NAMES(`test`) AS fields
+  FROM `db_workbench`.`_default`.`test`;
 ```
 
-- Query all data in the `test` table:
+- Query all data in the collection:
 ```sql
-  SELECT * FROM test;
+  SELECT META().id AS id, test.name, test.project
+  FROM `db_workbench`.`_default`.`test`;
 ```
 
-### 3. Insert a Row
-- Insert a new row into the `test` table:
+### 3. Insert a Document
+- Insert a new document:
 ```sql
-  INSERT INTO test (id, name, project)
-  VALUES (2, 'Paula', 'new-project');
+  UPSERT INTO `db_workbench`.`_default`.`test` (KEY, VALUE)
+  VALUES ("id:2", { "name": "Paula", "project": "new-project" });
 ```
 
 - Check the data after insertion:
 ```sql
-  SELECT * FROM test;  -- View the table to see the new row added
+  SELECT META().id AS id, test.name, test.project
+  FROM `db_workbench`.`_default`.`test`;  -- View the data to see the new document added
 ```
 
 ### 4. Update Data
 - Update data in the `test` table:
 ```sql
-  UPDATE test
-  SET project = 'updated-project'
-  WHERE id = 2;  -- Updates row based on id number
+  UPSERT INTO `db_workbench` (KEY, VALUE)
+  VALUES ("test:2", { "id": 2, "name": "Paula", "project": "updated-project" });  -- Upserts row based on key
 ```
 
-- Check the data after update:
+- Check the data after upsert:
 ```sql
-  SELECT * FROM test;  -- View the table again to check the updated row
+  SELECT META().id AS id, test.name, test.project
+  FROM `db_workbench`.`_default`.`test`;  -- View the data again to check the updated document
 ```
 
 ### 5. Delete Data
 - Delete a row from the `test` table:
 ```sql
-  DELETE FROM test
-  WHERE id = 2;  -- Deletes row based on id number
+  DELETE FROM `db_workbench`.`_default`.`test`
+  WHERE META().id = "id:2";  -- Deletes document based on key
 ```
 
 - Check the data after deletion:
 ```sql
-  SELECT * FROM test;  -- Table should have just one entry again
+  SELECT META().id AS id, test.name, test.project
+  FROM `db_workbench`.`_default`.`test`;  -- Collection should have just one entry again
 ```
 
-### 6. Create a New Database
-- Create a new database:
+### 6. Create a New Bucket
+- Create a new bucket:
 ```sql
-  CREATE DATABASE new_database;
+  CREATE BUCKET IF NOT EXISTS `new_bucket`;
 ```
 
-- List all databases again:
+- List all buckets again:
 ```sql
-  \l  -- Newly created database should be visible
+  SELECT name FROM system:buckets;  -- Newly created bucket should be visible
 ```
 
-- Switch to the new database:
+- Switch to the new bucket:
 ```sql
-  \c new_database;
+  -- Not required, buckets are always directly accessible
 ```
 
-### 7. Add a New Table
+### 7. Add a New Collection
 - Create a new table:
 ```sql
-  CREATE TABLE IF NOT EXISTS top_secret (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    organization TEXT,
-    country TEXT,
-    years_active INTEGER);
+  CREATE COLLECTION `new_bucket`.`_default`.`top_secret` IF NOT EXISTS;
 ```
 
-- List tables again:
+- List collections again:
 ```sql
-  \dt  -- Newly created table should be visible
+  SELECT name FROM system:keyspaces WHERE name != `bucket`;  -- Newly created collection should be visible
+```
+
+- List collections per bucket:
+```sql
+  SELECT `bucket`, name FROM system:keyspaces
+  WHERE name != `bucket`;  -- Find which collections belong to which bucket
 ```
 
 - Insert data into the new table:
 ```sql
-  INSERT INTO top_secret (name, organization, country, years_active)
-  VALUES ('James', 'MI6', 'UK', 20),
-    ('Ethan', 'IMF', 'USA', 30),
-    ('Nikita', 'Section One', 'Russia', 8),
-    ('Jason', 'CIA', 'USA', 12),
-    ('Sydney', 'SD-6', 'USA', 10);
+  UPSERT INTO `new_bucket`.`_default`.`top_secret` (KEY, VALUE)
+  VALUES ("id:1", { "name": "James", "organization": "MI6", "country": "UK", "years_active": 20 }),
+    ("id:2", { "name": "Ethan", "organization": "IMF", "country": "USA", "years_active": 30 }),
+    ("id:3", { "name": "Nikita", "organization": "Section One", "country": "Russia", "years_active": 8 }),
+    ("id:4", { "name": "Jason", "organization": "CIA", "country": "USA", "years_active": 12 }),
+    ("id:5", { "name": "Sydney", "organization": "SD-6", "country": "USA", "years_active": 10 });
 ```
 
 - Check the new table's data:
 ```sql
-  SELECT * FROM top_secret;
+  SELECT META().id AS id, top_secret.name, top_secret.organization, top_secret.country, top_secret.years_active
+  FROM `new_bucket`.`_default`.`top_secret` ORDER BY id;
 ```
 
 ### 8. Conditional queries
 - Match criteria:
 ```sql
-  SELECT * FROM top_secret
-  WHERE organization = 'CIA';
+  SELECT META().id AS id, t.*
+  FROM `new_bucket`.`_default`.`top_secret` AS t
+  WHERE t.organization = "CIA";
 ```
 
-- Find MAX value in entire table:
+- Find MAX value in entire collection:
 ```sql
-  SELECT MAX(years_active)
-  FROM top_secret; -- also works with MIN()
+  SELECT MAX(t.years_active) AS max_years
+  FROM `new_bucket`.`_default`.`top_secret` AS t; -- also works with MIN()
 ```
 
 - Threshold criteria:
 ```sql
-  SELECT * FROM top_secret
-  WHERE years_active < 15;  -- also works with <=, > and >=
+  SELECT META().id AS id, t.*
+  FROM `new_bucket`.`_default`.`top_secret` AS t
+  WHERE t.years_active < 15;  -- also works with <=, > and >=
 ```
 
 - Multiple criteria:
 ```sql
-  SELECT * FROM top_secret
-  WHERE years_active > 10 AND
-  name LIKE "J%";  -- matching names that start with "J"
+  SELECT META().id AS id, t.*
+  FROM `new_bucket`.`_default`.`top_secret` AS t
+  WHERE t.years_active > 10
+  AND t.name LIKE "J%";  -- matching names that start with "J"
 ```
 
 
 ### 9. Aggregation queries
-- Count number of rows:
+- Count number of documents:
 ```sql
   SELECT COUNT(*)
-  FROM top_secret
-  WHERE years_active > 15;  -- also works with >=, < and <=
+  FROM `new_bucket`.`_default`.`top_secret` AS t
+  WHERE t.years_active > 15;  -- also works with >=, < and <=
 ```
 
 - Using average and grouping:
 ```sql
-  SELECT country, AVG(years_active)
-  FROM top_secret
-  WHERE country = 'USA'
-  GROUP BY country;   -- also works with SUM()
+  SELECT t.country, AVG(t.years_active)
+  FROM `new_bucket`.`_default`.`top_secret` AS t
+  WHERE t.country = 'USA'
+  GROUP BY t.country;   -- also works with SUM()
 ```
 
 - Find MIN within a group:
 ```sql
-  SELECT country, MIN(years_active)
-  FROM top_secret
-  GROUP BY country; -- also works with MAX()
+  SELECT t.country, MIN(t.years_active)
+  FROM `new_bucket`.`_default`.`top_secret` AS t
+  GROUP BY t.country; -- also works with MAX()
 ```
 	
 ### 10. Cleanup
-- Delete table:
+- Delete collection:
 ```sql
-  DROP TABLE top_secret;
+  DROP COLLECTION `new_bucket`.`_default`.`top_secret`;
 ```
 
-- List tables again:
+- List collections again:
 ```sql
-  \dt  -- Verify that the "top_secret" table was deleted
+  SELECT name FROM system:keyspaces WHERE name != `bucket`;  -- Verify that the "top_secret" collection was deleted
 ```
 
-- Switch back to original database:
+- Delete bucket:
 ```sql
-  \c db_workbench;
+  DROP BUCKET `new_bucket`;
 ```
 
-- Delete database:
+- List all buckets again:
 ```sql
-  DROP DATABASE new_database;
-```
-
-- List all databases again:
-```sql
-  \l  -- Verify that the "new_database" database was deleted
+  SELECT name FROM system:buckets;  -- Verify that the "new_bucket" bucket was deleted
 ```
 
 ### 11. Exit Environment
 - Exit Couchbase CLI:
 ```sql
-  \q
+  \QUIT;
 ```
 
 ### Notes:

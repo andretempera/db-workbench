@@ -120,10 +120,10 @@ reset-postgres: ## Remove PostgreSQL, pgAdmin, SDK containers and volumes
 up-cassandra: ## Start Cassandra
 	docker compose up -d cassandra cassandra-init
 
-cli-cassandra: ## Enter Cassandra CQL shell (+ init script)
+cli-cassandra: ## Enter Cassandra CQL shell
 	docker compose exec -it cassandra cqlsh ${CASSANDRA_HOST} ${CASSANDRA_PORT} -u ${CASSANDRA_USER} -p ${CASSANDRA_PASSWORD} -k db_workbench
 
-sdk-cassandra: ## Connect to Cassandra via Python SDK (+ init script)
+sdk-cassandra: ## Connect to Cassandra via Python SDK
 	docker compose up -d cassandra-sdk
 	docker compose exec cassandra-sdk python /scripts/init_sdk.py
 
@@ -138,7 +138,7 @@ up-clickhouse: ## Start ClickHouse
 	docker compose up -d clickhouse
 
 cli-clickhouse: ## Enter ClickHouse client
-	docker compose exec -it clickhouse clickhouse-client --user $$CLICKHOUSE_USER --password $$CLICKHOUSE_PASSWORD --database db_workbench
+	docker compose exec -it clickhouse clickhouse-client --user ${CLICKHOUSE_USER} --password ${CLICKHOUSE_PASSWORD} --database db_workbench
 
 gui-clickhouse: ## Launch ClickHouse Web UI
 	@echo "Click link to open GUI: http://localhost:${CLICKHOUSE_PORT}"
@@ -156,15 +156,15 @@ reset-clickhouse: ## Remove ClickHouse, SDK containers and volumes
 
 up-couchbase: ## Start Couchbase
 	docker compose up -d couchbase
+	docker compose exec couchbase bash /data/couchbase/scripts/init.sh
 
-cli-couchbase: ## Connect to Couchbase CLI  (+ init script)
-	docker compose exec -it couchbase bash -c "/data/couchbase/scripts/init.sh cli; exec /bin/bash"
+cli-couchbase: ## Connect to Couchbase CLI
+	docker compose exec couchbase cbq -u ${COUCHBASE_USER} -p ${COUCHBASE_PASSWORD} -engine http://${COUCHBASE_HOST}:${COUCHBASE_PORT}
 
-gui-couchbase: ## Launch Couchbase Web Console (+ init script)
-	docker compose exec couchbase bash -c "/data/couchbase/scripts/init.sh gui"
+gui-couchbase: ## Launch Couchbase Web Console
 	@echo "Click link to open GUI: http://localhost:${COUCHBASE_PORT}/ui/index.html"
 
-sdk-couchbase: ## Connect to Couchbase via Python SDK (+ init script)
+sdk-couchbase: ## Connect to Couchbase via Python SDK
 	docker compose up -d couchbase-sdk
 	docker compose exec couchbase-sdk python /scripts/init_sdk.py
 
@@ -175,7 +175,7 @@ reset-couchbase: ## Remove Couchbase, SDK containers and volumes
 	docker compose down -v --remove-orphans couchbase couchbase-sdk
 
 
-up-elasticsearch: ## Start Elasticsearch (+ init script)
+up-elasticsearch: ## Start Elasticsearch
 	docker compose up -d elasticsearch
 	python3 ./data/elasticsearch/scripts/init.py
 	bash ./data/elasticsearch/scripts/init_kibana.sh
@@ -199,17 +199,17 @@ up-mongo: ## Start MongoDB + Mongo Express
 	docker compose up -d mongo
 
 cli-mongo: ## Enter Mongo shell (+ init script)
-	docker-compose exec -T mongo mongosh "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/db_workbench?authSource=admin" --eval "load('/docker-entrypoint-initdb.d/init.js');"
-	docker-compose exec -T mongo mongosh "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/db_workbench?authSource=admin"
+	docker compose exec -T mongo mongosh "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/db_workbench?authSource=admin" --eval "load('/docker-entrypoint-initdb.d/init.js');"
+	docker compose exec -T mongo mongosh "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/db_workbench?authSource=admin"
 
 gui-mongo: ## Launch Mongo Express for MongoDB (+ init script)
 	docker compose up -d mongo-express
-	docker-compose exec -T mongo mongosh "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/db_workbench?authSource=admin" --eval "load('/docker-entrypoint-initdb.d/init.js');"
+	docker compose exec -T mongo mongosh "mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/db_workbench?authSource=admin" --eval "load('/docker-entrypoint-initdb.d/init.js');"
 	@echo "Click link to open GUI: http://localhost:${MONGOEXPRESS_PORT}"
 
 sdk-mongo: ## Connect to MongoDB via Python SDK (+ init script)
 	docker compose up -d mongo-sdk
-	docker-compose exec mongo-sdk python /scripts/init_sdk.py
+	docker compose exec mongo-sdk python /scripts/init_sdk.py
 
 down-mongo: ## Stop MongoDB + Mongo Express
 	docker compose stop mongo mongo-express mongo-sdk

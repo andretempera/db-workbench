@@ -3,6 +3,7 @@ import code
 from couchbase.cluster import Cluster
 from couchbase.auth import PasswordAuthenticator
 from couchbase.exceptions import CouchbaseException
+from couchbase.options import QueryOptions
 
 
 # Environment variables with defaults

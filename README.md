@@ -236,7 +236,7 @@ All databases include **initialization scripts** to help you verify that the dat
 - A minimal test table/collection/bucket named `test` is automatically created if it doesn’t exist.
 - A single test row is inserted consistently: `id = 1`, `name = Andre`, `project = db-workbench`.
 - Scripts are **idempotent** — running them multiple times will not duplicate the test row.
-- Scripts are automatically executed when running `make up-<database_name>` or on CLI/GUI/SDK access, depending on the engine.
+- Scripts are automatically executed when running `make up-<database_name>`.
 
 **Location:**  
 `data/<database_name>/scripts/` — extensions vary by engine (e.g., `.sql`, `.py`, `.js`).
@@ -348,7 +348,7 @@ make sdk-mongo
 ```
 Each SDK runs in a dedicated container with the database workspace pre-configured.
  
-**Note:** You may need to use `sudo chown <USER> <file_path>` to manually change file permissions for file-based databases when switching between CLI and SDK.
+**Note:** You may need to use `sudo chown <USER> <file_path>` to manually change file permissions for DuckDB when switching between CLI and SDK.
 
 **4. Using DBeaver (or similar DB clients)**
 - Host: `localhost`

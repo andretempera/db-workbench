@@ -1,23 +1,29 @@
 #!/bin/bash
 set -euo pipefail
 
+# --- Config variables ---
 COUCHBASE_HOST=${COUCHBASE_HOST:-127.0.0.1}
 COUCHBASE_USER=${COUCHBASE_USER:-Administrator}
 COUCHBASE_PASSWORD=${COUCHBASE_PASSWORD:-password}
 COUCHBASE_BUCKET=${COUCHBASE_BUCKET:-db_workbench}
 
-# Mode parameter check
-MODE="${1:-cli}"  # Default to "cli" if no argument is passed
+INIT_MARKER="/tmp/.couchbase_init_done"
 
-echo "Mode selected: $MODE"
+# Exit early if marker exists
+if [ -f "$INIT_MARKER" ]; then
+    echo "Init script already ran. Skipping."
+    exit 0
+fi
 
-echo "Waiting for Couchbase management port (8091)..."
-until curl -s http://$COUCHBASE_HOST:8091/pools >/dev/null 2>&1; do
+echo "Waiting for Couchbase management API..."
+
+# Wait for management API
+until curl -sf http://$COUCHBASE_HOST:8091/pools >/dev/null 2>&1; do
     sleep 2
 done
-echo "Management API is up."
+echo "Management API ready."
 
-# Check if cluster is already initialized
+# Initialize cluster if needed
 if curl -s http://$COUCHBASE_HOST:8091/pools | grep -q '"pools":\[\]'; then
     echo "Cluster not initialized. Running cluster-init..."
     couchbase-cli cluster-init \
@@ -34,42 +40,58 @@ else
     echo "Cluster already initialized."
 fi
 
-echo "Waiting for Query service (8093)..."
-until netstat -tulpn | grep -q ":8093"; do
-    sleep 2
+# Wait until Query service reports ready for the bucket
+echo "Waiting for Query service to accept queries..."
+for i in {1..30}; do
+    if cbq -u "$COUCHBASE_USER" -p "$COUCHBASE_PASSWORD" \
+        --engine http://$COUCHBASE_HOST:8093 -s "SELECT 1;" >/dev/null 2>&1; then
+        echo "Query service ready."
+        break
+    else
+        echo "Query service not ready yet..."
+        sleep 2
+    fi
 done
-echo "Query service is running."
 
 # Create bucket if missing
 echo "Creating bucket '$COUCHBASE_BUCKET' if missing..."
-cbq -engine "couchbase://$COUCHBASE_HOST" -u "$COUCHBASE_USER" -p "$COUCHBASE_PASSWORD" \
-    -s "CREATE BUCKET IF NOT EXISTS \`$COUCHBASE_BUCKET\`;"
+until cbq -u "$COUCHBASE_USER" -p "$COUCHBASE_PASSWORD" \
+    --engine http://$COUCHBASE_HOST:8093 \
+    -s "CREATE BUCKET IF NOT EXISTS \`$COUCHBASE_BUCKET\`;"; do
+    echo "Waiting for bucket creation..."
+    sleep 2
+done
 
-# Short pause for bucket creation
-sleep 5
+until curl -s -u "$COUCHBASE_USER:$COUCHBASE_PASSWORD" \
+  http://$COUCHBASE_HOST:8091/pools/default/buckets/$COUCHBASE_BUCKET \
+  | grep -q '"nodes"'; do
+    echo "Bucket not ready yet..."
+    sleep 2
+done
+
+sleep 3
+
+echo "Bucket ready."
+
+# Create collection if missing
+cbq -u "$COUCHBASE_USER" -p "$COUCHBASE_PASSWORD" \
+    --engine http://$COUCHBASE_HOST:8093 \
+    --script="
+CREATE COLLECTION \`$COUCHBASE_BUCKET\`.\`_default\`.\`test\` IF NOT EXISTS;
+"
 
 # Insert test document
 echo "Inserting test document..."
-cbq -engine "couchbase://$COUCHBASE_HOST" -u "$COUCHBASE_USER" -p "$COUCHBASE_PASSWORD" \
-    -s "UPSERT INTO \`$COUCHBASE_BUCKET\` (KEY, VALUE) VALUES ('test:1', { 'id': 1, 'name': 'Andre', 'project': 'db-workbench' });"
+cbq -u "$COUCHBASE_USER" -p "$COUCHBASE_PASSWORD" \
+    --engine http://$COUCHBASE_HOST:8093 \
+    -s "UPSERT INTO \`$COUCHBASE_BUCKET\`.\`_default\`.\`test\` (KEY, VALUE) VALUES ('id:1', { 'name': 'Andre', 'project': 'db-workbench' });"
 
-# Ensure primary index exists
+# Create primary index
 echo "Creating primary index..."
-cbq -engine "couchbase://$COUCHBASE_HOST" -u "$COUCHBASE_USER" -p "$COUCHBASE_PASSWORD" \
-    -s "CREATE PRIMARY INDEX IF NOT EXISTS ON \`$COUCHBASE_BUCKET\`;"
+cbq -u "$COUCHBASE_USER" -p "$COUCHBASE_PASSWORD" \
+    --engine http://$COUCHBASE_HOST:8093 \
+    -s "CREATE PRIMARY INDEX IF NOT EXISTS ON \`$COUCHBASE_BUCKET\`.\`_default\`.\`test\`;"
 
-# Mode-specific execution
-if [[ "$MODE" == "cli" ]]; then
-    echo "Starting interactive Couchbase shell..."
-    exec cbq -engine "couchbase://$COUCHBASE_HOST" -u "$COUCHBASE_USER" -p "$COUCHBASE_PASSWORD"
-elif [[ "$MODE" == "gui" ]]; then
-    echo "Initialization complete."
-    exit 0
-elif [[ "$MODE" == "python" ]]; then
-    echo "Starting Python SDK shell..."
-    python3 /data/couchbase/scripts/init_sdk.py
-    exit 0
-else
-    echo "Unknown mode: $MODE. Exiting."
-    exit 1
-fi
+touch "$INIT_MARKER"
+
+echo "Couchbase initialization complete."
