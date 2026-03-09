@@ -413,9 +413,9 @@ URL: `http://localhost:<CLICKHOUSE_PORT>`
 - On the top right fill in user: `root` | password: `rootpass`
 - Click on the icon on the left side to open the panel, then `db_workbench` → and `test` twice and you should see:
 ```txt
-№	| id | name  | project      |
---|----|-------|--------------|
-1	| 1	 | Andre | db-workbench |
+№ | id | name  | project      
+--+----+-------+--------------
+1 | 1  | Andre | db-workbench 
  ```
 2. Run queries:
 - After the previous step you should automatically see `SELECT * FROM "db_workbench"."test" LIMIT 100` in the query editor
@@ -468,16 +468,17 @@ URL: `http://localhost:<MONGOEXPRESS_PORT>`
 - Password: `rootpass`
 
 1. Verify test data:
-- Open the db_workbench database.
-- Select the test collection.
-- Confirm the default document exists:
-```json
-{
-  "id": 1,
-  "name": "Andre",
-  "project": "db-workbench"
-}
+- Click on `View` / `db_workbench` → then `View`. You should now see:
+```txt
+_id                      | id | name  | project      
+-------------------------+----+-------+--------------
+(auto-generated value)   | 1  | Andre | db-workbench 
 ```
+2. Run Queries:
+- In the same `Viewing Collection: test` menu, click on `Advanced`.
+- This Query Editor acts as a shortcut for running `db.collection.find(filter, projection)` queries on chosen collection. You can write your queries in the editor and click `Find` to run them.
+- Mongo Express query functionalities are limited to light querying with find() filters and simple operations. For complex queries, aggregation, or batch operations, the CLI should be utilized.
+
 
 ### Redis / RedisInsight
 URL: `http://localhost:<REDISINSIGHT_PORT>`

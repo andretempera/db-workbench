@@ -22,7 +22,7 @@ Cluster (optional)
 - A MongoDB deployment can run as a single server, a replica set, or a sharded cluster.
 - A **database** is the primary logical grouping and contains collections.
 - A **collection** stores documents (similar to a table in relational systems).
-- A **document** is a BSON object (binary JSON) identified by a unique _id.
+- A **document** is a BSON object (binary JSON) identified by a unique _id (similar to a row).
 - Data is stored in flexible, schema-optional format.
 
 
@@ -36,188 +36,207 @@ Cluster (optional)
 ### 2. Inspect Existing Setup
 - Show all databases:
 ```sql
-  \l
+  show dbs
 ```
 
-- Show tables:
+- Show collections:
 ```sql
-  \dt
+  show collections
 ```
 
-- Show table structure:
+- Show collection structure:
 ```sql
-  \d test
+  Object.keys(db.test.findOne() || {})
 ```
 
-- Query all data in the `test` table:
+- Query all data in the `test` collection:
 ```sql
-  SELECT * FROM test;
+  db.test.find();
 ```
 
 ### 3. Insert a Row
-- Insert a new row into the `test` table:
+- Insert a new row into the `test` collection:
 ```sql
-  INSERT INTO test (id, name, project)
-  VALUES (2, 'Paula', 'new-project');
+  db.test.insertOne({ id: 2, name: "Paula", project: "new-project" });
 ```
 
 - Check the data after insertion:
 ```sql
-  SELECT * FROM test;  -- View the table to see the new row added
+  db.test.find();  -- View the collection to see the new row added
 ```
 
 ### 4. Update Data
 - Update data in the `test` table:
 ```sql
-  UPDATE test
-  SET project = 'updated-project'
-  WHERE id = 2;  -- Updates row based on id number
+  db.test.updateOne({ id: 2 }, { $set: { project: "updated-project" } });  -- Updates document based on first matching id number
 ```
 
 - Check the data after update:
 ```sql
-  SELECT * FROM test;  -- View the table again to check the updated row
+  db.test.find();  -- View the collection again to check the updated document
 ```
 
 ### 5. Delete Data
-- Delete a row from the `test` table:
+- Delete a document from the `test` table:
 ```sql
-  DELETE FROM test
-  WHERE id = 2;  -- Deletes row based on id number
+  db.test.deleteOne({ id: 2 });  -- Deletes document based on first matching id number
 ```
 
 - Check the data after deletion:
 ```sql
-  SELECT * FROM test;  -- Table should have just one entry again
+  db.test.find();  -- Collection should have just one entry again
 ```
 
 ### 6. Create a New Database
-- Create a new database:
+- Create and use a new database:
 ```sql
-  CREATE DATABASE new_database;
+  use new_database  -- Single command creates and connects to the new database
 ```
 
 - List all databases again:
 ```sql
-  \l  -- Newly created database should be visible
-```
-
-- Switch to the new database:
-```sql
-  \c new_database;
+  show dbs  -- Newly created database is empty and not yet visible
 ```
 
 ### 7. Add a New Table
 - Create a new table:
 ```sql
-  CREATE TABLE IF NOT EXISTS top_secret (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    organization TEXT,
-    country TEXT,
-    years_active INTEGER);
+  db.createCollection(
+    "top_secret",
+    {
+      validator: {
+        $jsonSchema: {
+          bsonType: "object",
+          required: ["id","name","organization","country","years_active"],
+          properties: {
+            id: { bsonType: "int" },
+            name: { bsonType: "string" },
+            organization: { bsonType: "string" },
+            country: { bsonType: "string" },
+            years_active: { bsonType: "int" }
+          }
+        }
+      }
+    }
+  )
 ```
 
-- List tables again:
+- List all databases again:
 ```sql
-  \dt  -- Newly created table should be visible
+  show dbs  -- By adding a collection, the created database is now visible
+```
+
+- List collections again:
+```sql
+  show collections  -- Newly created collection should be visible
+```
+
+- List collections per bucket:
+```sql
+db.adminCommand({ listDatabases: 1 }).databases.forEach(function(d) {
+    if (["admin","config","local"].includes(d.name)) return;
+    print("Database: " + d.name);
+    db = db.getSiblingDB(d.name);
+    print("Collections: " + db.getCollectionNames().join(", "));
+});
 ```
 
 - Insert data into the new table:
 ```sql
-  INSERT INTO top_secret (name, organization, country, years_active)
-  VALUES ('James', 'MI6', 'UK', 20),
-    ('Ethan', 'IMF', 'USA', 30),
-    ('Nikita', 'Section One', 'Russia', 8),
-    ('Jason', 'CIA', 'USA', 12),
-    ('Sydney', 'SD-6', 'USA', 10);
+  db.top_secret.insertMany([
+    { id: 1, name: "James", organization: "MI6", country: "UK", years_active: 20 },
+    { id: 2,name: "Ethan", organization: "IMF", country: "USA", years_active: 30 },
+    { id: 3,name: "Nikita", organization: "Section One", country: "Russia", years_active: 8 },
+    { id: 4,name: "Jason", organization: "CIA", country: "USA", years_active: 12 },
+    { id: 5,name: "Sydney", organization: "SD-6", country: "USA", years_active: 10 }
+  ]);
 ```
 
-- Check the new table's data:
+- Check the new collection's data:
 ```sql
-  SELECT * FROM top_secret;
+  db.top_secret.find()
 ```
 
 ### 8. Conditional queries
 - Match criteria:
 ```sql
-  SELECT * FROM top_secret
-  WHERE organization = 'CIA';
+  db.top_secret.find({ organization: "CIA" });
 ```
 
 - Find MAX value in entire table:
 ```sql
-  SELECT MAX(years_active)
-  FROM top_secret; -- also works with MIN()
+  db.top_secret.aggregate([
+  { $group: { _id: null, max_years_active: { $max: "$years_active" } } }
+  ]); -- also works with $min
 ```
 
 - Threshold criteria:
 ```sql
-  SELECT * FROM top_secret
-  WHERE years_active < 15;  -- also works with <=, > and >=
+  db.top_secret.find({ years_active: { $lt: 15 } });  -- also works with lte(<=), gt(>) and gte(>=)
 ```
 
 - Multiple criteria:
 ```sql
-  SELECT * FROM top_secret
-  WHERE years_active > 10 AND
-  name LIKE "J%";  -- matching names that start with "J"
+  db.top_secret.find({
+  years_active: { $gt: 10 },
+  name: { $regex: /^J/ }
+  });  -- matching names that start with "J"
 ```
 
 
 ### 9. Aggregation queries
 - Count number of rows:
 ```sql
-  SELECT COUNT(*)
-  FROM top_secret
-  WHERE years_active > 15;  -- also works with >=, < and <=
+  db.top_secret.countDocuments({
+  years_active: { $gt: 15 }
+  });  -- also works with gte(>=), lt(<) and lte(<=)
 ```
 
 - Using average and grouping:
 ```sql
-  SELECT country, AVG(years_active)
-  FROM top_secret
-  WHERE country = 'USA'
-  GROUP BY country;   -- also works with SUM()
+  db.top_secret.aggregate([
+    { $match: { country: "USA" } },             // filter documents
+    { $group: { _id: "$country", avg_years: { $avg: "$years_active" } } } // group by country and compute average
+  ]);   -- also works with $sum
 ```
 
 - Find MIN within a group:
 ```sql
-  SELECT country, MIN(years_active)
-  FROM top_secret
-  GROUP BY country; -- also works with MAX()
+  db.top_secret.aggregate([
+  { $group: { _id: "$country", min_years: { $min: "$years_active" } } }
+  ]); -- also works with $max
 ```
 	
 ### 10. Cleanup
-- Delete table:
+- Delete collection:
 ```sql
-  DROP TABLE top_secret;
+  db.top_secret.drop();
 ```
 
-- List tables again:
+- List collections again:
 ```sql
-  \dt  -- Verify that the "top_secret" table was deleted
-```
-
-- Switch back to original database:
-```sql
-  \c db_workbench;
+  show collections  -- Verify that the "top_secret" collection was deleted
 ```
 
 - Delete database:
 ```sql
-  DROP DATABASE new_database;
+  db.dropDatabase();  -- Drops the database you are currently in
+```
+
+- Switch back to original database:
+```sql
+  use db_workbench;
 ```
 
 - List all databases again:
 ```sql
-  \l  -- Verify that the "new_database" database was deleted
+  show dbs  -- Verify that the "new_database" database was deleted
 ```
 
 ### 11. Exit Environment
 - Exit MongoDB CLI:
 ```sql
-  \q
+  quit
 ```
 
 ### Notes:

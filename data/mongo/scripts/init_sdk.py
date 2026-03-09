@@ -37,15 +37,6 @@ else:
 
 db = client[WORK_DB]
 
-# Initialize test collection if empty
-print("Ensuring 'test' collection has base document...")
-
-db.test.update_one(
-    {"id": 1},
-    {"$set": {"name": "Andre", "project": "db-workbench"}},
-    upsert=True
-)
-
 print("\n||| MongoDB SDK Python CLI |||")
 print(f"Connected to database '{WORK_DB}'")
 print("Objects available:")
