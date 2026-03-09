@@ -19,202 +19,266 @@ Cluster
       └── Shard (data partition)
            └── Document (JSON data)
 ```
-- An Elasticsearch **cluster** contains one or more nodes, and contains one or more indexes.
-- An **index** is the primary logical grouping of data (similar to a database/table conceptually). It is split into **shards**, which distribute data across nodes.
-- A **document** is a JSON object stored inside an index, and are automatically assigned to shards.
+- An Elasticsearch **cluster** contains one or more nodes (servers that hold data), and contains one or more indexes.
+- An **index** is the primary logical grouping of data (similar to a merging of database and table conceptually). It is split into **shards**, which distribute data across nodes.
+- A **document** is a JSON object stored inside an index, and are automatically assigned to shards (similar to a row).
 - Elasticsearch uses a REST-based JSON API (not SQL by default, though SQL support exists).
 
 
 
 ## Basic Commands & Workflow
 ### 1. Start Environment
-- Elasticsearch does not provide a dedicated interactive CLI like SQL databases.
-- Once the container or service is running, you can interact with it via HTTP requests using tools such as `curl`, `http`, `Postman`, or language-specific SDKs.
-- The REST API allows you to query, insert, update, and delete documents immediately after the service is available.
+```sql
+-- Elasticsearch does not provide a dedicated interactive CLI like SQL databases.
+-- Once the container or service is running, you can interact with it via HTTP requests using tools such as `curl`, `http`, `Postman`, or language-specific SDKs.
+-- The REST API allows you to query, insert, update, and delete documents immediately after the service is available.
+```
 
 ### 2. Inspect Existing Setup
-- Show all databases:
+- Show all indexes:
 ```sql
-  \l
+-- All commands require connecting via `user:password https://host:port` pattern. Provided examples use default .env values.
+  curl -k -s -u elastic:rootpass "https://localhost:9200/_cat/indices?v" | awk '$6 > 0'
 ```
 
-- Show tables:
+- Show index structure:
 ```sql
-  \dt
+  curl -k -s -u elastic:rootpass "https://localhost:9200/db_workbench_test/_mapping?pretty"
 ```
 
-- Show table structure:
+- Query all data in the `db_workbench_test` index:
 ```sql
-  \d test
-```
-
-- Query all data in the `test` table:
-```sql
-  SELECT * FROM test;
+  curl -k -s -u elastic:rootpass "https://localhost:9200/db_workbench_test/_search?q=*&_source=true&pretty"
 ```
 
 ### 3. Insert a Row
-- Insert a new row into the `test` table:
+- Insert a new document into the `db_workbench_test` index:
 ```sql
-  INSERT INTO test (id, name, project)
-  VALUES (2, 'Paula', 'new-project');
+  curl -k -s -u elastic:rootpass -X POST "https://localhost:9200/db_workbench_test/_doc/2" \
+  -H 'Content-Type: application/json' \
+  -d '{"name": "Paula", "project": "new-project"}'
 ```
 
 - Check the data after insertion:
 ```sql
-  SELECT * FROM test;  -- View the table to see the new row added
+  curl -k -s -u elastic:rootpass "https://localhost:9200/db_workbench_test/_search?q=*&_source=true&pretty"  -- View the index to see the new document added
 ```
 
 ### 4. Update Data
-- Update data in the `test` table:
+- Update document in the `db_workbench_test` index:
 ```sql
-  UPDATE test
-  SET project = 'updated-project'
-  WHERE id = 2;  -- Updates row based on id number
+  curl -k -s -u elastic:rootpass -X POST "https://localhost:9200/db_workbench_test/_update/2" \
+  -H 'Content-Type: application/json' \
+  -d '{"doc": {"project": "updated-project"}}'  -- Updates document based on id number
 ```
 
 - Check the data after update:
 ```sql
-  SELECT * FROM test;  -- View the table again to check the updated row
+  curl -k -s -u elastic:rootpass "https://localhost:9200/db_workbench_test/_search?q=*&_source=true&pretty"  -- View the index again to check the updated document
 ```
 
 ### 5. Delete Data
-- Delete a row from the `test` table:
+- Delete a document from the `db_workbench_test` index:
 ```sql
-  DELETE FROM test
-  WHERE id = 2;  -- Deletes row based on id number
+  curl -k -s -u elastic:rootpass -X DELETE "https://localhost:9200/db_workbench_test/_doc/2"  -- Deletes document based on id number
 ```
 
 - Check the data after deletion:
 ```sql
-  SELECT * FROM test;  -- Table should have just one entry again
+  curl -k -s -u elastic:rootpass "https://localhost:9200/db_workbench_test/_search?q=*&_source=true&pretty"  -- Index should have just one entry again
 ```
 
-### 6. Create a New Database
-- Create a new database:
+### 6. Add a New Index
+- Create a new index:
 ```sql
-  CREATE DATABASE new_database;
+  curl -k -s -u elastic:rootpass -X PUT "https://localhost:9200/new_index_top_secret" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "mappings": {
+      "properties": {
+        "name": {
+          "type": "text",
+          "fields": {
+            "keyword": { "type": "keyword", "ignore_above": 256 }
+          }
+        },
+        "organization": { 
+          "type": "text",
+          "fields": {
+            "keyword": { "type": "keyword", "ignore_above": 256 }
+          }
+        },
+        "country": {
+          "type": "text",
+          "fields": {
+            "keyword": { "type": "keyword", "ignore_above": 256 }
+          }
+        },
+        "years_active": { "type": "integer" }
+      }
+    }
+  }'
 ```
 
-- List all databases again:
+- List all indexes again:
 ```sql
-  \l  -- Newly created database should be visible
+  curl -k -s -u elastic:rootpass "https://localhost:9200/_cat/indices?v" | awk '$6 > 0'  -- Newly created index should be visible
 ```
 
-- Switch to the new database:
+- Switch to the new index:
 ```sql
-  \c new_database;
+  -- Not required, indexes are always directly accessible
 ```
 
-### 7. Add a New Table
-- Create a new table:
+### 7. Add Data
+- Insert data into the new index:
 ```sql
-  CREATE TABLE IF NOT EXISTS top_secret (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    organization TEXT,
-    country TEXT,
-    years_active INTEGER);
+  curl -k -s -u elastic:rootpass -X POST "https://localhost:9200/new_index_top_secret/_doc/1" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"James","organization":"MI6","country":"UK","years_active":20}'
+  curl -k -s -u elastic:rootpass -X POST "https://localhost:9200/new_index_top_secret/_doc/2" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Ethan","organization":"IMF","country":"USA","years_active":30}'
+  curl -k -s -u elastic:rootpass -X POST "https://localhost:9200/new_index_top_secret/_doc/3" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Nikita","organization":"Section One","country":"Russia","years_active":8}'
+  curl -k -s -u elastic:rootpass -X POST "https://localhost:9200/new_index_top_secret/_doc/4" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Jason","organization":"CIA","country":"USA","years_active":12}'
+  curl -k -s -u elastic:rootpass -X POST "https://localhost:9200/new_index_top_secret/_doc/5" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Sydney","organization":"SD-6","country":"USA","years_active":10}'  -- bulk inserts are possible with `--data-binary` 
 ```
 
-- List tables again:
+- Check the new index's data:
 ```sql
-  \dt  -- Newly created table should be visible
-```
-
-- Insert data into the new table:
-```sql
-  INSERT INTO top_secret (name, organization, country, years_active)
-  VALUES ('James', 'MI6', 'UK', 20),
-    ('Ethan', 'IMF', 'USA', 30),
-    ('Nikita', 'Section One', 'Russia', 8),
-    ('Jason', 'CIA', 'USA', 12),
-    ('Sydney', 'SD-6', 'USA', 10);
-```
-
-- Check the new table's data:
-```sql
-  SELECT * FROM top_secret;
+  curl -k -s -u elastic:rootpass "https://localhost:9200/new_index_top_secret/_search?q=*&_source=true&pretty"
 ```
 
 ### 8. Conditional queries
 - Match criteria:
 ```sql
-  SELECT * FROM top_secret
-  WHERE organization = 'CIA';
+  curl -k -s -u elastic:rootpass "https://localhost:9200/new_index_top_secret/_search?pretty" \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "query": {
+          "match": {
+            "organization": "CIA"
+          }
+        }
+      }'
 ```
 
 - Find MAX value in entire table:
 ```sql
-  SELECT MAX(years_active)
-  FROM top_secret; -- also works with MIN()
+  curl -k -s -u elastic:rootpass "https://localhost:9200/new_index_top_secret/_search?pretty" \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "size": 0,
+        "aggs": {
+          "max_years_active": {
+            "max": { "field": "years_active" }
+          }
+        }
+      }' -- also works with MIN()
 ```
 
 - Threshold criteria:
 ```sql
-  SELECT * FROM top_secret
-  WHERE years_active < 15;  -- also works with <=, > and >=
+  curl -k -s -u elastic:rootpass "https://localhost:9200/new_index_top_secret/_search?pretty" \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "query": {
+          "range": {
+            "years_active": { "lt": 15 }
+          }
+        }
+      }'  -- also works with lte(<=), gt(>) and gte(>=)
 ```
 
 - Multiple criteria:
 ```sql
-  SELECT * FROM top_secret
-  WHERE years_active > 10 AND
-  name LIKE "J%";  -- matching names that start with "J"
+  curl -k -s -u elastic:rootpass "https://localhost:9200/new_index_top_secret/_search?pretty" \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "query": {
+          "bool": {
+            "must": [
+              { "range": { "years_active": { "gt": 10 } } },
+              { "wildcard": { "name.keyword": "J*" } }
+            ]
+          }
+        }
+      }'  -- matching names that start with "J"
 ```
 
 
 ### 9. Aggregation queries
 - Count number of rows:
 ```sql
-  SELECT COUNT(*)
-  FROM top_secret
-  WHERE years_active > 15;  -- also works with >=, < and <=
+  curl -k -s -u elastic:rootpass "https://localhost:9200/new_index_top_secret/_count" \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "query": {
+          "range": {
+            "years_active": { "gt": 15 }
+          }
+        }
+      }'  -- also works with gte(>=), lt(<) and lte(<=)
 ```
 
 - Using average and grouping:
 ```sql
-  SELECT country, AVG(years_active)
-  FROM top_secret
-  WHERE country = 'USA'
-  GROUP BY country;   -- also works with SUM()
+  curl -k -s -u elastic:rootpass "https://localhost:9200/new_index_top_secret/_search?pretty" \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "size": 0,
+        "query": {
+          "term": { "country.keyword": "USA" }
+        },
+        "aggs": {
+          "by_country": {
+            "terms": { "field": "country.keyword" },
+            "aggs": {
+              "avg_years_active": { "avg": { "field": "years_active" } }
+            }
+          }
+        }
+      }'   -- also works with SUM()
 ```
 
 - Find MIN within a group:
 ```sql
-  SELECT country, MIN(years_active)
-  FROM top_secret
-  GROUP BY country; -- also works with MAX()
+  curl -k -s -u elastic:rootpass "https://localhost:9200/new_index_top_secret/_search?pretty" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "size": 0,
+    "aggs": {
+      "by_country": {
+        "terms": { "field": "country.keyword" },
+        "aggs": {
+          "min_years_active": { "min": { "field": "years_active" } }
+        }
+      }
+    }
+  }' -- also works with MAX()
 ```
 	
 ### 10. Cleanup
-- Delete table:
+- Delete index:
 ```sql
-  DROP TABLE top_secret;
+  curl -k -s -u elastic:rootpass -X DELETE "https://localhost:9200/new_index_top_secret?pretty"
 ```
 
-- List tables again:
+- List all indexes again:
 ```sql
-  \dt  -- Verify that the "top_secret" table was deleted
-```
-
-- Switch back to original database:
-```sql
-  \c db_workbench;
-```
-
-- Delete database:
-```sql
-  DROP DATABASE new_database;
-```
-
-- List all databases again:
-```sql
-  \l  -- Verify that the "new_database" database was deleted
+  curl -k -s -u elastic:rootpass "https://localhost:9200/_cat/indices?v" | awk '$6 > 0'  -- Verify that the "new_index_top_secret" index was deleted
 ```
 
 ### 11. Exit Environment
-- Elasticsearch does not have a CLI environment to exit.
+```sql
+-- Elasticsearch does not have a CLI environment to exit.
+```
 
 
 ### Notes:

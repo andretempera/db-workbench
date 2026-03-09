@@ -156,7 +156,7 @@ reset-clickhouse: ## Remove ClickHouse, SDK containers and volumes
 
 up-couchbase: ## Start Couchbase
 	docker compose up -d couchbase
-	docker compose exec couchbase bash /data/couchbase/scripts/init.sh
+	docker compose exec couchbase bash /scripts/init.sh
 
 cli-couchbase: ## Connect to Couchbase CLI
 	docker compose exec couchbase cbq -u ${COUCHBASE_USER} -p ${COUCHBASE_PASSWORD} -engine http://${COUCHBASE_HOST}:${COUCHBASE_PORT}
@@ -193,6 +193,8 @@ down-elasticsearch: ## Stop Elasticsearch, Kibana and SDK container
 
 reset-elasticsearch: ## Remove Elasticsearch, Kibana, SDK containers and volumes
 	docker compose down -v --remove-orphans elasticsearch kibana elasticsearch-sdk
+	rm -f ./data/elasticsearch/logs/.init_done
+	rm -f ./data/elasticsearch/logs/.init_kibana_done
 
 
 up-mongo: ## Start MongoDB + Mongo Express

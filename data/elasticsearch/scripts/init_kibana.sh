@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Exit early if marker exists
+KIBANA_MARKER="./data/elasticsearch/logs/.init_kibana_done"
+if [ -f "$KIBANA_MARKER" ]; then
+    echo "Kibana system password already set. Skipping."
+    exit 0
+fi
+
 # Set the Elasticsearch URL and Kibana credentials from environment variables
 ES_URL="https://localhost:9200"
 ES_USER="elastic"
@@ -31,6 +38,9 @@ else
     echo "Failed to set Kibana system password."
     exit 1
 fi
+
+# Creating marker file
+touch "$KIBANA_MARKER"
 
 # Everything is ready, exit the script
 exit 0

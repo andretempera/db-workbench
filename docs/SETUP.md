@@ -252,7 +252,6 @@ make gui-<database_name>
 - Login credentials and URLs are defined in `.env`.
 - The default workspace `db_workbench` with a test row is pre-created.
 - Some GUIs (like Kibana) may require extra steps to connect to and visualize the test data.
-- Make command to access GUI is preferable, direct URL or Docker Desktop service port link possible.
 
 ### 4. Connect via SDK
 ```bash
@@ -334,7 +333,7 @@ Ensure:
 - Docker is running
 - The relevant database container is started
 
-You can access the GUI by entering the URL in a browser or clicking the service port in Docker Desktop. Using `make gui-<database_name>` is recommended, as some databases run initialization scripts when launched via `make`.
+You can access the GUI by using the `make gui-<database_name>` command and clicking on the provided link, by directly entering the URL in a browser or clicking the service port in Docker Desktop. 
 
 ### MariaDB - phpMyAdmin
 URL: `http://localhost:<PHPMYADMIN_MARIADB_PORT>`
@@ -447,29 +446,19 @@ URL: `http://localhost:<KIBANA_PORT>`
 - Password: `rootpass`
 
 1. Create a Data View in Kibana:
-  - Navigate to Management → Kibana → Data Views → Create Data View.
-  - Name: `DB Workbench`
-  - Index Pattern: `db_workbench`. (**Note:** You should see "Your index pattern matches 1 source.")
-  - Click Save to create the data view.
-
-2. Access the Data in Discover:
-- Go to Discover → Elasticsearch → Click on All logs.
-- Choose `DB Workbench` from the dropdown to view the test data.
-
-3. Run Queries in Dev Tools:
-- Go to Management → Dev Tools.
-- Dev Tools → run query: `GET /db_workbench/_doc/1`
-```json
-{
-  "_index": "db_workbench",
-  "_id": "1",
-  "_source": {
-    "id": 1,
-    "name": "Andre",
-    "project": "db-workbench"
-  }
-}
+  - On the left panel, click on `Management` → `Data Views` (under Kibana) → and `+ Create Data View` button on the right side.
+  - Name: `DB Workbench Test`, Index Pattern: `db_workbench_test`. (**Note:** You should see "Your index pattern matches 1 source.")
+  - Click `Save` to create the data view.
+2. Verify test data:
+- Go to `Discover` (on Elasticsearch Home).
+- Choose `DB Workbench Test` from the Data View dropdown (if not already selected). You should now see:
+```txt
+Summary
+name  Andre  project  db-workbench  _id1  _ignored  (null)  _index  db_workbench  _score  1
 ```
+3. Run Queries:
+- On the left panel, click on dropdown arrow next to `Management`, then `Dev Tools`.
+- Write your queries in the Console Shell (using `GET` and `POST` commands) and click on blue arrow to send request.
 
 ### MongoDB / Mongo Express
 URL: `http://localhost:<MONGOEXPRESS_PORT>`

@@ -4,6 +4,8 @@ import time
 import code
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import ConnectionError, NotFoundError
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Environment variables with defaults
 ELASTIC_HOST = os.getenv("ELASTIC_HOST", "elasticsearch")  # Set to 'elasticsearch' (service name)

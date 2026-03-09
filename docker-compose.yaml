@@ -288,8 +288,8 @@ services:
       - "${COUCHBASE_PORT}:8091"
     volumes:
       - couchbase_data:/opt/couchbase/var
-      - ./data/couchbase/scripts/init.sh:/data/couchbase/scripts/init.sh:ro
-      - ./data/couchbase/scripts/init_sdk.py:/data/couchbase/scripts/init_sdk.py:ro
+      - ./data/couchbase/scripts/init.sh:/scripts/init.sh:ro
+      - ./data/couchbase/scripts/init_sdk.py:/scripts/init_sdk.py:ro
     command: ["couchbase-server", "-d", "trace"]
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://127.0.0.1:8091/pools || exit 1"]

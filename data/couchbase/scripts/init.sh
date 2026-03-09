@@ -1,19 +1,18 @@
 #!/bin/bash
 set -euo pipefail
 
+# Exit early if marker exists
+INIT_MARKER="/tmp/.couchbase_init_done"
+if [ -f "$INIT_MARKER" ]; then
+    echo "Init script already ran. Skipping."
+    exit 0
+fi
+
 # --- Config variables ---
 COUCHBASE_HOST=${COUCHBASE_HOST:-127.0.0.1}
 COUCHBASE_USER=${COUCHBASE_USER:-Administrator}
 COUCHBASE_PASSWORD=${COUCHBASE_PASSWORD:-password}
 COUCHBASE_BUCKET=${COUCHBASE_BUCKET:-db_workbench}
-
-INIT_MARKER="/tmp/.couchbase_init_done"
-
-# Exit early if marker exists
-if [ -f "$INIT_MARKER" ]; then
-    echo "Init script already ran. Skipping."
-    exit 0
-fi
 
 echo "Waiting for Couchbase management API..."
 
@@ -92,6 +91,7 @@ cbq -u "$COUCHBASE_USER" -p "$COUCHBASE_PASSWORD" \
     --engine http://$COUCHBASE_HOST:8093 \
     -s "CREATE PRIMARY INDEX IF NOT EXISTS ON \`$COUCHBASE_BUCKET\`.\`_default\`.\`test\`;"
 
+# Creating marker file
 touch "$INIT_MARKER"
 
 echo "Couchbase initialization complete."
