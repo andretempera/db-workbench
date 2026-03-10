@@ -227,7 +227,7 @@ Cluster (optional)
 ### 11. Exit Environment
 - Exit ClickHouse CLI:
 ```sql
-  quit
+  exit
 ```
 
 ### Notes:

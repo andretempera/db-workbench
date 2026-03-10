@@ -240,7 +240,7 @@ Server (instance)
 ### 11. Exit Environment
 - Exit Redis CLI:
 ```sql
-  quit
+  exit
 ```
 
 ### Notes:

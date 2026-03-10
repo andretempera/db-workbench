@@ -224,7 +224,7 @@ Cluster
 ### 11. Exit Environment
 - Exit Couchbase CLI:
 ```sql
-  \QUIT;
+  \exit;
 ```
 
 ### Notes:

@@ -400,8 +400,8 @@ id | name  | project
  ```
 
 3. Run queries:
-- On the left panel, select `db_workbench` and open `Query Tool` above (or Alt + Shift + Q)
-- Write query and click on `Execute script` (or F5)
+- On the left panel, select `db_workbench` and open `Query Tool` above (or Alt + Shift + Q).
+- Write query and click on `Execute query` (Alt + F5) or `Execute script` (F5).
 
 ### ClickHouse / ClickHouse Web UI
 URL: `http://localhost:<CLICKHOUSE_PORT>`
@@ -510,7 +510,7 @@ This is a quick-reference table to make establishing connections on DBeaver easi
 | Cassandra *      | localhost       | 9042    | db_workbench         | N/A            | N/A       |
 | ClickHouse       | localhost       | 8123    | db_workbench         | root           | rootpass  |
 | Couchbase *      | localhost       | 8091    | db_workbench         | N/A            | N/A       |
-| Elasticsearch    | localhost       | 9200    | db_workbench         | N/A            | N/A       |
+| Elasticsearch    | localhost       | 9200    | db_workbench         | elastic        | rootpass  |
 | MongoDB *        | localhost       | 27017   | db_workbench         | N/A            | N/A       |
 | Redis *          | localhost       | 6379    | db_workbench         | N/A            | N/A       |
 
@@ -519,6 +519,7 @@ This is a quick-reference table to make establishing connections on DBeaver easi
 - `Server Host` should always be `localhost` (or `127.0.0.1`) when connecting from DBeaver through Docker. SQLite/DuckDB should point to the database file in your project root.
 - `Database` sets the default database to use, `db_workbench` is the default for this project. Check "Show all databases" box if needed.
 - Some databases may require going to Driver Properties and setting `allowPublicKeyRetrieval=TRUE`.
+- Elasticsearch config needs to bypass `SunCertPathBuilderException` and is a very involved process. Requires manually installing JDBC driver, getting PKCS12 certificate, create Java truststore with keytool and adding truststore properties in DBeaver driver.
 - Connection name defaults to the database name but can be renamed in DBeaver by right-clicking and selecting "Rename" or pressing "F2".
 - Other DB clients may connect similarly, but they have not been tested in this project.
 

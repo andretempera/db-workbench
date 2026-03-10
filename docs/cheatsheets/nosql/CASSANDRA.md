@@ -237,7 +237,7 @@ VALUES (5, 'Sydney', 'SD-6', 'USA', 10);  -- no multi-row insert, requires indiv
 ### 11. Exit Environment
 - Exit Cassandra CLI:
 ```sql
-  QUIT
+  exit
 ```
 
 ### Notes:

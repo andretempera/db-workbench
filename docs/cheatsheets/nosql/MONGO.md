@@ -236,7 +236,7 @@ db.adminCommand({ listDatabases: 1 }).databases.forEach(function(d) {
 ### 11. Exit Environment
 - Exit MongoDB CLI:
 ```sql
-  quit
+  exit
 ```
 
 ### Notes:
