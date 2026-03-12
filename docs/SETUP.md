@@ -527,7 +527,7 @@ This is a quick-reference table to make establishing connections on DBeaver easi
 ## Tips & Best Practices
 **1. File-Based Databases (SQLite & DuckDB)**
 
-- **DuckDB:** Can be accessed via CLI or DBeaver. CLI access is recommended for quick experiments, GUI access for inspection.
+- **DuckDB:** Can be accessed via CLI (recommended), SDK or DBeaver. You may need to use `sudo chown <USER> <file_path>` to manually change file permissions when switching between CLI and SDK if working with the same `*.duckdb` file.
 - **SQLite:** Due to file-level locking, avoid accessing the same database file simultaneously from Windows and WSL. Use the CLI within the same environment where the file resides.
 
 Always ensure the database file is not open in another program while running commands.

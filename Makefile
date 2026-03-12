@@ -23,8 +23,7 @@ sdk-duckdb: ## Enter DuckDB via Python SDK
 down-duckdb: ## No-op (file-based)
 	@echo "DuckDB is file-based. Nothing to stop."
 
-reset-duckdb: ## Delete DuckDB database file and remove CLI container
-	docker compose down -v --remove-orphans duckdb-cli
+reset-duckdb: ## Delete DuckDB database file
 	@echo "Removing DuckDB database..."
 	@rm -f ${DUCKDB_DB_PATH} || true
 

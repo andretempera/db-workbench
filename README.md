@@ -95,36 +95,20 @@ This project intentionally does **not** aim to be:
 Each database runs independently so you can explore and experiment with every engine in isolation.
 
 
-## Databases
-### Currently Supported:
-| Type  | Database        | Web GUI           | Default Workspace   |
-|-------|-----------------|-------------------|---------------------|
-| File  | `DuckDB`        | —                 | db_workbench.duckdb |
-| File  | `SQLite`        | —                 | db_workbench.db     |
-| SQL   | `MariaDB`       | phpMyAdmin        | db_workbench        |
-| SQL   | `MySQL`         | phpMyAdmin        | db_workbench        |
-| SQL   | `PostgreSQL`    | pgAdmin           | db_workbench        |
-| NoSQL | `Cassandra`     | —                 | db_workbench        |
-| NoSQL | `ClickHouse`    | ClickHouse Web UI | db_workbench        |
-| NoSQL | `Couchbase`     | Couchbase Console | db_workbench        |  
-| NoSQL | `Elasticsearch` | Kibana            | db_workbench        |
-| NoSQL | `MongoDB`       | Mongo Express     | db_workbench        |
-| NoSQL | `Redis`         | RedisInsight      | db_workbench        |
-
-### Technical Overview:
-| Database        | Model       | Storage      | Typical Use Case       |
-|-----------------|-------------|--------------|------------------------|
-| `DuckDB`        | Relational  | Columnar     | Analytics / OLAP       |
-| `SQLite`        | Relational  | Row-based    | Lightweight apps       |
-| `MariaDB`       | Relational  | Row-based    | MySQL-compatible apps  |
-| `MySQL`         | Relational  | Row-based    | Web applications       |
-| `PostgreSQL`    | Relational  | Row-based    | OLTP / production apps |
-| `Cassandra`     | Wide-column | Distributed  | High write throughput  |
-| `ClickHouse`    | Columnar    | Column-based | Large-scale analytics  |
-| `Couchbase`     | Document    | JSON         | Distributed apps       |
-| `Elasticsearch` | Search      | Inverted     | Full-text search       |
-| `MongoDB`       | Document    | BSON         | Flexible schemas       |
-| `Redis`         | Key-Value   | In-memory    | Caching / fast lookup  |
+## Currently Supported Databases
+| Database        | Type  | Model      | Storage      | Typical Use Case       | Web GUI           | Default Workspace   |
+|-----------------|-------|------------|--------------|------------------------|-------------------|---------------------|
+| `DuckDB`        | File  | Relational | Columnar     | Analytics / OLAP       | —                 | db_workbench.duckdb |
+| `SQLite`        | File  | Relational | Row-based    | Lightweight apps       | —                 | db_workbench.db     |
+| `MariaDB`       | SQL   | Relational | Row-based    | MySQL-compatible apps  | phpMyAdmin        | db_workbench        |
+| `MySQL`         | SQL   | Relational | Row-based    | Web applications       | phpMyAdmin        | db_workbench        |
+| `PostgreSQL`    | SQL   | Relational | Row-based    | OLTP / production apps | pgAdmin           | db_workbench        |
+| `Cassandra`     | NoSQL | Wide-column| Distributed  | High write throughput  | —                 | db_workbench        |
+| `ClickHouse`    | NoSQL | Columnar   | Column-based | Large-scale analytics  | ClickHouse Web UI | db_workbench        |
+| `Couchbase`     | NoSQL | Document   | JSON         | Distributed apps       | Couchbase Console | db_workbench        |
+| `Elasticsearch` | NoSQL | Search     | Inverted     | Full-text search       | Kibana            | db_workbench_test   |
+| `MongoDB`       | NoSQL | Document   | BSON         | Flexible schemas       | Mongo Express     | db_workbench        |
+| `Redis`         | NoSQL | Key-Value  | In-memory    | Caching / fast lookup  | RedisInsight      | db_workbench:test:1 |
 
 
 ## Project Structure
