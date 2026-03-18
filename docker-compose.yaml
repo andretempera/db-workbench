@@ -19,6 +19,51 @@ services:
   # SQL Databases
   # -------------------------
 
+  # --- CockroachDB ---
+  cockroach:
+    image: cockroachdb/cockroach:v26.1.1
+    container_name: cockroach
+    ports:
+      - "${COCKROACH_PORT}:26257"
+      - "${COCKROACH_UI_PORT}:8080"
+    volumes:
+      - cockroach-data:/cockroach/cockroach-data
+      - ./data/cockroach/scripts:/scripts
+    command: >
+      bash -c "
+      cockroach start-single-node --insecure --http-addr=0.0.0.0:8080 &
+      sleep 5 &&
+      cockroach sql --insecure -f /scripts/init.sql &&
+      wait
+      "
+    healthcheck:
+      test: ["CMD", "./cockroach", "sql", "--insecure", "--execute", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # --- CockroachDB SDK ---
+  cockroach-sdk:
+    build:
+      context: .
+      dockerfile: SDK/Dockerfile.CockroachDB
+    container_name: cockroach-sdk
+    depends_on:
+      cockroach:
+        condition: service_healthy
+    environment:
+      COCKROACH_HOST: ${COCKROACH_HOST}
+      COCKROACH_PORT: ${COCKROACH_PORT}
+      COCKROACH_DB: ${COCKROACH_DB}
+      COCKROACH_USER: ${COCKROACH_USER}
+    volumes:
+      - ./data/cockroach/scripts:/scripts:ro
+      - cockroach-data:/cockroach/cockroach-data
+    working_dir: /scripts
+    command: tail -f /dev/null
+
+
   # --- MariaDB ---
   mariadb:
     image: mariadb:12.2.2
@@ -517,6 +562,7 @@ services:
   # -------------------------
 
 volumes:
+  cockroach-data:
   mariadb_data:
   mysql_data:
   postgres_data:

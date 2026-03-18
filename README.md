@@ -28,12 +28,10 @@ This project is built for **convenient, isolated local experimentation**. It int
 ```bash
 git clone https://github.com/andretempera/db-workbench.git
 cd db-workbench
-
 cp .env.example .env
 
 python3 -m venv .venv
 source .venv/bin/activate
-
 pip install -r requirements.txt
 
 make up-postgres
@@ -100,9 +98,13 @@ Each database runs independently so you can explore and experiment with every en
 |-----------------|-------|------------|--------------|------------------------|-------------------|---------------------|
 | `DuckDB`        | File  | Relational | Columnar     | Analytics / OLAP       | —                 | db_workbench.duckdb |
 | `SQLite`        | File  | Relational | Row-based    | Lightweight apps       | —                 | db_workbench.db     |
+| `CockroachDB`   | SQL   | Relational | Row-based    | Distributed SQL        | Admin UI          | db_workbench        |
+| `H2`            | SQL   | Relational | Row-based    | Lightweight / embedded | Web Console       | db_workbench        |
 | `MariaDB`       | SQL   | Relational | Row-based    | MySQL-compatible apps  | phpMyAdmin        | db_workbench        |
 | `MySQL`         | SQL   | Relational | Row-based    | Web applications       | phpMyAdmin        | db_workbench        |
 | `PostgreSQL`    | SQL   | Relational | Row-based    | OLTP / production apps | pgAdmin           | db_workbench        |
+| `TimescaleDB`   | SQL   | Relational | Row-based    | Time-series analytics  | pgAdmin           | db_workbench        |
+| `YugabyteDB`    | SQL   | Relational | Row-based    | Distributed SQL        | Admin UI          | db_workbench        |
 | `Cassandra`     | NoSQL | Wide-column| Distributed  | High write throughput  | —                 | db_workbench        |
 | `ClickHouse`    | NoSQL | Columnar   | Column-based | Large-scale analytics  | ClickHouse Web UI | db_workbench        |
 | `Couchbase`     | NoSQL | Document   | JSON         | Distributed apps       | Couchbase Console | db_workbench        |

@@ -335,6 +335,24 @@ Ensure:
 
 You can access the GUI by using the `make gui-<database_name>` command and clicking on the provided link, by directly entering the URL in a browser or clicking the service port in Docker Desktop. 
 
+### CockroachDB - CockroachDB UI
+URL: `http://localhost:<COCKROACH_UI_PORT>`
+
+**Login** not required.
+
+1. Verify test data:
+- On the left tab click on `Databases` → `db_workbench` → `public.test`. You should be able to see the table structure:
+```sql
+CREATE TABLE public.test (
+  id INT8 NOT NULL,
+  name STRING NULL,
+  project STRING NULL,
+  CONSTRAINT test_pkey PRIMARY KEY (id ASC)
+) WITH (schema_locked = true);
+```
+
+Current version of CockroachDB UI does not support data viewing or querying. It is meant for Admin Management, monitoring and metadata.
+
 ### MariaDB - phpMyAdmin
 URL: `http://localhost:<PHPMYADMIN_MARIADB_PORT>`
 
@@ -504,6 +522,7 @@ This is a quick-reference table to make establishing connections on DBeaver easi
 |------------------|-----------------|---------|----------------------|----------------|-----------|
 | SQLite           | Local file path | N/A     | db_workbench.db      | N/A            | N/A       |
 | DuckDB           | Local file path | N/A     | db_workbench.duckdb  | N/A            | N/A       |
+| CockroachDB      | localhost       | 26257   | db_workbench         | root           | N/A       |
 | MariaDB          | localhost       | 3307    | db_workbench         | root           | rootpass  |
 | MySQL            | localhost       | 3306    | db_workbench         | root           | rootpass  |
 | PostgreSQL       | localhost       | 5432    | db_workbench         | postgres       | rootpass  |

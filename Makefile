@@ -49,6 +49,26 @@ reset-sqlite: ## Delete SQLite database file
 # SQL Databases
 ########################################
 
+up-cockroach: ## Start CockroachDB
+	docker compose up -d cockroach
+
+cli-cockroach: ## Enter CockroachDB CLI
+	docker exec -it cockroach ./cockroach sql --insecure --database=${COCKROACH_DB}
+
+gui-cockroach: ## Launch CockroachDB UI
+	@echo "Click link to open GUI: http://localhost:${COCKROACH_UI_PORT}"
+
+sdk-cockroach: ## Connect to CockroachDB via Python SDK
+	docker compose up -d cockroach-sdk
+	docker exec -it cockroach-sdk python /scripts/init_sdk.py
+
+down-cockroach: ## Stop CockroachDB and SDK container
+	docker compose stop cockroach cockroach-sdk
+
+reset-cockroach: ## Remove CockroachDB SDK containers and volumes
+	docker compose down -v --remove-orphans cockroach cockroach-sdk
+
+
 up-mariadb: ## Start MariaDB
 	docker compose up -d mariadb
 
@@ -256,23 +276,26 @@ reset-file: ## Reset all file-based databases (SQLite + DuckDB)
 	make reset-sqlite
 
 
-up-sql: ## Start all SQL databases and available GUIs, build respective SDKs images
+up-sql: ## Start all SQL database containers
+	make up-cockroach
 	make up-mariadb
 	make up-mysql
 	make up-postgres
 
-down-sql: ## Stop all SQL databases, SDKs and GUIs
+down-sql: ## Stop all SQL databases, GUIs and SDK containers
+	make down-cockroach
 	make down-mariadb
 	make down-mysql
 	make down-postgres
 
-reset-sql: ## Reset all SQL databases (containers + volumes)
+reset-sql: ## Delete all SQL databases, GUIs and SDK containers and volumes
+	make reset-cockroach
 	make reset-mariadb
 	make reset-mysql
 	make reset-postgres
 
 
-up-nosql: ## Start all NoSQL databases and available GUIs, build respective SDKs images
+up-nosql: ## Start all NoSQL database containers
 	make up-cassandra
 	make up-clickhouse
 	make up-couchbase
@@ -280,7 +303,7 @@ up-nosql: ## Start all NoSQL databases and available GUIs, build respective SDKs
 	make up-mongo
 	make up-redis
 
-down-nosql: ## Stop all NoSQL databases
+down-nosql: ## Stop all NoSQL databases, GUIs and SDK containers
 	make down-cassandra
 	make down-clickhouse
 	make down-couchbase
@@ -288,7 +311,7 @@ down-nosql: ## Stop all NoSQL databases
 	make down-mongo
 	make down-redis
 
-reset-nosql: ## Reset all NoSQL databases (containers + volumes)
+reset-nosql: ## Delete all NoSQL databases, GUIs and SDK containers and volumes
 	make reset-cassandra
 	make reset-clickhouse
 	make reset-couchbase
@@ -381,6 +404,13 @@ help-sqlite: ## Show SQLite commands
 	@echo ""
 
 
+help-cockroach: ## Show CockroachDB commands
+	@echo ""
+	@echo "  CockroachDB Commands"
+	@echo "  ------------------"
+	@awk 'BEGIN {FS = ":.*##"} /^up-cockroach:|^cli-cockroach:|^sdk-cockroach:|^gui-cockroach:|^down-cockroach:|^reset-cockroach:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+
 help-mariadb: ## Show MariaDB commands
 	@echo ""
 	@echo "  MariaDB Commands"
@@ -460,6 +490,8 @@ help-sql: ## Show SQL database commands
 	@echo ""
 	@echo "  SQL Databases Commands"
 	@echo "  ------------------------"
+	@awk 'BEGIN {FS=":.*##"} /^up-cockroach:|^cli-cockroach:|^sdk-cockroach:|^gui-cockroach:|^down-cockroach:|^reset-cockroach:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
 	@awk 'BEGIN {FS=":.*##"} /^up-mariadb:|^cli-mariadb:|^sdk-mariadb:|^gui-mariadb:|^down-mariadb:|^reset-mariadb:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 	@awk 'BEGIN {FS=":.*##"} /^up-mysql:|^cli-mysql:|^sdk-mysql:|^gui-mysql:|^down-mysql:|^reset-mysql:/ {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
